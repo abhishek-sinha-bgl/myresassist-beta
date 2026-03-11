@@ -7,121 +7,207 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
         
         :root {
-            --bg-deep: #050505;
-            --bg-card: #0d0d0f;
-            --accent: #6366f1;
+            /* Default Dark / Modern */
+            --bg-deep: #0a0b0e;
+            --bg-sidebar: #0d0f12;
+            --bg-card: rgba(17, 20, 24, 0.9);
+            --accent: #00d1ff;
             --text-main: #e2e8f0;
             --text-dim: #94a3b8;
+            --font-primary: 'Inter', sans-serif;
+            --border-val: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --bg-deep: #f8fafc;
+            --bg-sidebar: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --accent: #2563eb;
+            --text-main: #0f172a;
+            --text-dim: #64748b;
+            --border-val: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="academic"] {
+            --bg-deep: #fdfbf7;
+            --bg-sidebar: #f4f1ea;
+            --bg-card: #ffffff;
+            --accent: #7c2d12;
+            --text-main: #1a1a1a;
+            --text-dim: #57534e;
+            --font-primary: 'Noto Serif', serif;
+            --border-val: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="modern"] {
+            --bg-deep: #050505;
+            --bg-sidebar: #000000;
+            --bg-card: rgba(15, 15, 15, 0.7);
+            --accent: #c084fc;
+            --text-main: #fafafa;
+            --text-dim: #a1a1aa;
+            --border-val: rgba(255, 255, 255, 0.1);
         }
 
         body {
             background-color: var(--bg-deep);
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-primary);
             overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .mono { font-family: 'JetBrains Mono', monospace; }
+        
         .glass {
-            background: rgba(13, 13, 15, 0.8);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-val);
         }
 
-        .research-node {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .input-dark {
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-val);
+            border-radius: 6px;
+            transition: all 0.2s;
         }
 
-        .research-node:hover {
+        .input-dark:focus {
             border-color: var(--accent);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+            outline: none;
+            box-shadow: 0 0 0 1px var(--accent);
         }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .tab-active {
+            border-bottom: 2px solid var(--text-main);
+            color: var(--text-main);
+        }
+
+        .btn-outline {
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            background: rgba(var(--accent-rgb), 0.1);
         }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 10px; opacity: 0.3; }
 
-        @keyframes pulse-subtle {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        .animate-pulse-subtle { animation: pulse-subtle 3s infinite; }
-
+        @keyframes modalFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .modal-enter { animation: modalFade 0.2s ease-out; }
-        @keyframes modalFade { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .topic-item.active {
+            background: rgba(0, 209, 255, 0.08);
+            border-left: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--text-main) 0%, var(--text-dim) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
-<body class="h-screen flex flex-col">
+<body class="h-screen flex flex-col" data-theme="dark">
 
-    <!-- API & Source Modals (Hidden by Default) -->
-    <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="glass w-full max-w-md rounded-2xl p-6 modal-enter">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="key" class="w-5 h-5 text-indigo-400"></i> API Vault</h2>
-                <button onclick="toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- API Config Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="glass w-full max-w-xl rounded-xl p-8 modal-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold">API Configuration</h2>
+                <button onclick="toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <div class="space-y-4">
+            
+            <section class="mb-8">
+                <div class="flex justify-between items-end mb-2">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trusted Sources</label>
+                    <span class="text-[9px] text-slate-500 uppercase tracking-tighter italic">Promoted to Primary Tier</span>
+                </div>
+                <div class="flex gap-2">
+                    <input id="newSource" type="text" placeholder="e.g. epw.in or data.worldbank.org" class="flex-1 input-dark p-2.5 text-sm">
+                    <button onclick="addSource()" class="btn-outline px-4 py-2 rounded font-mono text-xs">+ Add</button>
+                </div>
+                <div id="sourceList" class="mt-3 flex flex-wrap gap-2"></div>
+            </section>
+
+            <hr class="border-white/5 mb-8">
+
+            <div class="flex gap-6 border-b border-white/5 mb-6 text-sm text-slate-500 font-medium">
+                <button onclick="switchTab('Claude')" class="provider-tab pb-2 px-1" id="tab-Claude">Claude</button>
+                <button onclick="switchTab('OpenAI')" class="provider-tab pb-2 px-1" id="tab-OpenAI">OpenAI</button>
+                <button onclick="switchTab('Gemini')" class="provider-tab pb-2 px-1" id="tab-Gemini">Gemini</button>
+                <button onclick="switchTab('Custom')" class="provider-tab pb-2 px-1" id="tab-Custom">Custom</button>
+            </div>
+
+            <div class="space-y-6">
+                <div id="customEndpointGroup" class="hidden">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Base URL</label>
+                    <input id="configUrl" type="text" class="w-full input-dark p-2.5 text-xs mono">
+                </div>
                 <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Add New Key</label>
-                    <div class="flex gap-2">
-                        <input id="newApiKey" type="password" placeholder="sk-..." class="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                        <button onclick="addApiKey()" class="bg-indigo-600 px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-500 transition-colors">ADD</button>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">API Key</label>
+                    <div class="relative">
+                        <input id="configKey" type="password" class="w-full input-dark p-2.5 text-xs mono pr-10" placeholder="••••••••••••••••">
+                        <button onclick="toggleKeyVisibility()" class="absolute right-3 top-2.5 text-slate-500"><i data-lucide="eye" class="w-4 h-4"></i></button>
                     </div>
                 </div>
-                <div id="keyList" class="space-y-2 max-h-48 overflow-y-auto pr-2">
-                    <!-- Keys injected here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="sourceModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="glass w-full max-w-lg rounded-2xl p-6 modal-enter">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5 text-emerald-400"></i> Authoritative Sources</h2>
-                <button onclick="toggleModal('sourceModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="space-y-4">
                 <div>
-                    <textarea id="newSource" placeholder="Add a URL or key document excerpt to the ground-truth library..." class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 h-24 resize-none"></textarea>
-                    <button onclick="addSource()" class="w-full mt-2 bg-emerald-600 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">ENROLL SOURCE</button>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Model</label>
+                    <select id="configModel" class="w-full input-dark p-2.5 text-xs mono appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1rem]"></select>
                 </div>
-                <div id="sourceList" class="space-y-2 max-h-60 overflow-y-auto pr-2">
-                    <!-- Sources injected here -->
+                <div class="flex items-center justify-between">
+                    <button onclick="fetchModels()" class="btn-outline px-4 py-2 rounded text-xs flex items-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Fetch models
+                    </button>
+                    <div class="text-xs text-slate-500">
+                        Get key at <a href="#" id="providerUrl" target="_blank" class="text-accent underline">aistudio.google.com</a>
+                    </div>
                 </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-white/5">
+                <button onclick="toggleModal('settingsModal')" class="px-6 py-2.5 rounded text-sm font-medium text-slate-400 hover:text-white transition-colors">Cancel</button>
+                <button onclick="saveProvider()" class="px-8 py-2.5 rounded text-sm font-medium bg-slate-100 text-slate-900 hover:bg-white transition-all">Save Provider</button>
+            </div>
+
+            <div class="mt-10">
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Saved Providers</h3>
+                <div id="providerList" class="space-y-3"></div>
             </div>
         </div>
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-12 right-6 z-[110] hidden glass px-4 py-3 rounded-xl border-l-4 border-indigo-500 shadow-2xl transition-all translate-y-10">
+    <div id="toast" class="fixed bottom-12 right-6 z-[110] hidden glass px-4 py-3 rounded-xl border-l-4 border-accent shadow-2xl transition-all translate-y-10">
         <p id="toastMessage" class="text-xs font-medium"></p>
     </div>
 
     <!-- Top Navigation -->
     <nav class="h-14 border-b border-white/5 flex items-center justify-between px-6 glass shrink-0 z-50">
         <div class="flex items-center gap-3">
-            <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center font-bold text-sm text-white shadow-lg shadow-indigo-500/20">R</div>
-            <span class="font-semibold tracking-tight">MyResAssist <span class="text-[10px] text-indigo-400 font-mono ml-1 opacity-70">LAB_V2</span></span>
+            <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center font-bold text-sm text-white shadow-lg">R</div>
+            <span class="font-semibold tracking-tight">MyResAssist <span class="text-[10px] text-accent font-mono ml-1 opacity-70 italic uppercase tracking-tighter">Lab</span></span>
         </div>
         
         <div class="flex items-center gap-4">
-            <button onclick="toggleModal('sourceModal')" class="flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-emerald-500/5">
-                <i data-lucide="library" class="w-4 h-4"></i>
-                <span id="sourceCount">0 Sources</span>
-            </button>
-            <div class="h-6 w-px bg-white/10"></div>
-            <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-indigo-400 transition-colors p-2 rounded-lg hover:bg-white/5">
+            <!-- Theme Switcher -->
+            <div class="flex items-center bg-black/10 rounded-lg p-1 border border-white/5">
+                <button onclick="setTheme('dark')" title="Dark Mode" class="p-1.5 rounded hover:bg-white/5 text-slate-400 theme-btn" id="tbtn-dark"><i data-lucide="moon" class="w-3.5 h-3.5"></i></button>
+                <button onclick="setTheme('light')" title="Light Mode" class="p-1.5 rounded hover:bg-white/5 text-slate-400 theme-btn" id="tbtn-light"><i data-lucide="sun" class="w-3.5 h-3.5"></i></button>
+                <button onclick="setTheme('academic')" title="Academic Mode" class="p-1.5 rounded hover:bg-white/5 text-slate-400 theme-btn" id="tbtn-academic"><i data-lucide="book" class="w-3.5 h-3.5"></i></button>
+                <button onclick="setTheme('modern')" title="Modern Mode" class="p-1.5 rounded hover:bg-white/5 text-slate-400 theme-btn" id="tbtn-modern"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i></button>
+            </div>
+
+            <div id="activeProviderTag" class="text-[10px] mono text-slate-500 flex items-center gap-2 hidden md:flex"></div>
+            <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-accent transition-colors p-2 rounded-lg hover:bg-white/5">
                 <i data-lucide="settings" class="w-4 h-4"></i>
             </button>
         </div>
@@ -131,361 +217,347 @@
     <main class="flex-1 flex overflow-hidden">
         
         <!-- Left Sidebar -->
-        <aside class="w-80 border-r border-white/5 flex flex-col bg-black/20 shrink-0">
-            <div class="p-5 flex-1 overflow-y-auto space-y-6">
-                
-                <!-- Research Phase Stepper -->
+        <aside class="w-80 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0 sidebar-bg">
+            <div class="p-5 border-b border-white/5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Research Topics</h3>
+                    <button onclick="createNewTopic()" class="p-1 hover:text-accent transition-colors"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                </div>
+                <div id="topicList" class="space-y-1 max-h-48 overflow-y-auto"></div>
+            </div>
+
+            <div class="flex-1 p-5 overflow-y-auto space-y-8">
                 <div>
                     <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Pipeline Status</h3>
-                    <div id="pipelineDisplay" class="space-y-1">
-                        <!-- Pipeline states injected via JS -->
-                    </div>
+                    <div id="pipelineDisplay" class="space-y-1"></div>
                 </div>
-
-                <!-- Live Logs -->
-                <div class="space-y-4">
-                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Activity Stream</h3>
-                    <div id="logStream" class="space-y-2 max-h-64 overflow-y-auto text-[10px] mono text-slate-500">
-                        <div class="flex gap-2"><span>[SYSTEM]</span> <span>Ready for input...</span></div>
-                    </div>
+                <div>
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Activity Stream</h3>
+                    <div id="logStream" class="space-y-2 text-[10px] mono text-slate-500"></div>
                 </div>
             </div>
 
-            <!-- Input Console -->
             <div class="p-4 border-t border-white/5 bg-black/40">
                 <div class="relative group">
-                    <textarea id="mainInput" placeholder="Define research vector (e.g. Impact of LLMs on Legal Discovery)..." 
-                        class="w-full bg-white/5 border border-white/10 rounded-xl p-3 pr-10 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none h-24 transition-all"></textarea>
-                    <button id="runBtn" onclick="initiateResearch()" class="absolute bottom-3 right-3 p-1.5 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <textarea id="mainInput" placeholder="Enter research vector..." 
+                        class="w-full bg-white/5 border border-white/10 rounded-xl p-3 pr-10 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent resize-none h-24 transition-all"></textarea>
+                    <button id="runBtn" onclick="initiateResearch()" class="absolute bottom-3 right-3 p-1.5 bg-accent rounded-lg text-black hover:opacity-90 transition-all shadow-lg shadow-accent/20 disabled:opacity-50">
                         <i data-lucide="zap" class="w-4 h-4"></i>
                     </button>
                 </div>
-                <p class="text-[9px] text-slate-600 mt-2 text-center font-mono">CMD + ENTER TO EXECUTE</p>
+                <p class="text-[9px] text-slate-600 mt-2 text-center font-mono uppercase">Cmd + Enter to Research</p>
             </div>
         </aside>
 
         <!-- Right Canvas -->
-        <section class="flex-1 flex flex-col bg-[#050505] relative overflow-hidden">
-            <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-indigo-600/5 blur-[140px] rounded-full pointer-events-none"></div>
+        <section class="flex-1 flex flex-col relative overflow-hidden">
+            <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-accent/5 blur-[140px] rounded-full pointer-events-none"></div>
 
-            <!-- Toolbar -->
             <div class="h-12 flex items-center justify-between px-8 border-b border-white/5 shrink-0 z-10 glass">
                 <div class="flex items-center gap-4 h-full">
-                    <button class="text-xs font-semibold text-white border-b-2 border-indigo-500 h-full px-2">Knowledge Synthesis</button>
-                    <button class="text-xs font-semibold text-slate-500 hover:text-slate-300 h-full px-2 transition-colors">Pattern Graph</button>
+                    <button class="text-xs font-semibold h-full px-2 border-b-2 border-accent">Synthesis Canvas</button>
+                    <button onclick="downloadActiveTopic()" class="text-xs font-semibold text-slate-500 hover:text-accent h-full px-2 transition-colors">Export .md</button>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="clearCanvas()" class="p-1.5 text-slate-500 hover:text-red-400 transition-colors" title="Clear Canvas"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    <button onclick="downloadResearch()" class="p-1.5 text-slate-500 hover:text-white transition-colors"><i data-lucide="download" class="w-4 h-4"></i></button>
+                    <button onclick="clearCanvas()" class="p-1.5 text-slate-500 hover:text-red-400 transition-colors" title="Clear this topic"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
             </div>
 
-            <!-- Research Output -->
             <div id="canvas" class="flex-1 p-8 lg:p-16 overflow-y-auto z-10">
-                <div id="briefContent" class="max-w-4xl mx-auto space-y-12 pb-20">
-                    <div class="text-center py-20 opacity-20">
-                        <i data-lucide="ghost" class="w-12 h-12 mx-auto mb-4"></i>
-                        <p class="text-sm mono">Canvas is empty. Initiate a vector to begin synthesis.</p>
-                    </div>
-                </div>
+                <div id="briefContent" class="max-w-4xl mx-auto space-y-12 pb-20"></div>
             </div>
         </section>
     </main>
 
     <script>
-        // State Management
-        let state = {
-            keys: JSON.parse(localStorage.getItem('myres_keys') || '[]'),
-            activeKeyIndex: parseInt(localStorage.getItem('myres_active_key') || '0'),
-            sources: JSON.parse(localStorage.getItem('myres_sources') || '[]'),
-            phase: 'idle', // idle, scan, research, validate, complete
-            logs: [],
-            brief: []
+        const PROVIDER_DEFAULTS = {
+            Gemini: { url: 'https://generativelanguage.googleapis.com/v1beta/models/', portal: 'aistudio.google.com', link: 'https://aistudio.google.com', models: ['gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-pro'] },
+            OpenAI: { url: 'https://api.openai.com/v1/chat/completions', portal: 'platform.openai.com', link: 'https://platform.openai.com', models: ['gpt-4o', 'gpt-4o-mini', 'o1-preview'] },
+            Claude: { url: 'https://api.anthropic.com/v1/messages', portal: 'console.anthropic.com', link: 'https://console.anthropic.com', models: ['claude-3-5-sonnet-latest', 'claude-3-opus-latest'] },
+            Custom: { url: '', portal: 'OpenRouter / Groq / Local', link: 'https://openrouter.ai', models: [] }
         };
 
-        // Initialize Icons
+        let state = {
+            providers: JSON.parse(localStorage.getItem('myres_providers') || '[]'),
+            activeProviderId: localStorage.getItem('myres_active_id') || null,
+            sources: JSON.parse(localStorage.getItem('myres_trusted_sources') || '[]'),
+            topics: JSON.parse(localStorage.getItem('myres_topics') || '[]'),
+            activeTopicId: localStorage.getItem('myres_active_topic') || null,
+            theme: localStorage.getItem('myres_theme') || 'dark',
+            currentTab: 'Gemini',
+            phase: 'idle'
+        };
+
         function refreshIcons() { lucide.createIcons(); }
-        refreshIcons();
 
-        // Modal Logic
+        // --- THEME ENGINE ---
+        function setTheme(themeName) {
+            state.theme = themeName;
+            document.body.setAttribute('data-theme', themeName);
+            localStorage.setItem('myres_theme', themeName);
+            
+            // UI Feedback
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('bg-white/10', 'text-accent'));
+            const activeBtn = document.getElementById(`tbtn-${themeName}`);
+            if (activeBtn) activeBtn.classList.add('bg-white/10', 'text-accent');
+            
+            showToast(`${themeName.charAt(0).toUpperCase() + themeName.slice(1)} theme applied.`);
+        }
+
+        // --- TOPIC MANAGEMENT ---
+        function createNewTopic() {
+            const title = prompt("Enter Research Topic Title:", "New Discovery");
+            if (!title) return;
+            const newT = { id: Date.now(), title, brief: null, validation: null, logs: [], date: new Date().toISOString() };
+            state.topics.unshift(newT);
+            state.activeTopicId = newT.id;
+            saveState(); renderTopics(); loadActiveTopic();
+            showToast("New topic initialized.");
+        }
+
+        function switchTopic(id) {
+            state.activeTopicId = id;
+            saveState(); renderTopics(); loadActiveTopic();
+        }
+
+        function deleteTopic(id) {
+            if (!confirm("Are you sure? This research will be lost.")) return;
+            state.topics = state.topics.filter(t => t.id !== id);
+            if (state.activeTopicId == id) state.activeTopicId = state.topics[0]?.id || null;
+            saveState(); renderTopics(); loadActiveTopic();
+        }
+
+        function renderTopics() {
+            const list = document.getElementById('topicList');
+            list.innerHTML = state.topics.map(t => `
+                <div onclick="switchTopic(${t.id})" class="topic-item group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all hover:bg-white/5 text-xs ${state.activeTopicId == t.id ? 'active font-bold' : 'text-slate-400'}">
+                    <span class="truncate">${t.title}</span>
+                    <button onclick="event.stopPropagation(); deleteTopic(${t.id})" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity">
+                        <i data-lucide="x" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            `).join('') || '<p class="text-[9px] text-slate-600 text-center py-2 italic">Create a topic to begin.</p>';
+            refreshIcons();
+        }
+
+        function loadActiveTopic() {
+            const t = state.topics.find(top => top.id == state.activeTopicId);
+            const canvas = document.getElementById('briefContent');
+            const stream = document.getElementById('logStream');
+            stream.innerHTML = '';
+            
+            if (t) {
+                if (t.brief) renderCanvas(t.title, t.brief, t.validation);
+                else canvas.innerHTML = `<div class="text-center py-20 opacity-20 text-sm mono">Awaiting synthesis for: ${t.title}</div>`;
+                t.logs.forEach(l => addLog(l.type, l.msg, false));
+            } else {
+                canvas.innerHTML = '<div class="text-center py-20 opacity-20 text-sm mono">Select or create a topic to begin.</div>';
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
         function toggleModal(id) {
-            const m = document.getElementById(id);
-            m.classList.toggle('hidden');
-            if (id === 'settingsModal') renderKeys();
-            if (id === 'sourceModal') renderSources();
-        }
-
-        // API Key Management
-        function addApiKey() {
-            const input = document.getElementById('newApiKey');
-            const key = input.value.trim();
-            if (key) {
-                state.keys.push({ key: key, id: Date.now() });
-                input.value = '';
-                saveState();
-                renderKeys();
-                showToast("API Key added to vault.");
-            }
-        }
-
-        function deleteKey(index) {
-            state.keys.splice(index, 1);
-            saveState();
-            renderKeys();
-        }
-
-        function selectKey(index) {
-            state.activeKeyIndex = index;
-            saveState();
-            renderKeys();
-            showToast("Primary key updated.");
-        }
-
-        function renderKeys() {
-            const list = document.getElementById('keyList');
-            list.innerHTML = state.keys.map((k, i) => `
-                <div class="flex items-center gap-3 p-3 rounded-xl border ${state.activeKeyIndex === i ? 'border-indigo-500/50 bg-indigo-500/10' : 'border-white/5 bg-white/5'}">
-                    <div class="flex-1 text-xs mono truncate font-medium ${state.activeKeyIndex === i ? 'text-white' : 'text-slate-500'}">
-                        ${k.key.substring(0, 12)}••••••••
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="selectKey(${i})" class="${state.activeKeyIndex === i ? 'text-indigo-400' : 'text-slate-600'} hover:text-white"><i data-lucide="check-circle" class="w-4 h-4"></i></button>
-                        <button onclick="deleteKey(${i})" class="text-slate-600 hover:text-red-400"><i data-lucide="trash" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-            `).join('') || '<p class="text-center text-xs text-slate-600 py-4">No keys configured.</p>';
-            refreshIcons();
-        }
-
-        // Source Management
-        function addSource() {
-            const input = document.getElementById('newSource');
-            const content = input.value.trim();
-            if (content) {
-                state.sources.push({ content: content, id: Date.now() });
-                input.value = '';
-                saveState();
+            document.getElementById(id).classList.toggle('hidden');
+            if (id === 'settingsModal') {
+                switchTab(state.currentTab);
+                renderProviders();
                 renderSources();
-                updateUI();
-                showToast("Source enrolled successfully.");
             }
         }
 
-        function deleteSource(index) {
-            state.sources.splice(index, 1);
-            saveState();
-            renderSources();
-            updateUI();
+        function switchTab(tab) {
+            state.currentTab = tab;
+            document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('tab-active'));
+            document.getElementById(`tab-${tab}`).classList.add('tab-active');
+            const def = PROVIDER_DEFAULTS[tab];
+            document.getElementById('customEndpointGroup').style.display = tab === 'Custom' ? 'block' : 'none';
+            document.getElementById('configUrl').value = def.url;
+            const modelSelect = document.getElementById('configModel');
+            modelSelect.innerHTML = def.models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option value="">Manual Entry</option>';
         }
 
-        function renderSources() {
-            const list = document.getElementById('sourceList');
-            list.innerHTML = state.sources.map((s, i) => `
-                <div class="p-3 rounded-xl border border-white/5 bg-white/5 group relative">
-                    <p class="text-[11px] text-slate-400 leading-relaxed line-clamp-2">${s.content}</p>
-                    <button onclick="deleteSource(${i})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 p-1 bg-black/40 rounded transition-opacity"><i data-lucide="x" class="w-3 h-3"></i></button>
-                </div>
-            `).join('') || '<p class="text-center text-xs text-slate-600 py-4">No authoritative sources enrolled.</p>';
-            refreshIcons();
-        }
-
-        // Core UI Sync
         function saveState() {
-            localStorage.setItem('myres_keys', JSON.stringify(state.keys));
-            localStorage.setItem('myres_active_key', state.activeKeyIndex.toString());
-            localStorage.setItem('myres_sources', JSON.stringify(state.sources));
+            localStorage.setItem('myres_providers', JSON.stringify(state.providers));
+            localStorage.setItem('myres_active_id', state.activeProviderId);
+            localStorage.setItem('myres_trusted_sources', JSON.stringify(state.sources));
+            localStorage.setItem('myres_topics', JSON.stringify(state.topics));
+            localStorage.setItem('myres_active_topic', state.activeTopicId);
         }
 
         function updateUI() {
-            document.getElementById('sourceCount').innerText = `${state.sources.length} Sources`;
-            
-            const pipeline = document.getElementById('pipelineDisplay');
-            const steps = [
-                { id: 'scan', name: 'Quick Scan', icon: 'zap' },
-                { id: 'research', name: 'Deep Research', icon: 'cpu' },
-                { id: 'validate', name: 'Claim Validation', icon: 'shield-check' }
-            ];
+            const active = state.providers.find(p => p.id == state.activeProviderId);
+            const tag = document.getElementById('activeProviderTag');
+            tag.innerHTML = active ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span> ${active.name}` : '<span class="text-red-500 font-bold uppercase text-[9px]">Offline</span>';
 
-            pipeline.innerHTML = steps.map(s => `
-                <div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400' : 'text-slate-600'}">
-                    <i data-lucide="${s.icon}" class="w-4 h-4"></i>
-                    <span class="text-xs font-semibold">${s.name}</span>
-                    ${state.phase === s.id ? '<span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>' : ''}
-                </div>
-            `).join('');
+            const pipeline = document.getElementById('pipelineDisplay');
+            const steps = [{ id: 'scan', name: 'Quick Scan', icon: 'zap' }, { id: 'research', name: 'Deep Research', icon: 'cpu' }, { id: 'validate', name: 'Claim Validation', icon: 'shield-check' }];
+            pipeline.innerHTML = steps.map(s => `<div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-semibold">${s.name}</span></div>`).join('');
             refreshIcons();
         }
 
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            const tm = document.getElementById('toastMessage');
-            tm.innerText = msg;
-            t.classList.remove('hidden');
-            setTimeout(() => t.classList.remove('translate-y-10'), 10);
-            setTimeout(() => {
-                t.classList.add('translate-y-10');
-                setTimeout(() => t.classList.add('hidden'), 300);
-            }, 3000);
-        }
-
-        function addLog(type, msg) {
+        function addLog(type, msg, save = true) {
             const stream = document.getElementById('logStream');
-            const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const logItem = document.createElement('div');
-            logItem.className = 'flex gap-2 animate-in slide-in-from-left-2 duration-300';
-            logItem.innerHTML = `<span class="opacity-40">[${time}]</span> <span class="uppercase ${type === 'AI' ? 'text-indigo-400' : 'text-slate-500'} font-bold">[${type}]</span> <span>${msg}</span>`;
+            logItem.className = 'flex gap-2 mb-1';
+            logItem.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : 'text-slate-500'} font-bold">[${type}]</span> <span>${msg}</span>`;
             stream.prepend(logItem);
-        }
-
-        // Research Engine Logic
-        async function callGemini(prompt, system) {
-            const apiKeyObj = state.keys[state.activeKeyIndex];
-            if (!apiKeyObj) throw new Error("No API key selected.");
             
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKeyObj.key}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: system }] }
-                })
-            });
-
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "API Request Failed");
+            if (save && state.activeTopicId) {
+                const t = state.topics.find(top => top.id == state.activeTopicId);
+                if (t) { t.logs.push({ type, msg }); saveState(); }
             }
-
-            const data = await response.json();
-            return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
         }
 
         async function initiateResearch() {
-            const input = document.getElementById('mainInput');
-            const query = input.value.trim();
+            const query = document.getElementById('mainInput').value.trim();
             if (!query) return;
 
-            if (state.keys.length === 0) {
-                showToast("Please add an API key first.");
-                toggleModal('settingsModal');
-                return;
+            if (!state.activeTopicId) {
+                createNewTopic();
+                if (!state.activeTopicId) return;
             }
 
-            const btn = document.getElementById('runBtn');
-            btn.disabled = true;
-            input.value = '';
-            
+            document.getElementById('runBtn').disabled = true;
             try {
-                // START PHASE: SCAN
-                state.phase = 'scan';
-                updateUI();
-                addLog('SYSTEM', `Initializing research vector for: "${query.substring(0, 30)}..."`);
+                state.phase = 'scan'; updateUI();
+                addLog('SYSTEM', `Vector identified. Starting Quick Scan...`);
+                const scan = await callAI(query, "Triage Agent. Identity 3 distinct patterns/themes. Brief bullet points.");
                 
-                const scanSystem = "You are a research triage agent. Perform a Quick Scan. Identity 3-5 key patterns or themes related to the query. Keep it technical and brief.";
-                const scanResult = await callGemini(query, scanSystem);
-                addLog('AI', "Prompt A (Quick Scan) Complete.");
-                
-                // START PHASE: RESEARCH
-                state.phase = 'research';
-                updateUI();
-                addLog('SYSTEM', "Advancing to Deep Research phase...");
-                
-                const researchSystem = `You are a Senior Researcher. Using the following scan results: [${scanResult}], generate a detailed technical synthesis. Focus on non-obvious patterns. Use Markdown.`;
-                const researchResult = await callGemini(`Write a synthesis report on: ${query}`, researchSystem);
-                addLog('AI', "Prompt B (Deep Research) Complete.");
+                state.phase = 'research'; updateUI();
+                addLog('AI', "Triage complete. Expanding synthesis...");
+                const report = await callAI(`Query: ${query}. Insights: ${scan}`, "Senior Researcher. Detailed technical synthesis in Markdown. Focus on emergent patterns.");
 
-                // START PHASE: VALIDATE
-                state.phase = 'validate';
-                updateUI();
-                const sourceText = state.sources.map(s => s.content).join("\n---\n");
-                addLog('SYSTEM', `Validating against ${state.sources.length} sources...`);
-                
-                const validateSystem = `You are a Fact Checker. Check the following report against these authoritative sources: [${sourceText}]. Identify any conflicts or high-confidence confirmations.`;
-                const validateResult = await callGemini(`Report: ${researchResult}`, validateSystem);
-                addLog('AI', "Prompt C (Validation) Complete.");
+                state.phase = 'validate'; updateUI();
+                const sources = state.sources.join(', ');
+                addLog('SYSTEM', `Verifying against grounding sources...`);
+                const valid = await callAI(`Report: ${report}. Grounding: ${sources}`, "Fact Checker. Identify potential hallucinations or conflicts.");
 
-                // RENDER TO CANVAS
-                renderCanvas(query, researchResult, validateResult);
+                const t = state.topics.find(top => top.id == state.activeTopicId);
+                if (t) {
+                    t.brief = report;
+                    t.validation = valid;
+                    saveState();
+                    renderCanvas(t.title, report, valid);
+                }
                 
-                state.phase = 'idle';
-                updateUI();
-                showToast("Research synthesis finalized.");
+                state.phase = 'idle'; updateUI();
+                showToast("Synthesis complete.");
             } catch (err) {
                 addLog('ERROR', err.message);
-                showToast("Critical Error: See Logs");
-                state.phase = 'idle';
-                updateUI();
+                showToast("Kernel Interruption.");
+                state.phase = 'idle'; updateUI();
             } finally {
-                btn.disabled = false;
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('mainInput').value = '';
             }
         }
 
-        function renderCanvas(query, content, validation) {
-            const brief = document.getElementById('briefContent');
-            const html = `
-                <div class="animate-in fade-in zoom-in-95 duration-700">
-                    <header class="mb-12">
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-tighter">SYNTHESIS GENERATED</span>
-                            <span class="text-slate-600 text-xs tracking-wide font-mono">${new Date().toLocaleDateString()}</span>
-                        </div>
-                        <h1 class="text-4xl font-bold text-white mb-6 leading-tight gradient-text">${query}</h1>
-                    </header>
+        async function callAI(prompt, system) {
+            const p = state.providers.find(pr => pr.id == state.activeProviderId);
+            if (!p) throw new Error("API Provider required.");
+            
+            const isGemini = p.name === 'Gemini' || p.url.includes('generativelanguage');
+            let url = isGemini ? `${p.url}${p.model}:generateContent?key=${p.key}` : p.url;
+            let body = isGemini ? {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: system }] }
+            } : {
+                model: p.model,
+                messages: [{ role: "system", content: system }, { role: "user", content: prompt }]
+            };
 
-                    <div class="prose prose-invert max-w-none space-y-8">
-                        <div class="p-8 rounded-3xl glass relative overflow-hidden group border-indigo-500/10">
-                            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-50"></div>
-                            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i> Research Brief
-                            </h2>
-                            <div class="text-slate-300 text-sm leading-relaxed relative z-10 whitespace-pre-wrap">
-                                ${content}
-                            </div>
-                        </div>
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${p.key}` },
+                body: JSON.stringify(body)
+            });
 
-                        <div class="p-6 rounded-2xl border border-emerald-500/10 bg-emerald-500/5">
-                            <h3 class="text-emerald-400 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-widest">
-                                <i data-lucide="shield-check" class="w-4 h-4"></i> Source Validation Results
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error?.message || "LLM Request Failed");
+            return isGemini ? data.candidates?.[0]?.content?.parts?.[0]?.text : data.choices?.[0]?.message?.content;
+        }
+
+        function renderCanvas(title, report, validation) {
+            document.getElementById('briefContent').innerHTML = `
+                <div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <h1 class="text-4xl font-bold mb-8 gradient-text">${title}</h1>
+                    <div class="space-y-12">
+                        <div class="p-8 rounded-xl glass border-accent/10">
+                            <h2 class="text-xl font-bold text-accent mb-6 flex items-center gap-2"><i data-lucide="file-text"></i> Synthesis Output</h2>
+                            <div class="text-sm leading-relaxed whitespace-pre-wrap">${report}</div>
+                        </div>
+                        <div class="p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                            <h3 class="text-emerald-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Validation Layer
                             </h3>
-                            <div class="text-xs text-slate-400 leading-relaxed italic">
-                                ${validation}
-                            </div>
+                            <div class="text-[11px] italic leading-relaxed opacity-80">${validation}</div>
                         </div>
                     </div>
                 </div>
             `;
-            brief.innerHTML = html;
             refreshIcons();
+        }
+
+        function saveProvider() {
+            const p = { id: Date.now(), name: state.currentTab, url: document.getElementById('configUrl').value, key: document.getElementById('configKey').value, model: document.getElementById('configModel').value };
+            state.providers.push(p); if (!state.activeProviderId) state.activeProviderId = p.id;
+            saveState(); renderProviders(); showToast("Configuration updated.");
+        }
+        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
+        function deleteProvider(id) { state.providers = state.providers.filter(p => p.id != id); if (state.activeProviderId == id) state.activeProviderId = null; saveState(); renderProviders(); updateUI(); }
+        
+        function renderProviders() {
+            const l = document.getElementById('providerList');
+            l.innerHTML = state.providers.map(p => `
+                <div class="flex items-center gap-4 p-4 rounded border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
+                    <div class="flex-1 text-xs">
+                        <div class="font-bold">${p.name}</div>
+                        <div class="mono opacity-50 text-[10px]">${p.model}</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="setActiveProvider(${p.id})" class="px-2 py-1 rounded border border-white/10 text-[9px] uppercase font-bold hover:bg-white/5 ${state.activeProviderId == p.id ? 'text-accent border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
+                        <button onclick="deleteProvider(${p.id})" class="px-2 py-1 rounded text-red-500 hover:bg-red-500/10 font-bold">×</button>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-[9px] text-slate-600 text-center">No providers saved.</p>';
+            refreshIcons();
+        }
+
+        function addSource() {
+            const v = document.getElementById('newSource').value.trim();
+            if (v && !state.sources.includes(v)) { state.sources.push(v); document.getElementById('newSource').value = ''; saveState(); renderSources(); }
+        }
+        function removeSource(s) { state.sources = state.sources.filter(src => src != s); saveState(); renderSources(); }
+        function renderSources() {
+            document.getElementById('sourceList').innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] mono flex items-center gap-2"><span>${s}</span><button onclick="removeSource('${s}')" class="hover:text-red-400">×</button></div>`).join('');
+        }
+
+        function downloadActiveTopic() {
+            const t = state.topics.find(top => top.id == state.activeTopicId);
+            if (!t || !t.brief) return showToast("Nothing to export.");
+            const blob = new Blob([`# ${t.title}\n\n${t.brief}\n\n## Validation\n${t.validation}`], { type: 'text/markdown' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${t.title.replace(/\s/g, '-')}.md`; a.click();
         }
 
         function clearCanvas() {
-            document.getElementById('briefContent').innerHTML = `
-                <div class="text-center py-20 opacity-20">
-                    <i data-lucide="ghost" class="w-12 h-12 mx-auto mb-4"></i>
-                    <p class="text-sm mono">Canvas cleared. Ready for new vector.</p>
-                </div>
-            `;
-            refreshIcons();
+            const t = state.topics.find(top => top.id == state.activeTopicId);
+            if (t) { t.brief = null; t.logs = []; saveState(); loadActiveTopic(); showToast("Research cleared."); }
         }
 
-        function downloadResearch() {
-            const content = document.getElementById('briefContent').innerText;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `research-${Date.now()}.txt`;
-            a.click();
-        }
+        function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3000); }
+        function toggleKeyVisibility() { const i = document.getElementById('configKey'); i.type = i.type === 'password' ? 'text' : 'password'; }
 
-        // Init
-        updateUI();
-        document.getElementById('mainInput').addEventListener('keydown', (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch();
-        });
-
+        // --- INIT ---
+        window.onload = () => {
+            setTheme(state.theme);
+            renderTopics();
+            loadActiveTopic();
+            updateUI();
+            addLog('SYSTEM', "Kernel online. Memory layer operational.");
+            document.getElementById('mainInput').addEventListener('keydown', (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch();
+            });
+        };
     </script>
 </body>
 </html>
