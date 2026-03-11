@@ -149,8 +149,8 @@
 
             <div class="space-y-6">
                 <div id="customEndpointGroup" class="hidden">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Base URL</label>
-                    <input id="configUrl" type="text" class="w-full input-dark p-2.5 text-xs mono">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Base URL (OpenRouter/Ollama)</label>
+                    <input id="configUrl" type="text" class="w-full input-dark p-2.5 text-xs mono" placeholder="https://openrouter.ai/api/v1">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">API Key</label>
@@ -245,7 +245,7 @@
                         <i data-lucide="zap" class="w-4 h-4"></i>
                     </button>
                 </div>
-                <p class="text-[9px] text-slate-600 mt-2 text-center font-mono uppercase">Cmd + Enter to Research</p>
+                <p class="text-[9px] text-slate-600 mt-2 text-center font-mono uppercase tracking-widest">Cmd + Enter to Research</p>
             </div>
         </aside>
 
@@ -272,9 +272,9 @@
     <script>
         const PROVIDER_DEFAULTS = {
             Gemini: { url: 'https://generativelanguage.googleapis.com/v1beta/models/', portal: 'aistudio.google.com', link: 'https://aistudio.google.com', models: ['gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-pro'] },
-            OpenAI: { url: 'https://api.openai.com/v1/chat/completions', portal: 'platform.openai.com', link: 'https://platform.openai.com', models: ['gpt-4o', 'gpt-4o-mini', 'o1-preview'] },
+            OpenAI: { url: 'https://api.openai.com/v1', portal: 'platform.openai.com', link: 'https://platform.openai.com', models: ['gpt-4o', 'gpt-4o-mini', 'o1-preview'] },
             Claude: { url: 'https://api.anthropic.com/v1/messages', portal: 'console.anthropic.com', link: 'https://console.anthropic.com', models: ['claude-3-5-sonnet-latest', 'claude-3-opus-latest'] },
-            Custom: { url: '', portal: 'OpenRouter / Groq / Local', link: 'https://openrouter.ai', models: [] }
+            Custom: { url: 'https://openrouter.ai/api/v1', portal: 'OpenRouter / Groq / Local', link: 'https://openrouter.ai', models: [] }
         };
 
         let state = {
@@ -390,12 +390,22 @@
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.error?.message || "Failed to fetch Gemini models");
                     fetchedModels = data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
-                } else if (state.currentTab === 'OpenAI') {
-                    const res = await fetch('https://api.openai.com/v1/models', {
+                } else if (state.currentTab === 'OpenAI' || state.currentTab === 'Custom') {
+                    let fetchUrl = state.currentTab === 'OpenAI' ? 'https://api.openai.com/v1/models' : endpoint;
+                    
+                    // Normalize endpoint for model fetching (ensure it ends in /models)
+                    if (state.currentTab === 'Custom') {
+                        fetchUrl = fetchUrl.replace(/\/chat\/completions$/, '');
+                        if (!fetchUrl.endsWith('/models')) {
+                            fetchUrl = fetchUrl.replace(/\/$/, '') + '/models';
+                        }
+                    }
+
+                    const res = await fetch(fetchUrl, {
                         headers: { 'Authorization': `Bearer ${key}` }
                     });
                     const data = await res.json();
-                    if (!res.ok) throw new Error(data.error?.message || "Failed to fetch OpenAI models");
+                    if (!res.ok) throw new Error(data.error?.message || "Failed to fetch models from " + fetchUrl);
                     fetchedModels = data.data.map(m => m.id);
                 } else {
                     throw new Error("Automatic fetch not supported for this provider yet.");
@@ -447,6 +457,7 @@
         function removeSource(s) { state.sources = state.sources.filter(src => src != s); saveState(); renderSources(); }
         function renderSources() {
             document.getElementById('sourceList').innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] mono flex items-center gap-2"><span>${s}</span><button onclick="removeSource('${s}')" class="hover:text-red-400">×</button></div>`).join('');
+            refreshIcons();
         }
 
         // --- CORE RESEARCH ---
@@ -484,18 +495,25 @@
             const query = document.getElementById('mainInput').value.trim();
             if (!query) return;
             if (!state.activeTopicId) { createNewTopic(); if (!state.activeTopicId) return; }
-            document.getElementById('runBtn').disabled = true;
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
             try {
+                // PHASE A: QUICK SCAN
                 state.phase = 'scan'; updateUI();
-                addLog('SYSTEM', `Vector identified. Starting Quick Scan...`);
-                const scan = await callAI(query, "Triage Agent. Identity 3 distinct patterns/themes. Brief bullet points.");
+                addLog('SYSTEM', `Initializing Structured Thinking for: ${query.substring(0, 30)}...`);
+                const scan = await callAI(query, "Triage Agent. Identify 3-5 distinct high-potential research themes. For each theme, explicitly describe its 'Semantic Potential' and relevance to the user's vector. Be brief and structured.");
+                
+                // PHASE B: DEEP RESEARCH
                 state.phase = 'research'; updateUI();
-                addLog('AI', "Triage complete. Expanding synthesis...");
-                const report = await callAI(`Query: ${query}. Insights: ${scan}`, "Senior Researcher. Detailed technical synthesis in Markdown. Focus on emergent patterns.");
+                addLog('AI', "Triage complete. Generating Multidimensional Synthesis...");
+                const report = await callAI(`User Query: ${query}. Themes Found in Scan: ${scan}`, "Senior Research Scientist. Generate a multidimensional technical synthesis. Cross-reference themes to find non-obvious patterns. Use Markdown. Focus on emergent knowledge extraction.");
+
+                // PHASE C: CLAIM VALIDATION
                 state.phase = 'validate'; updateUI();
                 const sources = state.sources.join(', ');
-                addLog('SYSTEM', `Verifying against grounding sources...`);
-                const valid = await callAI(`Report: ${report}. Grounding: ${sources}`, "Fact Checker. Identify potential hallucinations or conflicts.");
+                addLog('SYSTEM', `Fact-Check Layer: Verifying against grounding library...`);
+                const valid = await callAI(`Research Report: ${report}. Authoritative Grounding Material: ${sources}`, "Forensic Fact Checker. Compare the report against trusted sources. Flag conflicts, cite confirmations, and evaluate the overall signal-to-noise ratio. Be critical.");
+
                 const t = state.topics.find(top => top.id == state.activeTopicId);
                 if (t) { t.brief = report; t.validation = valid; saveState(); renderCanvas(t.title, report, valid); }
                 state.phase = 'idle'; updateUI();
@@ -503,7 +521,7 @@
             } catch (err) {
                 addLog('ERROR', err.message); showToast("Kernel Interruption."); state.phase = 'idle'; updateUI();
             } finally {
-                document.getElementById('runBtn').disabled = false; document.getElementById('mainInput').value = '';
+                btn.disabled = false; document.getElementById('mainInput').value = '';
             }
         }
 
@@ -511,11 +529,24 @@
             const p = state.providers.find(pr => pr.id == state.activeProviderId);
             if (!p) throw new Error("API Provider required.");
             const isGemini = p.name === 'Gemini' || p.url.includes('generativelanguage');
+            
             let url = isGemini ? `${p.url}${p.model}:generateContent?key=${p.key}` : p.url;
+            
+            // For Custom/OpenRouter, ensure we hit the chat/completions endpoint
+            if (p.name === 'Custom' || p.name === 'OpenAI') {
+                if (!url.endsWith('/chat/completions')) {
+                    url = url.replace(/\/$/, '') + '/chat/completions';
+                }
+            }
+
             let body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
-            const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${p.key}` }, body: JSON.stringify(body) });
+            
+            const headers = { 'Content-Type': 'application/json' };
+            if (!isGemini) headers['Authorization'] = `Bearer ${p.key}`;
+
+            const response = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(body) });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error?.message || "LLM Request Failed");
+            if (!response.ok) throw new Error(data.error?.message || "LLM Request Failed at " + url);
             return isGemini ? data.candidates?.[0]?.content?.parts?.[0]?.text : data.choices?.[0]?.message?.content;
         }
 
@@ -525,11 +556,11 @@
                     <h1 class="text-4xl font-bold mb-8 gradient-text">${title}</h1>
                     <div class="space-y-12">
                         <div class="p-8 rounded-xl glass border-accent/10">
-                            <h2 class="text-xl font-bold text-accent mb-6 flex items-center gap-2"><i data-lucide="file-text"></i> Synthesis Output</h2>
+                            <h2 class="text-xl font-bold text-accent mb-6 flex items-center gap-2"><i data-lucide="file-text"></i> Multidimensional Synthesis</h2>
                             <div class="text-sm leading-relaxed whitespace-pre-wrap">${report}</div>
                         </div>
                         <div class="p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
-                            <h3 class="text-emerald-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Validation Layer</h3>
+                            <h3 class="text-emerald-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Signal-to-Noise Validation</h3>
                             <div class="text-[11px] italic leading-relaxed opacity-80">${validation}</div>
                         </div>
                     </div>
@@ -559,7 +590,7 @@
             renderTopics();
             loadActiveTopic();
             updateUI();
-            addLog('SYSTEM', "Kernel online. Memory layer operational.");
+            addLog('SYSTEM', "Kernel online. Cognitive layers operational.");
             document.getElementById('mainInput').addEventListener('keydown', (e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch();
             });
