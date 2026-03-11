@@ -6,6 +6,8 @@
     <title>MyResAssist | Research Lab V4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Simple Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
         
@@ -51,37 +53,38 @@
             --border-val: rgba(255, 255, 255, 0.15);
         }
 
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            font-family: var(--font-primary);
-            overflow: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
+        body { background-color: var(--bg-deep); color: var(--text-main); font-family: var(--font-primary); overflow: hidden; transition: background-color 0.3s ease; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-val); }
         .input-dark { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-val); border-radius: 6px; transition: all 0.2s; color: inherit; }
-        
         select option { background-color: #1a1a1a !important; color: #ffffff !important; }
         [data-theme="light"] select option { background-color: #ffffff !important; color: #000000 !important; }
 
         .btn-outline { border: 1px solid var(--accent); color: var(--accent); transition: all 0.2s; }
         .btn-action { background: var(--accent); color: #000; font-weight: 700; transition: all 0.2s; }
-        
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 10px; opacity: 0.3; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
 
         .topic-item.active { background: rgba(0, 209, 255, 0.08); border-left: 3px solid var(--accent); color: var(--accent); }
         .tab-btn.active { border-bottom: 2px solid var(--accent); color: var(--accent); }
         
-        .claim-card { transition: all 0.2s ease; }
-        .claim-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+        .claim-card { transition: all 0.2s ease; border: 1px solid var(--border-val); }
+        .claim-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 4px 20px -5px rgba(0, 209, 255, 0.2); }
+
+        /* Synthesis Content Styling */
+        .synthesis-rendered h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 1.5rem; color: var(--accent); }
+        .synthesis-rendered h2 { font-size: 1.75rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-val); padding-bottom: 0.5rem; }
+        .synthesis-rendered h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--text-dim); }
+        .synthesis-rendered p { margin-bottom: 1rem; line-height: 1.7; }
+        .synthesis-rendered ul { margin-left: 1.5rem; list-style-type: square; margin-bottom: 1rem; }
+        .synthesis-rendered li { margin-bottom: 0.5rem; }
+        .synthesis-rendered hr { border: 0; border-top: 1px solid var(--border-val); margin: 2rem 0; }
 
         @keyframes ping { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
         .ping { position: relative; }
         .ping::after { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; border-radius: 50%; background: var(--accent); animation: ping 1.5s infinite; opacity: 0.4; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 10px; opacity: 0.3; }
     </style>
 </head>
 <body class="h-screen flex flex-col" data-theme="dark">
@@ -98,10 +101,10 @@
         
         <div class="flex items-center gap-4">
             <div class="flex items-center bg-black/20 rounded-lg p-1 border border-white/10">
-                <button onclick="setTheme('dark')" class="p-1.5 rounded theme-btn" id="tbtn-dark"><i data-lucide="moon" class="w-4 h-4"></i></button>
-                <button onclick="setTheme('light')" class="p-1.5 rounded theme-btn" id="tbtn-light"><i data-lucide="sun" class="w-4 h-4"></i></button>
-                <button onclick="setTheme('academic')" class="p-1.5 rounded theme-btn" id="tbtn-academic"><i data-lucide="book" class="w-4 h-4"></i></button>
-                <button onclick="setTheme('modern')" class="p-1.5 rounded theme-btn" id="tbtn-modern"><i data-lucide="sparkles" class="w-4 h-4"></i></button>
+                <button onclick="setTheme('dark')" class="p-1.5 rounded theme-btn" id="tbtn-dark" title="Dark"><i data-lucide="moon" class="w-4 h-4"></i></button>
+                <button onclick="setTheme('light')" class="p-1.5 rounded theme-btn" id="tbtn-light" title="Light"><i data-lucide="sun" class="w-4 h-4"></i></button>
+                <button onclick="setTheme('academic')" class="p-1.5 rounded theme-btn" id="tbtn-academic" title="Academic"><i data-lucide="book" class="w-4 h-4"></i></button>
+                <button onclick="setTheme('modern')" class="p-1.5 rounded theme-btn" id="tbtn-modern" title="Modern"><i data-lucide="sparkles" class="w-4 h-4"></i></button>
             </div>
             <div id="activeProviderTag" class="text-[10px] mono text-slate-400 hidden lg:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5"></div>
             <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-accent p-2 transition-colors"><i data-lucide="settings" class="w-5 h-5"></i></button>
@@ -111,25 +114,23 @@
     <!-- Config Modal -->
     <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
         <div class="glass w-full max-w-2xl rounded-xl p-8 modal-enter max-h-[95vh] overflow-y-auto border border-white/10">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-bold" id="modalTitle">API Configuration</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold" id="modalTitle">Engine Configuration</h2>
                 <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
 
-            <!-- Orchestration Toggle -->
             <div class="mb-8 p-5 bg-accent/5 rounded-2xl border border-accent/20">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-xs font-bold uppercase tracking-widest text-accent">Orchestration Protocol</h3>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-accent">Orchestration Intelligence</h3>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="multiLlmToggle" class="sr-only peer" onchange="saveState()">
                         <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
                         <span class="ml-3 text-[10px] font-bold uppercase tracking-tighter opacity-80">Parallel Mode</span>
                     </label>
                 </div>
-                <p class="text-[11px] text-slate-400">Parallel mode utilizes all 'Worker' agents for extraction. Orchestrator leads the final brief synthesis.</p>
+                <p class="text-[11px] text-slate-400">Parallel mode utilizes all 'Worker' agents for extraction. Orchestrator leads the synthesis.</p>
             </div>
 
-            <!-- Tabs -->
             <div class="flex gap-6 border-b border-white/5 mb-8 text-sm text-slate-500 font-medium">
                 <button onclick="switchTab('Claude')" class="provider-tab pb-2" id="tab-Claude">Claude</button>
                 <button onclick="switchTab('OpenAI')" class="provider-tab pb-2" id="tab-OpenAI">OpenAI</button>
@@ -141,47 +142,43 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Profile Name</label>
-                        <input id="configName" type="text" class="w-full input-dark p-2.5 text-xs font-bold" placeholder="e.g. My OpenRouter Profile">
+                        <input id="configName" type="text" class="w-full input-dark p-2.5 text-xs font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Pipeline Role</label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Role</label>
                         <select id="configRole" class="w-full input-dark p-2.5 text-xs">
-                            <option value="worker">Worker (Research)</option>
+                            <option value="worker">Worker (Researcher)</option>
                             <option value="orchestrator" selected>Orchestrator (Synthesis)</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="endpointContainer">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">API Base Endpoint</label>
-                    <input id="configUrl" type="text" class="w-full input-dark p-2.5 text-xs mono" placeholder="https://api.openai.com/v1">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">API Base URL</label>
+                    <input id="configUrl" type="text" class="w-full input-dark p-2.5 text-xs mono">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">API Secret Key</label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Secret Key</label>
                         <input id="configKey" type="password" class="w-full input-dark p-2.5 text-xs mono" placeholder="sk-...">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Active Model</label>
-                        <select id="configModel" class="w-full input-dark p-2.5 text-xs mono">
-                             <option value="" disabled selected>Select or fetch models...</option>
-                        </select>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Model</label>
+                        <select id="configModel" class="w-full input-dark p-2.5 text-xs mono"></select>
                     </div>
                 </div>
                 
-                <button id="fetchModelsBtn" onclick="fetchModels()" class="w-full btn-outline py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span id="fetchBtnText">Fetch & Verify Models</span>
-                </button>
+                <button id="fetchModelsBtn" onclick="fetchModels()" class="w-full btn-outline py-2 rounded text-xs font-bold">Fetch Provider Models</button>
             </div>
 
             <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-white/5">
-                <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="px-6 py-2 rounded text-sm text-slate-400 font-medium">Cancel</button>
-                <button onclick="saveProvider()" class="px-8 py-2 rounded text-sm bg-white text-black font-bold shadow-xl">Save & Commit</button>
+                <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="px-6 py-2 rounded text-sm text-slate-400">Cancel</button>
+                <button onclick="saveProvider()" class="px-8 py-2 rounded text-sm bg-white text-black font-bold">Save Provider</button>
             </div>
 
-            <div class="mt-10">
-                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Saved Research Profiles</h3>
+            <div class="mt-8">
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Saved Profiles</h3>
                 <div id="providerList" class="space-y-3"></div>
             </div>
         </div>
@@ -195,10 +192,10 @@
     <!-- Main Workspace -->
     <main class="flex-1 flex overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-80 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0 sidebar-bg">
+        <aside class="w-80 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0">
             <div class="p-5 border-b border-white/5">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Research Tree</h3>
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Discovery Tree</h3>
                     <button onclick="createNewTopic()" class="p-1 hover:text-accent"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
                 </div>
                 <div id="topicList" class="space-y-1 max-h-60 overflow-y-auto pr-1"></div>
@@ -219,27 +216,33 @@
                 <textarea id="mainInput" placeholder="Initialize research vector..." 
                     class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent resize-none h-24 mb-3"></textarea>
                 <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-accent/20">
-                    <i data-lucide="zap" class="w-4 h-4"></i> Run Pipeline
+                    <i data-lucide="zap" class="w-4 h-4"></i> Execute Pipeline
                 </button>
             </div>
         </aside>
 
-        <!-- Right Content Area -->
+        <!-- Analytical Center -->
         <section class="flex-1 flex flex-col relative overflow-hidden bg-[#050505]">
             <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-accent/5 blur-[140px] rounded-full pointer-events-none"></div>
 
             <div class="h-12 flex items-center px-8 border-b border-white/5 shrink-0 z-10 glass gap-8">
                 <button onclick="switchCenterTab('synthesis')" class="tab-btn active text-[10px] uppercase font-black tracking-widest h-full px-2" id="tab-synthesis">Synthesis</button>
-                <button onclick="switchCenterTab('vault')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full px-2" id="tab-vault">Claims</button>
-                <button onclick="switchCenterTab('visualizer')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full px-2" id="tab-visualizer">Signal</button>
+                <button onclick="switchCenterTab('vault')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full px-2" id="tab-vault">Claims Vault</button>
+                <button onclick="switchCenterTab('visualizer')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full px-2" id="tab-visualizer">Signal Map</button>
+                <button onclick="switchCenterTab('gaps')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full px-2" id="tab-gaps">Voids</button>
             </div>
 
             <div id="canvas" class="flex-1 p-8 lg:p-16 overflow-y-auto z-10">
-                <div id="synthesisView" class="max-w-4xl mx-auto space-y-12 pb-20"></div>
-                <div id="vaultView" class="hidden max-w-5xl mx-auto space-y-8 pb-20"><div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="claimGrid"></div></div>
-                <div id="visualizerView" class="hidden h-full flex flex-col items-center justify-center">
+                <div id="synthesisView" class="max-w-4xl mx-auto synthesis-rendered pb-20"></div>
+                <div id="vaultView" class="hidden max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20" id="claimGrid"></div>
+                <div id="visualizerView" class="hidden h-full flex flex-col items-center justify-center animate-in fade-in zoom-in-95">
                     <svg id="snrGraph" width="500" height="500" class="max-w-full h-auto"></svg>
+                    <div class="mt-12 grid grid-cols-2 gap-16 text-center">
+                        <div><div class="text-[10px] font-black text-slate-500 uppercase mb-1">Signal Confidence</div><div class="text-4xl font-black text-accent" id="statSignal">0%</div></div>
+                        <div><div class="text-[10px] font-black text-slate-500 uppercase mb-1">Agent Breadth</div><div class="text-4xl font-black text-purple-400" id="statBreadth">0%</div></div>
+                    </div>
                 </div>
+                <div id="gapsView" class="hidden max-w-3xl mx-auto space-y-4" id="gapList"></div>
             </div>
         </section>
     </main>
@@ -275,8 +278,7 @@
         }
 
         function toggleModal(id) {
-            const m = document.getElementById(id);
-            m.classList.toggle('hidden');
+            const m = document.getElementById(id); m.classList.toggle('hidden');
             if (id === 'settingsModal') { renderProviders(); switchTab(state.currentTab); }
         }
 
@@ -284,7 +286,7 @@
             state.centerTab = tab;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
-            ['synthesisView', 'vaultView', 'visualizerView'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            ['synthesisView', 'vaultView', 'visualizerView', 'gapsView'].forEach(v => document.getElementById(v).classList.add('hidden'));
             document.getElementById(tab + 'View').classList.remove('hidden');
             if (tab === 'visualizer') renderSNRGraph();
         }
@@ -294,11 +296,8 @@
             state.currentTab = t;
             document.querySelectorAll('.provider-tab').forEach(b => b.classList.remove('tab-active', 'border-accent', 'text-white'));
             document.getElementById('tab-'+t).classList.add('tab-active', 'border-accent', 'text-white');
-            
-            // Custom endpoint field visibility
             const urlInput = document.getElementById('configUrl');
             urlInput.disabled = (t !== 'Custom');
-            
             if (!state.editingProviderId) {
                 urlInput.value = PROVIDER_DEFAULTS[t].url;
                 const select = document.getElementById('configModel');
@@ -311,28 +310,21 @@
             const key = document.getElementById('configKey').value.trim();
             const url = document.getElementById('configUrl').value.trim();
             if (!key) return showToast("API Key required.");
-            const btnText = document.getElementById('fetchBtnText');
-            btnText.innerText = "Connecting...";
-
             try {
                 let fetchedModels = [];
                 if (state.currentTab === 'Gemini') {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
                     const data = await res.json();
-                    if (!res.ok) throw new Error(data.error?.message);
                     fetchedModels = data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
                 } else {
                     const fetchUrl = url.replace(/\/chat\/completions$/, '').replace(/\/$/, '') + '/models';
                     const res = await fetch(fetchUrl, { headers: { 'Authorization': `Bearer ${key}` }});
                     const data = await res.json();
-                    if (!res.ok) throw new Error("Endpoint verification failed.");
                     fetchedModels = data.data.map(m => m.id);
                 }
                 document.getElementById('configModel').innerHTML = fetchedModels.sort().map(m => `<option value="${m}">${m}</option>`).join('');
-                showToast(`Retrieved ${fetchedModels.length} models.`);
-            } catch (e) {
-                showToast("Connection error: Verify Endpoint & Key.");
-            } finally { btnText.innerText = "Fetch & Verify Models"; }
+                showToast("Retrieved models.");
+            } catch (e) { showToast("Connection error."); }
         }
 
         function saveProvider() {
@@ -341,12 +333,8 @@
             const key = document.getElementById('configKey').value.trim();
             const model = document.getElementById('configModel').value;
             const role = document.getElementById('configRole').value;
-
             if (!key || !model) return showToast("Key and Model required.");
-            if (state.currentTab === 'Custom' && !url) return showToast("Custom URL required.");
-
             const p = { id: state.editingProviderId || Date.now(), name, type: state.currentTab, url: url.replace(/\/+$/, ''), key, model, role };
-
             if (state.editingProviderId) {
                 const idx = state.providers.findIndex(x => x.id === state.editingProviderId);
                 state.providers[idx] = p;
@@ -354,14 +342,11 @@
                 state.providers.push(p);
                 if (!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id;
             }
-
             saveState(); renderProviders(); resetConfigForm(); updateUI();
-            showToast("Profile persistent.");
         }
 
         function editProvider(id) {
             const p = state.providers.find(x => x.id === id);
-            if (!p) return;
             state.editingProviderId = id;
             document.getElementById('modalTitle').innerText = "Editing: " + p.name;
             document.getElementById('configName').value = p.name;
@@ -369,8 +354,7 @@
             document.getElementById('configRole').value = p.role;
             switchTab(p.type);
             document.getElementById('configUrl').value = p.url;
-            const select = document.getElementById('configModel');
-            select.innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
+            document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
         }
 
         function renderProviders() {
@@ -382,21 +366,21 @@
                         <div class="text-xs font-bold text-white truncate">${p.name}</div>
                         <div class="text-[10px] mono opacity-40 truncate">${p.model}</div>
                     </div>
-                    <div class="flex gap-1 shrink-0">
-                        <button onclick="setActiveProvider(${p.id})" class="px-3 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : 'hover:bg-white/5'}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
+                    <div class="flex gap-1">
+                        <button onclick="setActiveProvider(${p.id})" class="px-3 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : 'hover:bg-white/5'}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
                         <button onclick="editProvider(${p.id})" class="p-2 hover:text-accent"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                         <button onclick="deleteProvider(${p.id})" class="p-2 text-red-500 hover:bg-red-500/10"><i data-lucide="trash" class="w-4 h-4"></i></button>
                     </div>
                 </div>
-            `).join('') || '<div class="text-center py-6 opacity-30 italic text-xs">Awaiting agent configuration.</div>';
+            `).join('') || '<div class="text-center py-6 opacity-30 text-xs">Configure an agent.</div>';
             refreshIcons();
         }
 
         function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
         function deleteProvider(id) { if(confirm("Discard profile?")) { state.providers = state.providers.filter(x => x.id != id); if(state.activeProviderId == id) state.activeProviderId = null; saveState(); renderProviders(); updateUI(); }}
-        function resetConfigForm() { state.editingProviderId = null; document.getElementById('modalTitle').innerText = "Engine Configuration"; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; switchTab('Gemini'); }
+        function resetConfigForm() { state.editingProviderId = null; document.getElementById('modalTitle').innerText = "Engine Configuration"; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
 
-        // --- PIPELINE CORE ---
+        // --- PIPELINE ENGINE ---
         async function initiateResearch() {
             const query = document.getElementById('mainInput').value.trim();
             if (!query) return;
@@ -409,36 +393,46 @@
 
             try {
                 state.phase = 'scan'; updateUI();
-                addLog('SYSTEM', 'Multi-Agent Triage active...');
-                const scan = await callAI_Specific(activeP, query, "Identify 5 technical themes. Evaluate 'Semantic Potential'. Be technical.");
+                addLog('SYSTEM', 'Multi-Agent Triage...');
+                const scan = await callAI_Specific(activeP, query, "Triage Agent. Identify 5 themes. Evaluate 'Semantic Potential'. Be technical.");
                 
                 state.phase = 'research'; updateUI();
                 const workers = state.providers.filter(p => p.role === 'worker');
-                let researchBlocks = [];
+                let blocks = [];
                 
                 if (state.multiLlm && workers.length > 0) {
                     addLog('SYSTEM', `Orchestrating ${workers.length} Workers...`);
-                    researchBlocks = await Promise.all(workers.map(p => callAI_Specific(p, query + "\nContext: " + scan, "Perform deep synthesis.")));
+                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, query + "\nContext: " + scan, "Expert synthesis.")));
                 } else {
-                    addLog('SYSTEM', 'Single Core synthesis active...');
-                    researchBlocks = [await callAI_Specific(activeP, query + "\nScan Data: " + scan, "Perform Multidimensional Synthesis.")];
+                    blocks = [await callAI_Specific(activeP, query + "\nScan: " + scan, "Technical synthesis.")];
                 }
 
-                addLog('AI', 'Uniting research blocks...');
-                const brief = await callAI_Specific(activeP, "Final synthesis: " + researchBlocks.join("\n\n"), "Chief Scientist. Deliver technical Markdown.");
+                addLog('AI', 'Constructing United Brief...');
+                const synthPrompt = `United Research Synthesis. Focus on emergent patterns. Deliver a professional, formatted brief.
+                    
+                    MANDATORY TECHNICAL FOOTER (Hidden from main display):
+                    ---
+                    CLAIM: [VERIFIED] | Claim Text | Evidence
+                    GAP: Research Gap Topic
+                    SNR: Confidence Value (0-100)
+                    
+                    Source Blocks: ${blocks.join("\n\n")}`;
+                
+                const finalResponse = await callAI_Specific(activeP, synthPrompt, "Senior Scientist. Professional Markdown.");
 
-                state.phase = 'validate'; updateUI();
-                addLog('SYSTEM', 'Forensic Claim Validation...');
-                const valid = await callAI_Specific(activeP, brief, "Extract claims: CLAIM: [Status] | Text | Reason. SNR: 0-100.");
-
-                const parsed = parseValidation(valid);
-                t.brief = brief; t.claims = parsed.claims; t.snr = parsed.snr; t.breadth = (researchBlocks.length * 25);
+                // Parsing Logic
+                const contentParts = finalResponse.split('---');
+                t.brief = contentParts[0].trim();
+                const dataRaw = contentParts.slice(1).join('---');
+                const parsed = parseValidation(dataRaw);
+                
+                t.claims = parsed.claims; t.gaps = parsed.gaps; t.snr = parsed.snr;
+                t.breadth = (blocks.length * 25) + 10;
                 
                 saveState(); loadActiveTopic();
-                showToast("Synthesis Achieved.");
-            } catch (err) {
-                addLog('ERROR', "Network Failure: Check active profile settings.");
-            } finally { state.phase = 'idle'; updateUI(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
+                showToast("Synthesis achieved.");
+            } catch (err) { addLog('ERROR', "Pipeline stalled: Check configuration."); }
+            finally { state.phase = 'idle'; updateUI(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
         }
 
         async function callAI_Specific(p, prompt, system) {
@@ -446,35 +440,33 @@
             let cleanUrl = p.url.replace(/\/+$/, '');
             let url = isGemini ? `${cleanUrl}/${p.model}:generateContent?key=${p.key}` : cleanUrl;
             if (!isGemini && !url.endsWith('/chat/completions')) url += '/chat/completions';
-
             const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } 
                                   : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
             const headers = { 'Content-Type': 'application/json' };
             if (!isGemini) headers['Authorization'] = `Bearer ${p.key}`;
-
             const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
             const data = await res.json();
-            if (!res.ok) throw new Error("API Refusal");
             return isGemini ? data.candidates?.[0]?.content?.parts?.[0]?.text : data.choices?.[0]?.message?.content;
         }
 
         function parseValidation(raw) {
             const lines = raw.split('\n');
-            const claims = []; let snr = 0;
+            const claims = [], gaps = []; let snr = 75;
             lines.forEach(l => {
                 if (l.trim().startsWith('CLAIM:')) {
                     const p = l.replace('CLAIM:', '').split('|');
                     claims.push({ status: p[0]?.trim() || '[?]', text: p[1]?.trim() || l, reason: p[2]?.trim() || '' });
-                } else if (l.trim().startsWith('SNR:')) snr = parseInt(l.replace('SNR:', '').replace(/\D/g, '')) || 0;
+                } else if (l.trim().startsWith('GAP:')) gaps.push(l.replace('GAP:', '').trim());
+                else if (l.trim().startsWith('SNR:')) snr = parseInt(l.replace('SNR:', '').replace(/\D/g, '')) || 75;
             });
-            return { claims, snr };
+            return { claims, gaps, snr };
         }
 
-        // --- TREE ---
+        // --- TREE & RENDER ---
         function createNewTopic() {
-            const title = prompt("Discovery Title:", "New Vector");
+            const title = prompt("Vector Title:", "New Project");
             if (!title) return;
-            const nt = { id: Date.now(), title, brief: null, claims: [], snr: 0, breadth: 0, date: new Date().toISOString(), logs: [] };
+            const nt = { id: Date.now(), title, brief: null, claims: [], gaps: [], snr: 0, breadth: 0, date: new Date().toISOString(), logs: [] };
             state.topics.unshift(nt); state.activeTopicId = nt.id;
             saveState(); renderTopics(); loadActiveTopic();
         }
@@ -483,9 +475,8 @@
             document.getElementById('topicList').innerHTML = state.topics.map(t => `
                 <div onclick="switchTopic(${t.id})" class="topic-item group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all ${state.activeTopicId == t.id ? 'active font-bold' : 'text-slate-400'}">
                     <span class="truncate">${t.title}</span>
-                    <button onclick="event.stopPropagation(); deleteTopic(${t.id})" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                 </div>
-            `).join('') || '<p class="text-[10px] text-center opacity-30 py-4">No topics.</p>';
+            `).join('') || '<p class="text-[10px] text-center opacity-30 py-4">No projects.</p>';
             refreshIcons();
         }
 
@@ -494,24 +485,31 @@
         function loadActiveTopic() {
             const t = state.topics.find(x => x.id == state.activeTopicId);
             const synthesis = document.getElementById('synthesisView');
-            const vault = document.getElementById('claimGrid');
-            const logs = document.getElementById('logStream');
-            logs.innerHTML = '';
-            
+            const vault = document.getElementById('vaultView');
+            const gaps = document.getElementById('gapsView');
             if (t) {
                 if (t.brief) {
-                    synthesis.innerHTML = `<div class="animate-in fade-in slide-in-from-bottom-4 duration-700"><h1 class="text-5xl font-black mb-12 gradient-text leading-tight tracking-tighter">${t.title}</h1><div class="prose prose-invert max-w-none text-slate-100 whitespace-pre-wrap text-lg">${t.brief}</div></div>`;
-                    vault.innerHTML = t.claims.map(c => `<div class="claim-card p-6 rounded-2xl border border-accent/20 bg-accent/5"><div class="text-[10px] font-black uppercase mb-3 text-accent">${c.status}</div><p class="text-sm font-bold text-white mb-2">${c.text}</p><p class="text-xs opacity-60 leading-relaxed">${c.reason}</p></div>`).join('') || '<p class="opacity-30">No claims extracted.</p>';
+                    synthesis.innerHTML = marked.parse(t.brief);
+                    vault.innerHTML = t.claims.map(c => `<div class="claim-card p-6 rounded-2xl border border-accent/20 bg-accent/5"><div class="text-[10px] font-black uppercase mb-3 text-accent">${c.status}</div><p class="text-sm font-bold text-white mb-2">${c.text}</p><p class="text-xs opacity-60">${c.reason}</p></div>`).join('');
+                    gaps.innerHTML = t.gaps.map(g => `<div class="p-5 rounded-2xl glass border-white/5 flex items-center justify-between group"><div class="text-sm font-bold text-white">${g}</div><button onclick="drillDown('${g}')" class="btn-outline text-[10px] px-4 py-2 rounded-lg font-black uppercase transition-all">Drill Down</button></div>`).join('');
                 } else {
-                    synthesis.innerHTML = `<div class="text-center py-40 opacity-20"><i data-lucide="compass" class="w-12 h-12 mx-auto mb-4"></i><p class="mono">Vector ready: ${t.title}</p></div>`;
-                    vault.innerHTML = '';
+                    synthesis.innerHTML = `<div class="text-center py-40 opacity-20"><i data-lucide="compass" class="w-12 h-12 mx-auto mb-4"></i><p class="mono">Initializing: ${t.title}</p></div>`;
+                    vault.innerHTML = gaps.innerHTML = '';
                 }
-                if(t.logs) t.logs.forEach(l => addLog(l.type, l.msg, false));
-                updateUI();
+                document.getElementById('statSignal').innerText = (t.snr || 0) + '%';
+                document.getElementById('statBreadth').innerText = (t.breadth || 0) + '%';
             }
+            refreshIcons();
         }
 
-        // --- UTILS ---
+        function renderSNRGraph() {
+            const svg = document.getElementById('snrGraph');
+            const t = state.topics.find(x => x.id == state.activeTopicId);
+            if (!t) return;
+            const signal = t.snr || 0, breadth = t.breadth || 0, cx = 250, cy = 250;
+            svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="200" fill="none" stroke="rgba(255,255,255,0.03)" /><circle cx="${cx}" cy="${cy}" r="150" fill="none" stroke="rgba(255,255,255,0.05)" /><line x1="50" y1="250" x2="450" y2="250" stroke="rgba(255,255,255,0.1)" /><line x1="250" y1="50" x2="250" y2="450" stroke="rgba(255,255,255,0.1)" /><circle cx="${cx + (breadth * 2 - 100)}" cy="${cy - (signal * 2 - 100)}" r="10" class="fill-accent ping" />`;
+        }
+
         function saveState() {
             state.multiLlm = document.getElementById('multiLlmToggle').checked;
             localStorage.setItem('myres_providers', JSON.stringify(state.providers));
@@ -519,13 +517,12 @@
             localStorage.setItem('myres_topics', JSON.stringify(state.topics));
             localStorage.setItem('myres_active_topic', state.activeTopicId);
             localStorage.setItem('myres_multi_llm', state.multiLlm);
-            localStorage.setItem('myres_theme', state.theme);
         }
         function updateUI() {
             const p = state.providers.find(x => x.id == state.activeProviderId);
             document.getElementById('activeProviderTag').innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent ping mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 text-[9px] font-bold">OFFLINE</span>';
-            const steps = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Analysis', icon: 'shield-check' }];
-            document.getElementById('pipelineDisplay').innerHTML = steps.map(s => `<div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-semibold">${s.name}</span></div>`).join('');
+            const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Validation', icon: 'shield-check' }];
+            document.getElementById('pipelineDisplay').innerHTML = pipeline.map(s => `<div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-semibold">${s.name}</span></div>`).join('');
             refreshIcons();
         }
         function addLog(type, msg, save=true) {
@@ -534,10 +531,8 @@
             l.className = 'flex gap-2 mb-1 animate-in slide-in-from-left-2 duration-300';
             l.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : (type === 'ERROR' ? 'text-red-500' : 'text-slate-500')} font-bold">[${type}]</span> <span>${msg}</span>`;
             s.prepend(l);
-            if(save && state.activeTopicId) { const t=state.topics.find(x=>x.id==state.activeTopicId); if(t){ if(!t.logs) t.logs=[]; t.logs.push({type, msg}); saveState(); }}
         }
         function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 3000); }
-        function renderSNRGraph() { /* Simplified visual */ }
 
         window.onload = () => {
             document.getElementById('multiLlmToggle').checked = state.multiLlm;
