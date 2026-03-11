@@ -61,12 +61,23 @@
 
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-val); }
-        .input-dark { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-val); border-radius: 6px; transition: all 0.2s; color: inherit; }
-        .input-dark:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
-
-        /* Hard fix for Select Dropdown contrast */
-        select option { background-color: #1a1a1a !important; color: #ffffff !important; }
-        [data-theme="light"] select option { background-color: #ffffff !important; color: #000000 !important; }
+        
+        /* Select Dropdown Contrast Fix */
+        .input-dark { 
+            background: rgba(0, 0, 0, 0.2); 
+            border: 1px solid var(--border-val); 
+            border-radius: 6px; 
+            transition: all 0.2s; 
+            color: inherit; 
+        }
+        select.input-dark option { 
+            background-color: #1a1a1a; 
+            color: #ffffff; 
+        }
+        [data-theme="light"] select.input-dark option { 
+            background-color: #ffffff; 
+            color: #000000; 
+        }
 
         .btn-outline { border: 1px solid var(--accent); color: var(--accent); transition: all 0.2s; }
         .btn-outline:hover { background: rgba(0, 209, 255, 0.1); }
@@ -87,17 +98,17 @@
     <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div class="glass w-full max-w-xl rounded-xl p-8 modal-enter max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-bold">API Configuration</h2>
+                <h2 class="text-xl font-bold" id="modalTitle">API Configuration</h2>
                 <button onclick="toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             
             <section class="mb-8">
                 <div class="flex justify-between items-end mb-2">
                     <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trusted Sources</label>
-                    <span class="text-[9px] text-slate-500 uppercase tracking-tighter italic">Primary Tier Grounding</span>
+                    <span class="text-[9px] text-slate-500 uppercase tracking-tighter italic">Grounding Domains</span>
                 </div>
                 <div class="flex gap-2">
-                    <input id="newSource" type="text" placeholder="e.g. epw.in or data.worldbank.org" class="flex-1 input-dark p-2.5 text-sm">
+                    <input id="newSource" type="text" placeholder="e.g. data.worldbank.org" class="flex-1 input-dark p-2.5 text-sm">
                     <button onclick="addSource()" class="btn-outline px-4 py-2 rounded font-mono text-xs">+ Add</button>
                 </div>
                 <div id="sourceList" class="mt-3 flex flex-wrap gap-2"></div>
@@ -113,36 +124,42 @@
             </div>
 
             <div class="space-y-6">
-                <div id="customEndpointGroup" class="hidden">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Base URL</label>
-                    <input id="configUrl" type="text" class="w-full input-dark p-2.5 text-xs mono" placeholder="https://api.provider.ai/v1">
-                </div>
                 <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">API Key</label>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Provider Label</label>
+                    <input id="configName" type="text" placeholder="e.g. My OpenRouter account" class="w-full input-dark p-2.5 text-xs font-semibold">
+                </div>
+
+                <div id="customEndpointGroup" class="hidden">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Base API URL</label>
+                    <input id="configUrl" type="text" class="w-full input-dark p-2.5 text-xs mono" placeholder="https://openrouter.ai/api/v1">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Secret Key</label>
                     <div class="relative">
                         <input id="configKey" type="password" class="w-full input-dark p-2.5 text-xs mono pr-10" placeholder="••••••••••••••••">
                         <button onclick="toggleKeyVisibility()" class="absolute right-3 top-2.5 text-slate-500"><i data-lucide="eye" class="w-4 h-4"></i></button>
                     </div>
                 </div>
+
                 <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Model Selection</label>
-                    <select id="configModel" class="w-full input-dark p-2.5 text-xs mono bg-slate-900 focus:bg-slate-800 text-white">
-                        <option value="" disabled selected>Select or fetch models...</option>
-                    </select>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Model</label>
+                    <select id="configModel" class="w-full input-dark p-2.5 text-xs mono"></select>
                 </div>
+
                 <div class="flex items-center justify-between">
                     <button id="fetchModelsBtn" onclick="fetchModels()" class="btn-outline px-4 py-2 rounded text-xs flex items-center gap-2">
                         <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Fetch models
                     </button>
                     <div class="text-xs text-slate-500">
-                        Get key at <a href="#" id="providerUrl" target="_blank" class="text-accent underline">developer portal</a>
+                        Target: <span id="providerDisplayHint" class="text-accent underline">Gemini</span>
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-white/5">
-                <button onclick="toggleModal('settingsModal')" class="px-6 py-2.5 rounded text-sm font-medium text-slate-400 hover:text-white">Cancel</button>
-                <button onclick="saveProvider()" class="px-8 py-2.5 rounded text-sm font-medium bg-white text-black hover:bg-slate-200">Save Provider</button>
+                <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="px-6 py-2.5 rounded text-sm font-medium text-slate-400 hover:text-white">Cancel</button>
+                <button onclick="saveProvider()" class="px-8 py-2.5 rounded text-sm font-medium bg-white text-black hover:bg-slate-200">Save Profile</button>
             </div>
 
             <div class="mt-10">
@@ -161,7 +178,7 @@
     <nav class="h-14 border-b border-white/5 flex items-center justify-between px-6 glass shrink-0 z-50">
         <div class="flex items-center gap-3">
             <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center font-bold text-sm text-white shadow-lg">R</div>
-            <span class="font-semibold tracking-tight">MyResAssist <span class="text-[10px] text-accent font-mono ml-1 opacity-70 italic uppercase tracking-tighter">Research Lab</span></span>
+            <span class="font-semibold tracking-tight">MyResAssist <span class="text-[10px] text-accent font-mono ml-1 opacity-70 italic uppercase tracking-tighter">Personal Lab</span></span>
         </div>
         
         <div class="flex items-center gap-4">
@@ -172,7 +189,7 @@
                 <button onclick="setTheme('modern')" class="p-1.5 rounded hover:bg-white/5 theme-btn" id="tbtn-modern"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i></button>
             </div>
             <div id="activeProviderTag" class="text-[10px] mono text-slate-500 hidden md:block"></div>
-            <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-accent p-2 rounded-lg hover:bg-white/5"><i data-lucide="settings" class="w-4 h-4"></i></button>
+            <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="text-slate-400 hover:text-accent p-2 rounded-lg hover:bg-white/5"><i data-lucide="settings" class="w-4 h-4"></i></button>
         </div>
     </nav>
 
@@ -200,16 +217,15 @@
                 </div>
             </div>
 
-            <!-- Input Console with Tiered Buttons -->
             <div class="p-4 border-t border-white/5 bg-black/40">
                 <textarea id="mainInput" placeholder="Initialize research vector..." 
                     class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent resize-none h-24 mb-3 transition-all"></textarea>
                 
                 <div class="grid grid-cols-2 gap-2 mb-2">
-                    <button onclick="runStep('scan')" class="px-3 py-2 rounded-lg border border-white/10 text-[10px] font-bold uppercase hover:bg-white/5 transition-all flex items-center justify-center gap-1">
+                    <button onclick="runStep('scan')" class="px-3 py-2 rounded-lg border border-white/10 text-[10px] font-bold uppercase hover:bg-white/5 flex items-center justify-center gap-1">
                         <i data-lucide="zap" class="w-3 h-3 text-amber-400"></i> Quick Scan
                     </button>
-                    <button onclick="runStep('research')" class="px-3 py-2 rounded-lg border border-white/10 text-[10px] font-bold uppercase hover:bg-white/5 transition-all flex items-center justify-center gap-1">
+                    <button onclick="runStep('research')" class="px-3 py-2 rounded-lg border border-white/10 text-[10px] font-bold uppercase hover:bg-white/5 flex items-center justify-center gap-1">
                         <i data-lucide="cpu" class="w-3 h-3 text-purple-400"></i> Deep Dive
                     </button>
                 </div>
@@ -253,7 +269,8 @@
             activeTopicId: localStorage.getItem('myres_active_topic') || null,
             theme: localStorage.getItem('myres_theme') || 'dark',
             currentTab: 'Gemini',
-            phase: 'idle'
+            phase: 'idle',
+            editingProviderId: null
         };
 
         function refreshIcons() { lucide.createIcons(); }
@@ -270,7 +287,11 @@
         function toggleModal(id) {
             const m = document.getElementById(id);
             m.classList.toggle('hidden');
-            if (id === 'settingsModal') { switchTab(state.currentTab); renderProviders(); renderSources(); }
+            if (id === 'settingsModal') { 
+                switchTab(state.currentTab); 
+                renderProviders(); 
+                renderSources(); 
+            }
         }
 
         function switchTab(tab) {
@@ -278,11 +299,17 @@
             document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('tab-active'));
             document.getElementById(`tab-${tab}`).classList.add('tab-active');
             const def = PROVIDER_DEFAULTS[tab];
-            document.getElementById('customEndpointGroup').style.display = (tab === 'Custom' || tab === 'OpenAI') ? 'block' : 'none';
+            
+            // Logic for Custom vs Standard
+            document.getElementById('customEndpointGroup').style.display = (tab === 'Custom') ? 'block' : 'none';
             document.getElementById('configUrl').value = def.url;
-            document.getElementById('providerUrl').innerText = def.portal;
-            document.getElementById('providerUrl').href = def.link;
-            document.getElementById('configModel').innerHTML = def.models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option value="" disabled>Fetch models...</option>';
+            document.getElementById('providerDisplayHint').innerText = tab;
+            document.getElementById('providerDisplayHint').href = def.link;
+            
+            // Populate models if they aren't manually set
+            if (def.models.length > 0) {
+                document.getElementById('configModel').innerHTML = def.models.map(m => `<option value="${m}">${m}</option>`).join('');
+            }
         }
 
         async function fetchModels() {
@@ -300,7 +327,6 @@
                     if (!res.ok) throw new Error(data.error?.message || "Failed");
                     fetchedModels = data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
                 } else {
-                    // Normalize endpoint for OpenAI/Custom
                     let fetchUrl = url.replace(/\/chat\/completions$/, '').replace(/\/$/, '') + '/models';
                     const res = await fetch(fetchUrl, { headers: { 'Authorization': `Bearer ${key}` }});
                     const data = await res.json();
@@ -315,9 +341,111 @@
             } finally { btn.disabled = false; }
         }
 
+        // --- PROVIDER CRUD ---
+        function saveProvider() {
+            const name = document.getElementById('configName').value.trim() || state.currentTab;
+            const url = document.getElementById('configUrl').value.trim();
+            const key = document.getElementById('configKey').value.trim();
+            const model = document.getElementById('configModel').value;
+
+            if (!key || !model) {
+                showToast("Missing API Key or Model selection.");
+                return;
+            }
+
+            const payload = {
+                id: state.editingProviderId || Date.now(),
+                name: name,
+                type: state.currentTab,
+                url: url,
+                key: key,
+                model: model
+            };
+
+            if (state.editingProviderId) {
+                // Update existing
+                const idx = state.providers.findIndex(p => p.id === state.editingProviderId);
+                state.providers[idx] = payload;
+                showToast("Provider updated.");
+            } else {
+                // Create new
+                state.providers.push(payload);
+                if (!state.activeProviderId) state.activeProviderId = payload.id;
+                showToast("Provider profile created.");
+            }
+
+            saveState();
+            resetConfigForm();
+            renderProviders();
+            updateUI();
+        }
+
+        function editProvider(id) {
+            const p = state.providers.find(x => x.id === id);
+            if (!p) return;
+
+            state.editingProviderId = id;
+            document.getElementById('modalTitle').innerText = "Edit Provider: " + p.name;
+            document.getElementById('configName').value = p.name;
+            document.getElementById('configKey').value = p.key;
+            
+            // Switch tab to the correct type
+            switchTab(p.type);
+            document.getElementById('configUrl').value = p.url;
+            
+            // Populate model list if empty, and set value
+            const modelSelect = document.getElementById('configModel');
+            if (!Array.from(modelSelect.options).some(opt => opt.value === p.model)) {
+                modelSelect.innerHTML = `<option value="${p.model}">${p.model}</option>` + modelSelect.innerHTML;
+            }
+            modelSelect.value = p.model;
+        }
+
+        function resetConfigForm() {
+            state.editingProviderId = null;
+            document.getElementById('modalTitle').innerText = "API Configuration";
+            document.getElementById('configName').value = "";
+            document.getElementById('configKey').value = "";
+            switchTab('Gemini');
+        }
+
+        function renderProviders() {
+            document.getElementById('providerList').innerHTML = state.providers.map(p => `
+                <div class="flex items-center gap-4 p-4 rounded border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
+                    <div class="flex-1 text-xs">
+                        <div class="font-bold flex items-center gap-2">
+                            ${p.name}
+                            <span class="text-[9px] px-1 bg-white/10 rounded uppercase opacity-50 font-normal">${p.type}</span>
+                        </div>
+                        <div class="mono opacity-60 text-[10px] truncate max-w-[200px]">${p.model}</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="setActiveProvider(${p.id})" class="px-2 py-1 rounded border border-white/10 text-[9px] uppercase hover:bg-white/5 ${state.activeProviderId == p.id ? 'text-accent border-accent' : ''}">
+                            ${state.activeProviderId == p.id ? 'active' : 'use'}
+                        </button>
+                        <button onclick="editProvider(${p.id})" class="px-2 py-1 rounded border border-white/10 text-[9px] uppercase hover:text-accent hover:border-accent">
+                            edit
+                        </button>
+                        <button onclick="deleteProvider(${p.id})" class="px-2 py-1 rounded text-red-500 font-bold hover:bg-red-500/10">×</button>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-[9px] text-slate-600 text-center py-4">No providers configured.</p>';
+            refreshIcons();
+        }
+
+        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
+        
+        function deleteProvider(id) { 
+            if(confirm("Permanently delete this provider?")) {
+                state.providers = state.providers.filter(x => x.id != id); 
+                if(state.activeProviderId == id) state.activeProviderId = state.providers[0]?.id || null; 
+                saveState(); renderProviders(); updateUI(); 
+            }
+        }
+
         // --- TOPICS ---
         function createNewTopic() {
-            const title = prompt("Topic Title:", "Research Project " + (state.topics.length + 1));
+            const title = prompt("Topic Title:", "Project " + (state.topics.length + 1));
             if (!title) return;
             const nt = { id: Date.now(), title, brief: null, validation: null, logs: [], date: new Date().toISOString() };
             state.topics.unshift(nt);
@@ -334,7 +462,7 @@
                     <span class="truncate">${t.title}</span>
                     <button onclick="event.stopPropagation(); deleteTopic(${t.id})" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400">×</button>
                 </div>
-            `).join('') || '<p class="text-[10px] text-slate-600 text-center py-4 italic">No topics.</p>';
+            `).join('') || '<p class="text-[10px] text-slate-600 text-center py-4 italic">No research topics.</p>';
             refreshIcons();
         }
 
@@ -347,15 +475,15 @@
                 if (t.brief) renderCanvas(t.title, t.brief, t.validation);
                 else c.innerHTML = `<div class="text-center py-20 opacity-20 text-sm mono">Awaiting vector for: ${t.title}</div>`;
                 t.logs.forEach(l => addLog(l.type, l.msg, false));
-            } else { c.innerHTML = '<div class="text-center py-20 opacity-20 text-sm mono">Select topic.</div>'; }
+            } else { c.innerHTML = '<div class="text-center py-20 opacity-20 text-sm mono">Select or create a topic.</div>'; }
         }
 
-        // --- ENGINE ---
+        // --- RESEARCH PIPELINE ---
         async function callAI(prompt, system) {
             const p = state.providers.find(x => x.id == state.activeProviderId);
-            if (!p) throw new Error("No API provider active.");
+            if (!p || !p.key || !p.model) throw new Error("Ensure an active Provider is configured and has a model.");
             
-            const isGemini = p.name === 'Gemini' || p.url.includes('generativelanguage');
+            const isGemini = p.type === 'Gemini' || p.url.includes('generativelanguage');
             let url = isGemini ? `${p.url}${p.model}:generateContent?key=${p.key}` : p.url;
             if (!isGemini && !url.endsWith('/chat/completions')) url = url.replace(/\/$/, '') + '/chat/completions';
 
@@ -372,7 +500,7 @@
 
             const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error?.message || "LLM Failed");
+            if (!response.ok) throw new Error(data.error?.message || "LLM Request Stalled");
             return isGemini ? data.candidates?.[0]?.content?.parts?.[0]?.text : data.choices?.[0]?.message?.content;
         }
 
@@ -384,12 +512,12 @@
             try {
                 state.phase = stepType; updateUI();
                 if (stepType === 'scan') {
-                    addLog('SYSTEM', 'Performing Quick Scan...');
-                    const res = await callAI(query, "Triage Agent. Identify 3 themes. Evaluate 'Semantic Potential'. Be extremely technical and brief.");
-                    addLog('AI', "Scan Complete: " + res.substring(0, 100) + "...");
+                    addLog('SYSTEM', 'Performing Quick Scan (Triage)...');
+                    const res = await callAI(query, "Triage Agent. Identify the top 3 high-value research themes. Explicitly evaluate the 'Semantic Potential' of the query. Be technical and concise.");
+                    addLog('AI', "Scan Result: " + res.substring(0, 150) + "...");
                 } else if (stepType === 'research') {
-                    addLog('SYSTEM', 'Initiating Deep Research Synthesis...');
-                    const res = await callAI(query, "Research Scientist. Perform Multidimensional Synthesis. Find Emergent Patterns. Markdown output.");
+                    addLog('SYSTEM', 'Initiating Multidimensional Synthesis...');
+                    const res = await callAI(query, "Research Scientist. Perform a multidimensional technical synthesis. Extract emergent patterns and non-obvious cross-domain links. Deliver in structured Markdown.");
                     const t = state.topics.find(x => x.id == state.activeTopicId);
                     t.brief = res; saveState(); loadActiveTopic();
                 }
@@ -406,23 +534,23 @@
             try {
                 // A: SCAN
                 state.phase = 'scan'; updateUI();
-                addLog('SYSTEM', 'Architecture Phase A: Quick Scan...');
-                const scan = await callAI(query, "Triage Agent. 1. Themes. 2. Semantic Potential. 3. Signal-to-Noise estimate. Structural brevity required.");
+                addLog('SYSTEM', 'Phase A: Performing Quick Scan...');
+                const scan = await callAI(query, "Triage Agent. 1. Core Themes. 2. Semantic Potential analysis. 3. Signal-to-Noise estimation. High technical density.");
                 
                 // B: DEEP RESEARCH
                 state.phase = 'research'; updateUI();
-                addLog('AI', 'Phase B: Multidimensional Synthesis...');
-                const brief = await callAI(`Query: ${query}. Scan Findings: ${scan}`, "Research Lead. Detailed synthesis. Identify emergent cross-domain patterns. High technical density.");
+                addLog('AI', 'Phase B: Generating Multidimensional Synthesis...');
+                const brief = await callAI(`Query: ${query}. Scan Data: ${scan}`, "Research Scientist. Detailed multidimensional synthesis. Identify latent patterns. Use high-precision language. Markdown format.");
 
                 // C: VALIDATION
                 state.phase = 'validate'; updateUI();
                 const sources = state.sources.join(', ');
-                addLog('SYSTEM', 'Phase C: Fact-Check & Signal Validation...');
-                const valid = await callAI(`Report: ${brief}. Grounding: ${sources}`, "Forensic Fact Checker. List specific claims. Label: VERIFIED/CONTRADICTED/UNKNOWN. Calculate Signal-to-Noise (0-100).");
+                addLog('SYSTEM', 'Phase C: Forensic Claim Validation...');
+                const valid = await callAI(`Report: ${brief}. Grounding domains: ${sources}`, "Forensic Fact Checker. Extract atomic claims. Label: VERIFIED / CONTRADICTED / UNCERTAIN. Final Signal-to-Noise ratio check.");
 
                 const t = state.topics.find(x => x.id == state.activeTopicId);
                 if (t) { t.brief = brief; t.validation = valid; saveState(); renderCanvas(t.title, brief, valid); }
-                showToast("Pipeline Success.");
+                showToast("Research Pipeline Finalized.");
             } catch (e) { addLog('ERROR', e.message); }
             finally { state.phase = 'idle'; btn.disabled = false; updateUI(); }
         }
@@ -437,7 +565,7 @@
                             <div class="text-sm leading-relaxed whitespace-pre-wrap">${report}</div>
                         </div>
                         <div class="p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
-                            <h3 class="text-emerald-500 font-bold text-[10px] uppercase tracking-widest mb-4 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4"></i> Validation & Signal Analysis</h3>
+                            <h3 class="text-emerald-500 font-bold text-[10px] uppercase tracking-widest mb-4 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4"></i> Claim & Signal Analysis</h3>
                             <div class="text-[11px] italic opacity-80">${validation}</div>
                         </div>
                     </div>
@@ -447,30 +575,9 @@
         }
 
         // --- UTILS ---
-        function saveProvider() {
-            const p = { id: Date.now(), name: state.currentTab, url: document.getElementById('configUrl').value, key: document.getElementById('configKey').value, model: document.getElementById('configModel').value };
-            state.providers.push(p); if(!state.activeProviderId) state.activeProviderId = p.id;
-            saveState(); renderProviders(); showToast("Provider saved.");
-        }
-        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
-        function deleteProvider(id) { state.providers = state.providers.filter(x=>x.id!=id); if(state.activeProviderId==id) state.activeProviderId=null; saveState(); renderProviders(); updateUI(); }
-        function renderProviders() {
-            document.getElementById('providerList').innerHTML = state.providers.map(p => `
-                <div class="flex items-center gap-4 p-4 rounded border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
-                    <div class="flex-1 text-xs">
-                        <div class="font-bold">${p.name}</div>
-                        <div class="mono opacity-60 text-[10px]">${p.model}</div>
-                    </div>
-                    <div class="flex gap-1">
-                        <button onclick="setActiveProvider(${p.id})" class="px-2 py-1 rounded border border-white/10 text-[9px] uppercase hover:bg-white/5 ${state.activeProviderId == p.id ? 'text-accent border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
-                        <button onclick="deleteProvider(${p.id})" class="px-2 py-1 rounded text-red-500 font-bold">×</button>
-                    </div>
-                </div>
-            `).join('') || '<p class="text-[9px] text-slate-600 text-center">Empty.</p>';
-            refreshIcons();
-        }
         function addSource() { const v = document.getElementById('newSource').value.trim(); if(v){ state.sources.push(v); document.getElementById('newSource').value=''; saveState(); renderSources(); }}
         function renderSources() { document.getElementById('sourceList').innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] mono flex items-center gap-2"><span>${s}</span><button onclick="state.sources=state.sources.filter(x=>x!='${s}');saveState();renderSources();">×</button></div>`).join(''); }
+        
         function saveState() {
             localStorage.setItem('myres_providers', JSON.stringify(state.providers));
             localStorage.setItem('myres_active_id', state.activeProviderId);
@@ -478,28 +585,50 @@
             localStorage.setItem('myres_topics', JSON.stringify(state.topics));
             localStorage.setItem('myres_active_topic', state.activeTopicId);
         }
+
         function updateUI() {
             const p = state.providers.find(x => x.id == state.activeProviderId);
-            document.getElementById('activeProviderTag').innerHTML = p ? `<span class="w-2 h-2 rounded-full bg-accent inline-block mr-1"></span> ${p.name}` : '<span class="text-red-400">OFFLINE</span>';
+            document.getElementById('activeProviderTag').innerHTML = p ? `<span class="w-2 h-2 rounded-full bg-accent inline-block mr-1"></span> ${p.name}` : '<span class="text-red-400">NO ACTIVE PROVIDER</span>';
             const pipeline = document.getElementById('pipelineDisplay');
             const steps = [{ id: 'scan', name: 'Quick Scan', icon: 'zap' }, { id: 'research', name: 'Deep Research', icon: 'cpu' }, { id: 'validate', name: 'Claim Validation', icon: 'shield-check' }];
             pipeline.innerHTML = steps.map(s => `<div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-semibold">${s.name}</span></div>`).join('');
             refreshIcons();
         }
+
         function addLog(type, msg, save=true) {
             const s = document.getElementById('logStream');
             const l = document.createElement('div');
             l.className = 'flex gap-2 mb-1';
             l.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : 'text-slate-500'} font-bold">[${type}]</span> <span>${msg}</span>`;
             s.prepend(l);
-            if(save && state.activeTopicId) { const t=state.topics.find(x=>x.id==state.activeTopicId); t.logs.push({type, msg}); saveState(); }
+            if(save && state.activeTopicId) { 
+                const t = state.topics.find(x => x.id == state.activeTopicId);
+                if (t) t.logs.push({type, msg}); 
+                saveState(); 
+            }
         }
+
+        function downloadActiveTopic() {
+            const t = state.topics.find(x => x.id == state.activeTopicId);
+            if (!t || !t.brief) return showToast("Nothing to export.");
+            const content = `# ${t.title}\n\n${t.brief}\n\n## Validation\n${t.validation}`;
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${t.title.replace(/\s+/g, '-')}.md`; a.click();
+        }
+
         function clearCanvas() { const t=state.topics.find(x=>x.id==state.activeTopicId); if(t){ t.brief=null; t.logs=[]; saveState(); loadActiveTopic(); }}
         function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 3000); }
         function toggleKeyVisibility() { const i = document.getElementById('configKey'); i.type = i.type === 'password' ? 'text' : 'password'; }
 
-        window.onload = () => { setTheme(state.theme); renderTopics(); loadActiveTopic(); updateUI(); refreshIcons();
-            document.getElementById('mainInput').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch(); });
+        window.onload = () => { 
+            setTheme(state.theme); 
+            renderTopics(); 
+            loadActiveTopic(); 
+            updateUI(); 
+            refreshIcons();
+            document.getElementById('mainInput').addEventListener('keydown', (e) => { 
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch(); 
+            });
         };
     </script>
 </body>
