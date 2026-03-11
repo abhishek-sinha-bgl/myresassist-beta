@@ -17,102 +17,64 @@ display:flex;
 height:100vh;
 }
 
-/* SIDEBAR */
+/* layout */
+
+#app{
+display:flex;
+width:100%;
+gap:16px;
+padding:10px;
+box-sizing:border-box;
+}
+
+/* sidebar */
 
 #sidebar{
-width:230px;
+width:220px;
 background:#0b1220;
-padding:16px;
-display:flex;
-flex-direction:column;
+padding:14px;
+border-radius:8px;
 }
 
 .topic{
 background:#1e293b;
-padding:10px;
+padding:8px;
 border-radius:6px;
 margin-top:6px;
 cursor:pointer;
 }
 
-/* MAIN */
-
-#main{
-flex:1;
-display:flex;
-flex-direction:column;
-}
-
-/* HEADER */
-
-#header{
-height:52px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 16px;
-background:#0b1220;
-}
-
-.iconBtn{
-background:none;
-border:none;
-cursor:pointer;
-color:white;
-margin-left:10px;
-}
-
-/* WORKSPACE */
-
-#workspace{
-flex:1;
-display:flex;
-}
-
-/* RESEARCH */
+/* research */
 
 #research{
 flex:2;
-padding:20px;
+background:#0b1220;
+padding:14px;
+border-radius:8px;
 overflow:auto;
 }
 
-/* RADAR */
-
-#radar{
-background:#1e293b;
-padding:10px;
-border-radius:8px;
-margin-bottom:16px;
-}
-
-/* CLAIMS */
-
 .claim{
 background:#1e293b;
-padding:12px;
-border-radius:8px;
-margin-bottom:10px;
+padding:10px;
+border-radius:6px;
+margin-top:10px;
 }
 
-.claim button{
-margin-top:8px;
-margin-right:6px;
-}
-
-/* CHAT */
+/* chat */
 
 #chatpane{
 width:360px;
 background:#0b1220;
+border-radius:8px;
 display:flex;
 flex-direction:column;
 }
 
 #chat{
 flex:1;
-overflow:auto;
 padding:12px;
+overflow:auto;
 }
 
 textarea{
@@ -121,30 +83,8 @@ height:70px;
 background:#1e293b;
 border:none;
 color:white;
+border-radius:6px;
 padding:6px;
-border-radius:6px;
-}
-
-/* SETTINGS */
-
-#settings{
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:#0b1220;
-padding:20px;
-border-radius:10px;
-display:none;
-width:420px;
-}
-
-input,select{
-width:100%;
-padding:8px;
-margin-top:4px;
-border-radius:6px;
-border:none;
 }
 
 button{
@@ -154,12 +94,15 @@ padding:6px 10px;
 border-radius:6px;
 color:white;
 cursor:pointer;
+margin-top:6px;
 }
 
 </style>
 </head>
 
 <body>
+
+<div id="app">
 
 <div id="sidebar">
 
@@ -171,42 +114,9 @@ cursor:pointer;
 
 </div>
 
-<div id="main">
-
-<div id="header">
-
-<div id="topicTitle">Select Topic</div>
-
-<div>
-
-<button class="iconBtn" onclick="toggleTheme()">
-<i data-lucide="moon"></i>
-</button>
-
-<button class="iconBtn" onclick="globalSearch()">
-<i data-lucide="search"></i>
-</button>
-
-<button class="iconBtn" onclick="openSettings()">
-<i data-lucide="settings"></i>
-</button>
-
-</div>
-
-</div>
-
-<div id="workspace">
-
 <div id="research">
 
-<div id="radar">Research radar will appear here</div>
-
-<select onchange="sortClaims(this.value)">
-<option value="new">Newest</option>
-<option value="old">Oldest</option>
-<option value="high">Highest Confidence</option>
-<option value="low">Lowest Confidence</option>
-</select>
+<h3 id="topicTitle">Select a topic</h3>
 
 <div id="claims"></div>
 
@@ -218,38 +128,15 @@ cursor:pointer;
 
 <div style="padding:10px">
 
-<textarea id="query" disabled placeholder="Select a topic first"></textarea>
+<textarea id="query" disabled placeholder="Select a topic to begin research"></textarea>
 
-<button onclick="quickScan()" id="quickBtn" disabled>Quick Scan</button>
-<button onclick="deepResearch()" id="deepBtn" disabled>Deep Research</button>
+<button id="quickBtn" disabled onclick="quickScan()">Quick Scan</button>
 
-</div>
-
-</div>
+<button id="deepBtn" disabled onclick="deepResearch()">Deep Research</button>
 
 </div>
 
 </div>
-
-<div id="settings">
-
-<h3>API Provider</h3>
-
-<label>Endpoint</label>
-<input id="endpoint">
-
-<label>API Key</label>
-<input id="apikey" type="password">
-
-<label>Model</label>
-<select id="model"></select>
-
-<button onclick="fetchModels()">Fetch Models</button>
-
-<br><br>
-
-<button onclick="saveSettings()">Save</button>
-<button onclick="closeSettings()">Close</button>
 
 </div>
 
@@ -259,12 +146,11 @@ lucide.createIcons()
 
 let settings=JSON.parse(localStorage.getItem("settings")||"{}")
 let topics=JSON.parse(localStorage.getItem("topics")||"[]")
-
 let currentTopic=null
 
 function createTopic(){
 
-let name=prompt("Topic")
+let name=prompt("Topic name")
 
 if(!name)return
 
@@ -336,88 +222,58 @@ card.innerHTML=
 
 `<b>${c.claim}</b><br>
 Confidence: ${c.confidence}<br>
-Evidence: ${c.evidence}
-
-<br>
-
-<button onclick="validateClaim(${i})">Validate</button>
-<button onclick="deleteClaim(${i})">✕</button>`
+Evidence: ${c.evidence}`
 
 box.appendChild(card)
 
 })
 
-updateRadar()
+}
+
+function safeParseJSON(text){
+
+try{
+
+let start=text.indexOf("[")
+let end=text.lastIndexOf("]")
+
+if(start!==-1 && end!==-1){
+
+return JSON.parse(text.substring(start,end+1))
 
 }
 
-function deleteClaim(i){
+}catch(e){}
 
-currentTopic.claims.splice(i,1)
-
-saveTopics()
-
-renderClaims()
-
-}
-
-function sortClaims(mode){
-
-if(!currentTopic)return
-
-if(mode=="high"){
-
-let map={high:3,medium:2,low:1}
-
-currentTopic.claims.sort((a,b)=>map[b.confidence]-map[a.confidence])
-
-}
-
-renderClaims()
-
-}
-
-function updateRadar(){
-
-let radar=document.getElementById("radar")
-
-radar.innerText="Claims in topic: "+currentTopic.claims.length
-
-}
-
-async function quickScan(){
-
-runResearch(document.getElementById("query").value)
-
-}
-
-async function deepResearch(){
-
-runResearch("Deep research: "+document.getElementById("query").value)
-
-}
-
-async function validateClaim(i){
-
-let claim=currentTopic.claims[i].claim
-
-runResearch("Validate this claim: "+claim)
+return null
 
 }
 
 async function runResearch(prompt){
 
-if(!currentTopic){
-
-alert("Select a topic")
-
-return
-
-}
-
 try{
 
 let endpoint=settings.endpoint.replace("/chat/completions","")
+
+let body={
+model:settings.model,
+messages:[
+{role:"user",content:
+
+`Extract factual claims from this text.
+
+Return ONLY JSON:
+
+[
+ {claim:"",confidence:"high|medium|low",evidence:""}
+]
+
+Text:
+${prompt}`
+
+}
+]
+}
 
 let r=await fetch(endpoint+"/chat/completions",{
 
@@ -430,33 +286,33 @@ headers:{
 "X-Title":"MyResAssist"
 },
 
-body:JSON.stringify({
-
-model:settings.model,
-
-messages:[{role:"user",content:
-
-`Extract factual claims from this text as JSON.
-
-${prompt}
-
-Return:
-
-[
-{claim:"",confidence:"high|medium|low",evidence:""}
-]
-
-`}]
-
-})
+body:JSON.stringify(body)
 
 })
 
 let j=await r.json()
 
+if(!j.choices){
+
+alert(j.error?.message || "API error")
+
+return
+
+}
+
 let text=j.choices[0].message.content
 
-let claims=JSON.parse(text)
+let claims=safeParseJSON(text)
+
+if(!claims){
+
+claims=[{
+claim:text.substring(0,150),
+confidence:"unknown",
+evidence:"model response"
+}]
+
+}
 
 claims.forEach(c=>currentTopic.claims.push(c))
 
@@ -466,75 +322,21 @@ renderClaims()
 
 }catch(e){
 
-alert("Research failed")
+alert("Network or CORS error")
 
 }
 
 }
 
-function openSettings(){
+function quickScan(){
 
-document.getElementById("settings").style.display="block"
-
-}
-
-function closeSettings(){
-
-document.getElementById("settings").style.display="none"
+runResearch(document.getElementById("query").value)
 
 }
 
-async function fetchModels(){
+function deepResearch(){
 
-let endpoint=document.getElementById("endpoint").value
-
-let key=document.getElementById("apikey").value
-
-let r=await fetch(endpoint.replace("/chat/completions","")+"/models",{
-
-headers:{
-
-Authorization:"Bearer "+key,
-
-"HTTP-Referer":"https://github.io",
-
-"X-Title":"MyResAssist"
-
-}
-
-})
-
-let j=await r.json()
-
-let models=j.data.sort((a,b)=>a.id.localeCompare(b.id))
-
-let sel=document.getElementById("model")
-
-sel.innerHTML=""
-
-models.forEach(m=>{
-
-let o=document.createElement("option")
-
-o.value=m.id
-
-o.innerText=m.id
-
-sel.appendChild(o)
-
-})
-
-}
-
-function saveSettings(){
-
-settings.endpoint=document.getElementById("endpoint").value
-settings.key=document.getElementById("apikey").value
-settings.model=document.getElementById("model").value
-
-localStorage.setItem("settings",JSON.stringify(settings))
-
-closeSettings()
+runResearch("Deep analysis: "+document.getElementById("query").value)
 
 }
 
