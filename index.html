@@ -1,348 +1,491 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>MyResAssist</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyResAssist | Personal Research Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root {
+            --bg-deep: #050505;
+            --bg-card: #0d0d0f;
+            --accent: #6366f1;
+            --text-main: #e2e8f0;
+            --text-dim: #94a3b8;
+        }
 
-<script src="https://unpkg.com/lucide@latest"></script>
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
 
-<style>
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass {
+            background: rgba(13, 13, 15, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
 
-body{
-margin:0;
-font-family:system-ui;
-background:#0f172a;
-color:#e5e7eb;
-display:flex;
-height:100vh;
-}
+        .research-node {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-/* layout */
+        .research-node:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+        }
 
-#app{
-display:flex;
-width:100%;
-gap:16px;
-padding:10px;
-box-sizing:border-box;
-}
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-/* sidebar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-#sidebar{
-width:220px;
-background:#0b1220;
-padding:14px;
-border-radius:8px;
-}
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-subtle { animation: pulse-subtle 3s infinite; }
 
-.topic{
-background:#1e293b;
-padding:8px;
-border-radius:6px;
-margin-top:6px;
-cursor:pointer;
-}
-
-/* research */
-
-#research{
-flex:2;
-background:#0b1220;
-padding:14px;
-border-radius:8px;
-overflow:auto;
-}
-
-.claim{
-background:#1e293b;
-padding:10px;
-border-radius:6px;
-margin-top:10px;
-}
-
-/* chat */
-
-#chatpane{
-width:360px;
-background:#0b1220;
-border-radius:8px;
-display:flex;
-flex-direction:column;
-}
-
-#chat{
-flex:1;
-padding:12px;
-overflow:auto;
-}
-
-textarea{
-width:100%;
-height:70px;
-background:#1e293b;
-border:none;
-color:white;
-border-radius:6px;
-padding:6px;
-}
-
-button{
-background:#3b82f6;
-border:none;
-padding:6px 10px;
-border-radius:6px;
-color:white;
-cursor:pointer;
-margin-top:6px;
-}
-
-</style>
+        .modal-enter { animation: modalFade 0.2s ease-out; }
+        @keyframes modalFade { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
 </head>
-
-<body>
-
-<div id="app">
-
-<div id="sidebar">
-
-<h3>MyResAssist</h3>
-
-<button onclick="createTopic()">New Topic</button>
-
-<div id="topics"></div>
-
-</div>
-
-<div id="research">
-
-<h3 id="topicTitle">Select a topic</h3>
-
-<div id="claims"></div>
-
-</div>
-
-<div id="chatpane">
-
-<div id="chat"></div>
-
-<div style="padding:10px">
-
-<textarea id="query" disabled placeholder="Select a topic to begin research"></textarea>
-
-<button id="quickBtn" disabled onclick="quickScan()">Quick Scan</button>
-
-<button id="deepBtn" disabled onclick="deepResearch()">Deep Research</button>
-
-</div>
-
-</div>
-
-</div>
-
-<script>
-
-lucide.createIcons()
-
-let settings=JSON.parse(localStorage.getItem("settings")||"{}")
-let topics=JSON.parse(localStorage.getItem("topics")||"[]")
-let currentTopic=null
-
-function createTopic(){
-
-let name=prompt("Topic name")
-
-if(!name)return
-
-let t={id:Date.now(),title:name,claims:[]}
-
-topics.push(t)
-
-saveTopics()
-
-renderTopics()
-
-}
-
-function renderTopics(){
-
-let box=document.getElementById("topics")
-
-box.innerHTML=""
-
-topics.forEach(t=>{
-
-let d=document.createElement("div")
-
-d.className="topic"
-
-d.innerText=t.title
-
-d.onclick=()=>openTopic(t.id)
-
-box.appendChild(d)
-
-})
-
-}
-
-function openTopic(id){
-
-currentTopic=topics.find(t=>t.id==id)
-
-document.getElementById("topicTitle").innerText=currentTopic.title
-
-document.getElementById("query").disabled=false
-document.getElementById("quickBtn").disabled=false
-document.getElementById("deepBtn").disabled=false
-
-renderClaims()
-
-}
-
-function saveTopics(){
-localStorage.setItem("topics",JSON.stringify(topics))
-}
-
-function renderClaims(){
-
-let box=document.getElementById("claims")
-
-box.innerHTML=""
-
-if(!currentTopic)return
-
-currentTopic.claims.forEach((c,i)=>{
-
-let card=document.createElement("div")
-
-card.className="claim"
-
-card.innerHTML=
-
-`<b>${c.claim}</b><br>
-Confidence: ${c.confidence}<br>
-Evidence: ${c.evidence}`
-
-box.appendChild(card)
-
-})
-
-}
-
-function safeParseJSON(text){
-
-try{
-
-let start=text.indexOf("[")
-let end=text.lastIndexOf("]")
-
-if(start!==-1 && end!==-1){
-
-return JSON.parse(text.substring(start,end+1))
-
-}
-
-}catch(e){}
-
-return null
-
-}
-
-async function runResearch(prompt){
-
-try{
-
-let endpoint=settings.endpoint.replace("/chat/completions","")
-
-let body={
-model:settings.model,
-messages:[
-{role:"user",content:
-
-`Extract factual claims from this text.
-
-Return ONLY JSON:
-
-[
- {claim:"",confidence:"high|medium|low",evidence:""}
-]
-
-Text:
-${prompt}`
-
-}
-]
-}
-
-let r=await fetch(endpoint+"/chat/completions",{
-
-method:"POST",
-
-headers:{
-"Authorization":"Bearer "+settings.key,
-"Content-Type":"application/json",
-"HTTP-Referer":"https://github.io",
-"X-Title":"MyResAssist"
-},
-
-body:JSON.stringify(body)
-
-})
-
-let j=await r.json()
-
-if(!j.choices){
-
-alert(j.error?.message || "API error")
-
-return
-
-}
-
-let text=j.choices[0].message.content
-
-let claims=safeParseJSON(text)
-
-if(!claims){
-
-claims=[{
-claim:text.substring(0,150),
-confidence:"unknown",
-evidence:"model response"
-}]
-
-}
-
-claims.forEach(c=>currentTopic.claims.push(c))
-
-saveTopics()
-
-renderClaims()
-
-}catch(e){
-
-alert("Network or CORS error")
-
-}
-
-}
-
-function quickScan(){
-
-runResearch(document.getElementById("query").value)
-
-}
-
-function deepResearch(){
-
-runResearch("Deep analysis: "+document.getElementById("query").value)
-
-}
-
-renderTopics()
-
-</script>
-
+<body class="h-screen flex flex-col">
+
+    <!-- API & Source Modals (Hidden by Default) -->
+    <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass w-full max-w-md rounded-2xl p-6 modal-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="key" class="w-5 h-5 text-indigo-400"></i> API Vault</h2>
+                <button onclick="toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Add New Key</label>
+                    <div class="flex gap-2">
+                        <input id="newApiKey" type="password" placeholder="sk-..." class="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <button onclick="addApiKey()" class="bg-indigo-600 px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-500 transition-colors">ADD</button>
+                    </div>
+                </div>
+                <div id="keyList" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                    <!-- Keys injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sourceModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass w-full max-w-lg rounded-2xl p-6 modal-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5 text-emerald-400"></i> Authoritative Sources</h2>
+                <button onclick="toggleModal('sourceModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <textarea id="newSource" placeholder="Add a URL or key document excerpt to the ground-truth library..." class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 h-24 resize-none"></textarea>
+                    <button onclick="addSource()" class="w-full mt-2 bg-emerald-600 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-colors">ENROLL SOURCE</button>
+                </div>
+                <div id="sourceList" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                    <!-- Sources injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-12 right-6 z-[110] hidden glass px-4 py-3 rounded-xl border-l-4 border-indigo-500 shadow-2xl transition-all translate-y-10">
+        <p id="toastMessage" class="text-xs font-medium"></p>
+    </div>
+
+    <!-- Top Navigation -->
+    <nav class="h-14 border-b border-white/5 flex items-center justify-between px-6 glass shrink-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center font-bold text-sm text-white shadow-lg shadow-indigo-500/20">R</div>
+            <span class="font-semibold tracking-tight">MyResAssist <span class="text-[10px] text-indigo-400 font-mono ml-1 opacity-70">LAB_V2</span></span>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button onclick="toggleModal('sourceModal')" class="flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-emerald-500/5">
+                <i data-lucide="library" class="w-4 h-4"></i>
+                <span id="sourceCount">0 Sources</span>
+            </button>
+            <div class="h-6 w-px bg-white/10"></div>
+            <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-indigo-400 transition-colors p-2 rounded-lg hover:bg-white/5">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Sidebar -->
+        <aside class="w-80 border-r border-white/5 flex flex-col bg-black/20 shrink-0">
+            <div class="p-5 flex-1 overflow-y-auto space-y-6">
+                
+                <!-- Research Phase Stepper -->
+                <div>
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Pipeline Status</h3>
+                    <div id="pipelineDisplay" class="space-y-1">
+                        <!-- Pipeline states injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Live Logs -->
+                <div class="space-y-4">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Activity Stream</h3>
+                    <div id="logStream" class="space-y-2 max-h-64 overflow-y-auto text-[10px] mono text-slate-500">
+                        <div class="flex gap-2"><span>[SYSTEM]</span> <span>Ready for input...</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Console -->
+            <div class="p-4 border-t border-white/5 bg-black/40">
+                <div class="relative group">
+                    <textarea id="mainInput" placeholder="Define research vector (e.g. Impact of LLMs on Legal Discovery)..." 
+                        class="w-full bg-white/5 border border-white/10 rounded-xl p-3 pr-10 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none h-24 transition-all"></textarea>
+                    <button id="runBtn" onclick="initiateResearch()" class="absolute bottom-3 right-3 p-1.5 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p class="text-[9px] text-slate-600 mt-2 text-center font-mono">CMD + ENTER TO EXECUTE</p>
+            </div>
+        </aside>
+
+        <!-- Right Canvas -->
+        <section class="flex-1 flex flex-col bg-[#050505] relative overflow-hidden">
+            <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-indigo-600/5 blur-[140px] rounded-full pointer-events-none"></div>
+
+            <!-- Toolbar -->
+            <div class="h-12 flex items-center justify-between px-8 border-b border-white/5 shrink-0 z-10 glass">
+                <div class="flex items-center gap-4 h-full">
+                    <button class="text-xs font-semibold text-white border-b-2 border-indigo-500 h-full px-2">Knowledge Synthesis</button>
+                    <button class="text-xs font-semibold text-slate-500 hover:text-slate-300 h-full px-2 transition-colors">Pattern Graph</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="clearCanvas()" class="p-1.5 text-slate-500 hover:text-red-400 transition-colors" title="Clear Canvas"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button onclick="downloadResearch()" class="p-1.5 text-slate-500 hover:text-white transition-colors"><i data-lucide="download" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+
+            <!-- Research Output -->
+            <div id="canvas" class="flex-1 p-8 lg:p-16 overflow-y-auto z-10">
+                <div id="briefContent" class="max-w-4xl mx-auto space-y-12 pb-20">
+                    <div class="text-center py-20 opacity-20">
+                        <i data-lucide="ghost" class="w-12 h-12 mx-auto mb-4"></i>
+                        <p class="text-sm mono">Canvas is empty. Initiate a vector to begin synthesis.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // State Management
+        let state = {
+            keys: JSON.parse(localStorage.getItem('myres_keys') || '[]'),
+            activeKeyIndex: parseInt(localStorage.getItem('myres_active_key') || '0'),
+            sources: JSON.parse(localStorage.getItem('myres_sources') || '[]'),
+            phase: 'idle', // idle, scan, research, validate, complete
+            logs: [],
+            brief: []
+        };
+
+        // Initialize Icons
+        function refreshIcons() { lucide.createIcons(); }
+        refreshIcons();
+
+        // Modal Logic
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.classList.toggle('hidden');
+            if (id === 'settingsModal') renderKeys();
+            if (id === 'sourceModal') renderSources();
+        }
+
+        // API Key Management
+        function addApiKey() {
+            const input = document.getElementById('newApiKey');
+            const key = input.value.trim();
+            if (key) {
+                state.keys.push({ key: key, id: Date.now() });
+                input.value = '';
+                saveState();
+                renderKeys();
+                showToast("API Key added to vault.");
+            }
+        }
+
+        function deleteKey(index) {
+            state.keys.splice(index, 1);
+            saveState();
+            renderKeys();
+        }
+
+        function selectKey(index) {
+            state.activeKeyIndex = index;
+            saveState();
+            renderKeys();
+            showToast("Primary key updated.");
+        }
+
+        function renderKeys() {
+            const list = document.getElementById('keyList');
+            list.innerHTML = state.keys.map((k, i) => `
+                <div class="flex items-center gap-3 p-3 rounded-xl border ${state.activeKeyIndex === i ? 'border-indigo-500/50 bg-indigo-500/10' : 'border-white/5 bg-white/5'}">
+                    <div class="flex-1 text-xs mono truncate font-medium ${state.activeKeyIndex === i ? 'text-white' : 'text-slate-500'}">
+                        ${k.key.substring(0, 12)}••••••••
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="selectKey(${i})" class="${state.activeKeyIndex === i ? 'text-indigo-400' : 'text-slate-600'} hover:text-white"><i data-lucide="check-circle" class="w-4 h-4"></i></button>
+                        <button onclick="deleteKey(${i})" class="text-slate-600 hover:text-red-400"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-center text-xs text-slate-600 py-4">No keys configured.</p>';
+            refreshIcons();
+        }
+
+        // Source Management
+        function addSource() {
+            const input = document.getElementById('newSource');
+            const content = input.value.trim();
+            if (content) {
+                state.sources.push({ content: content, id: Date.now() });
+                input.value = '';
+                saveState();
+                renderSources();
+                updateUI();
+                showToast("Source enrolled successfully.");
+            }
+        }
+
+        function deleteSource(index) {
+            state.sources.splice(index, 1);
+            saveState();
+            renderSources();
+            updateUI();
+        }
+
+        function renderSources() {
+            const list = document.getElementById('sourceList');
+            list.innerHTML = state.sources.map((s, i) => `
+                <div class="p-3 rounded-xl border border-white/5 bg-white/5 group relative">
+                    <p class="text-[11px] text-slate-400 leading-relaxed line-clamp-2">${s.content}</p>
+                    <button onclick="deleteSource(${i})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 p-1 bg-black/40 rounded transition-opacity"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </div>
+            `).join('') || '<p class="text-center text-xs text-slate-600 py-4">No authoritative sources enrolled.</p>';
+            refreshIcons();
+        }
+
+        // Core UI Sync
+        function saveState() {
+            localStorage.setItem('myres_keys', JSON.stringify(state.keys));
+            localStorage.setItem('myres_active_key', state.activeKeyIndex.toString());
+            localStorage.setItem('myres_sources', JSON.stringify(state.sources));
+        }
+
+        function updateUI() {
+            document.getElementById('sourceCount').innerText = `${state.sources.length} Sources`;
+            
+            const pipeline = document.getElementById('pipelineDisplay');
+            const steps = [
+                { id: 'scan', name: 'Quick Scan', icon: 'zap' },
+                { id: 'research', name: 'Deep Research', icon: 'cpu' },
+                { id: 'validate', name: 'Claim Validation', icon: 'shield-check' }
+            ];
+
+            pipeline.innerHTML = steps.map(s => `
+                <div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400' : 'text-slate-600'}">
+                    <i data-lucide="${s.icon}" class="w-4 h-4"></i>
+                    <span class="text-xs font-semibold">${s.name}</span>
+                    ${state.phase === s.id ? '<span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>' : ''}
+                </div>
+            `).join('');
+            refreshIcons();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            const tm = document.getElementById('toastMessage');
+            tm.innerText = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.remove('translate-y-10'), 10);
+            setTimeout(() => {
+                t.classList.add('translate-y-10');
+                setTimeout(() => t.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function addLog(type, msg) {
+            const stream = document.getElementById('logStream');
+            const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const logItem = document.createElement('div');
+            logItem.className = 'flex gap-2 animate-in slide-in-from-left-2 duration-300';
+            logItem.innerHTML = `<span class="opacity-40">[${time}]</span> <span class="uppercase ${type === 'AI' ? 'text-indigo-400' : 'text-slate-500'} font-bold">[${type}]</span> <span>${msg}</span>`;
+            stream.prepend(logItem);
+        }
+
+        // Research Engine Logic
+        async function callGemini(prompt, system) {
+            const apiKeyObj = state.keys[state.activeKeyIndex];
+            if (!apiKeyObj) throw new Error("No API key selected.");
+            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKeyObj.key}`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: system }] }
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "API Request Failed");
+            }
+
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
+        }
+
+        async function initiateResearch() {
+            const input = document.getElementById('mainInput');
+            const query = input.value.trim();
+            if (!query) return;
+
+            if (state.keys.length === 0) {
+                showToast("Please add an API key first.");
+                toggleModal('settingsModal');
+                return;
+            }
+
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            input.value = '';
+            
+            try {
+                // START PHASE: SCAN
+                state.phase = 'scan';
+                updateUI();
+                addLog('SYSTEM', `Initializing research vector for: "${query.substring(0, 30)}..."`);
+                
+                const scanSystem = "You are a research triage agent. Perform a Quick Scan. Identity 3-5 key patterns or themes related to the query. Keep it technical and brief.";
+                const scanResult = await callGemini(query, scanSystem);
+                addLog('AI', "Prompt A (Quick Scan) Complete.");
+                
+                // START PHASE: RESEARCH
+                state.phase = 'research';
+                updateUI();
+                addLog('SYSTEM', "Advancing to Deep Research phase...");
+                
+                const researchSystem = `You are a Senior Researcher. Using the following scan results: [${scanResult}], generate a detailed technical synthesis. Focus on non-obvious patterns. Use Markdown.`;
+                const researchResult = await callGemini(`Write a synthesis report on: ${query}`, researchSystem);
+                addLog('AI', "Prompt B (Deep Research) Complete.");
+
+                // START PHASE: VALIDATE
+                state.phase = 'validate';
+                updateUI();
+                const sourceText = state.sources.map(s => s.content).join("\n---\n");
+                addLog('SYSTEM', `Validating against ${state.sources.length} sources...`);
+                
+                const validateSystem = `You are a Fact Checker. Check the following report against these authoritative sources: [${sourceText}]. Identify any conflicts or high-confidence confirmations.`;
+                const validateResult = await callGemini(`Report: ${researchResult}`, validateSystem);
+                addLog('AI', "Prompt C (Validation) Complete.");
+
+                // RENDER TO CANVAS
+                renderCanvas(query, researchResult, validateResult);
+                
+                state.phase = 'idle';
+                updateUI();
+                showToast("Research synthesis finalized.");
+            } catch (err) {
+                addLog('ERROR', err.message);
+                showToast("Critical Error: See Logs");
+                state.phase = 'idle';
+                updateUI();
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function renderCanvas(query, content, validation) {
+            const brief = document.getElementById('briefContent');
+            const html = `
+                <div class="animate-in fade-in zoom-in-95 duration-700">
+                    <header class="mb-12">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-tighter">SYNTHESIS GENERATED</span>
+                            <span class="text-slate-600 text-xs tracking-wide font-mono">${new Date().toLocaleDateString()}</span>
+                        </div>
+                        <h1 class="text-4xl font-bold text-white mb-6 leading-tight gradient-text">${query}</h1>
+                    </header>
+
+                    <div class="prose prose-invert max-w-none space-y-8">
+                        <div class="p-8 rounded-3xl glass relative overflow-hidden group border-indigo-500/10">
+                            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-50"></div>
+                            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i> Research Brief
+                            </h2>
+                            <div class="text-slate-300 text-sm leading-relaxed relative z-10 whitespace-pre-wrap">
+                                ${content}
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-2xl border border-emerald-500/10 bg-emerald-500/5">
+                            <h3 class="text-emerald-400 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-widest">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i> Source Validation Results
+                            </h3>
+                            <div class="text-xs text-slate-400 leading-relaxed italic">
+                                ${validation}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            brief.innerHTML = html;
+            refreshIcons();
+        }
+
+        function clearCanvas() {
+            document.getElementById('briefContent').innerHTML = `
+                <div class="text-center py-20 opacity-20">
+                    <i data-lucide="ghost" class="w-12 h-12 mx-auto mb-4"></i>
+                    <p class="text-sm mono">Canvas cleared. Ready for new vector.</p>
+                </div>
+            `;
+            refreshIcons();
+        }
+
+        function downloadResearch() {
+            const content = document.getElementById('briefContent').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `research-${Date.now()}.txt`;
+            a.click();
+        }
+
+        // Init
+        updateUI();
+        document.getElementById('mainInput').addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch();
+        });
+
+    </script>
 </body>
 </html>
