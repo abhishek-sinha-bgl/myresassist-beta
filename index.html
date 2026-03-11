@@ -93,7 +93,7 @@
         }
 
         .btn-outline:hover {
-            background: rgba(var(--accent-rgb), 0.1);
+            background: rgba(0, 209, 255, 0.1);
         }
 
         ::-webkit-scrollbar { width: 4px; }
@@ -164,7 +164,7 @@
                     <select id="configModel" class="w-full input-dark p-2.5 text-xs mono appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1rem]"></select>
                 </div>
                 <div class="flex items-center justify-between">
-                    <button onclick="fetchModels()" class="btn-outline px-4 py-2 rounded text-xs flex items-center gap-2">
+                    <button id="fetchModelsBtn" onclick="fetchModels()" class="btn-outline px-4 py-2 rounded text-xs flex items-center gap-2">
                         <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Fetch models
                     </button>
                     <div class="text-xs text-slate-500">
@@ -295,13 +295,9 @@
             state.theme = themeName;
             document.body.setAttribute('data-theme', themeName);
             localStorage.setItem('myres_theme', themeName);
-            
-            // UI Feedback
             document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('bg-white/10', 'text-accent'));
             const activeBtn = document.getElementById(`tbtn-${themeName}`);
             if (activeBtn) activeBtn.classList.add('bg-white/10', 'text-accent');
-            
-            showToast(`${themeName.charAt(0).toUpperCase() + themeName.slice(1)} theme applied.`);
         }
 
         // --- TOPIC MANAGEMENT ---
@@ -345,7 +341,6 @@
             const canvas = document.getElementById('briefContent');
             const stream = document.getElementById('logStream');
             stream.innerHTML = '';
-            
             if (t) {
                 if (t.brief) renderCanvas(t.title, t.brief, t.validation);
                 else canvas.innerHTML = `<div class="text-center py-20 opacity-20 text-sm mono">Awaiting synthesis for: ${t.title}</div>`;
@@ -355,7 +350,7 @@
             }
         }
 
-        // --- CORE FUNCTIONS ---
+        // --- API CONFIG & FETCH ---
         function toggleModal(id) {
             document.getElementById(id).classList.toggle('hidden');
             if (id === 'settingsModal') {
@@ -376,133 +371,55 @@
             modelSelect.innerHTML = def.models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option value="">Manual Entry</option>';
         }
 
-        function saveState() {
-            localStorage.setItem('myres_providers', JSON.stringify(state.providers));
-            localStorage.setItem('myres_active_id', state.activeProviderId);
-            localStorage.setItem('myres_trusted_sources', JSON.stringify(state.sources));
-            localStorage.setItem('myres_topics', JSON.stringify(state.topics));
-            localStorage.setItem('myres_active_topic', state.activeTopicId);
-        }
+        async function fetchModels() {
+            const key = document.getElementById('configKey').value.trim();
+            const endpoint = document.getElementById('configUrl').value.trim();
+            const btn = document.getElementById('fetchModelsBtn');
+            const modelSelect = document.getElementById('configModel');
 
-        function updateUI() {
-            const active = state.providers.find(p => p.id == state.activeProviderId);
-            const tag = document.getElementById('activeProviderTag');
-            tag.innerHTML = active ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span> ${active.name}` : '<span class="text-red-500 font-bold uppercase text-[9px]">Offline</span>';
+            if (!key) return showToast("Enter an API key first.");
 
-            const pipeline = document.getElementById('pipelineDisplay');
-            const steps = [{ id: 'scan', name: 'Quick Scan', icon: 'zap' }, { id: 'research', name: 'Deep Research', icon: 'cpu' }, { id: 'validate', name: 'Claim Validation', icon: 'shield-check' }];
-            pipeline.innerHTML = steps.map(s => `<div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-semibold">${s.name}</span></div>`).join('');
-            refreshIcons();
-        }
+            btn.disabled = true;
+            addLog('SYSTEM', `Fetching models for ${state.currentTab}...`);
 
-        function addLog(type, msg, save = true) {
-            const stream = document.getElementById('logStream');
-            const logItem = document.createElement('div');
-            logItem.className = 'flex gap-2 mb-1';
-            logItem.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : 'text-slate-500'} font-bold">[${type}]</span> <span>${msg}</span>`;
-            stream.prepend(logItem);
-            
-            if (save && state.activeTopicId) {
-                const t = state.topics.find(top => top.id == state.activeTopicId);
-                if (t) { t.logs.push({ type, msg }); saveState(); }
-            }
-        }
-
-        async function initiateResearch() {
-            const query = document.getElementById('mainInput').value.trim();
-            if (!query) return;
-
-            if (!state.activeTopicId) {
-                createNewTopic();
-                if (!state.activeTopicId) return;
-            }
-
-            document.getElementById('runBtn').disabled = true;
             try {
-                state.phase = 'scan'; updateUI();
-                addLog('SYSTEM', `Vector identified. Starting Quick Scan...`);
-                const scan = await callAI(query, "Triage Agent. Identity 3 distinct patterns/themes. Brief bullet points.");
-                
-                state.phase = 'research'; updateUI();
-                addLog('AI', "Triage complete. Expanding synthesis...");
-                const report = await callAI(`Query: ${query}. Insights: ${scan}`, "Senior Researcher. Detailed technical synthesis in Markdown. Focus on emergent patterns.");
-
-                state.phase = 'validate'; updateUI();
-                const sources = state.sources.join(', ');
-                addLog('SYSTEM', `Verifying against grounding sources...`);
-                const valid = await callAI(`Report: ${report}. Grounding: ${sources}`, "Fact Checker. Identify potential hallucinations or conflicts.");
-
-                const t = state.topics.find(top => top.id == state.activeTopicId);
-                if (t) {
-                    t.brief = report;
-                    t.validation = valid;
-                    saveState();
-                    renderCanvas(t.title, report, valid);
+                let fetchedModels = [];
+                if (state.currentTab === 'Gemini') {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error?.message || "Failed to fetch Gemini models");
+                    fetchedModels = data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
+                } else if (state.currentTab === 'OpenAI') {
+                    const res = await fetch('https://api.openai.com/v1/models', {
+                        headers: { 'Authorization': `Bearer ${key}` }
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error?.message || "Failed to fetch OpenAI models");
+                    fetchedModels = data.data.map(m => m.id);
+                } else {
+                    throw new Error("Automatic fetch not supported for this provider yet.");
                 }
-                
-                state.phase = 'idle'; updateUI();
-                showToast("Synthesis complete.");
+
+                if (fetchedModels.length > 0) {
+                    fetchedModels.sort();
+                    modelSelect.innerHTML = fetchedModels.map(m => `<option value="${m}">${m}</option>`).join('');
+                    showToast(`Successfully fetched ${fetchedModels.length} models.`);
+                }
             } catch (err) {
+                showToast(err.message);
                 addLog('ERROR', err.message);
-                showToast("Kernel Interruption.");
-                state.phase = 'idle'; updateUI();
             } finally {
-                document.getElementById('runBtn').disabled = false;
-                document.getElementById('mainInput').value = '';
+                btn.disabled = false;
             }
-        }
-
-        async function callAI(prompt, system) {
-            const p = state.providers.find(pr => pr.id == state.activeProviderId);
-            if (!p) throw new Error("API Provider required.");
-            
-            const isGemini = p.name === 'Gemini' || p.url.includes('generativelanguage');
-            let url = isGemini ? `${p.url}${p.model}:generateContent?key=${p.key}` : p.url;
-            let body = isGemini ? {
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: { parts: [{ text: system }] }
-            } : {
-                model: p.model,
-                messages: [{ role: "system", content: system }, { role: "user", content: prompt }]
-            };
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${p.key}` },
-                body: JSON.stringify(body)
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error?.message || "LLM Request Failed");
-            return isGemini ? data.candidates?.[0]?.content?.parts?.[0]?.text : data.choices?.[0]?.message?.content;
-        }
-
-        function renderCanvas(title, report, validation) {
-            document.getElementById('briefContent').innerHTML = `
-                <div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <h1 class="text-4xl font-bold mb-8 gradient-text">${title}</h1>
-                    <div class="space-y-12">
-                        <div class="p-8 rounded-xl glass border-accent/10">
-                            <h2 class="text-xl font-bold text-accent mb-6 flex items-center gap-2"><i data-lucide="file-text"></i> Synthesis Output</h2>
-                            <div class="text-sm leading-relaxed whitespace-pre-wrap">${report}</div>
-                        </div>
-                        <div class="p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
-                            <h3 class="text-emerald-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Validation Layer
-                            </h3>
-                            <div class="text-[11px] italic leading-relaxed opacity-80">${validation}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            refreshIcons();
         }
 
         function saveProvider() {
             const p = { id: Date.now(), name: state.currentTab, url: document.getElementById('configUrl').value, key: document.getElementById('configKey').value, model: document.getElementById('configModel').value };
             state.providers.push(p); if (!state.activeProviderId) state.activeProviderId = p.id;
-            saveState(); renderProviders(); showToast("Configuration updated.");
+            saveState(); renderProviders(); showToast("Provider saved.");
         }
+
         function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
         function deleteProvider(id) { state.providers = state.providers.filter(p => p.id != id); if (state.activeProviderId == id) state.activeProviderId = null; saveState(); renderProviders(); updateUI(); }
         
@@ -530,6 +447,95 @@
         function removeSource(s) { state.sources = state.sources.filter(src => src != s); saveState(); renderSources(); }
         function renderSources() {
             document.getElementById('sourceList').innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] mono flex items-center gap-2"><span>${s}</span><button onclick="removeSource('${s}')" class="hover:text-red-400">×</button></div>`).join('');
+        }
+
+        // --- CORE RESEARCH ---
+        function saveState() {
+            localStorage.setItem('myres_providers', JSON.stringify(state.providers));
+            localStorage.setItem('myres_active_id', state.activeProviderId);
+            localStorage.setItem('myres_trusted_sources', JSON.stringify(state.sources));
+            localStorage.setItem('myres_topics', JSON.stringify(state.topics));
+            localStorage.setItem('myres_active_topic', state.activeTopicId);
+        }
+
+        function updateUI() {
+            const active = state.providers.find(p => p.id == state.activeProviderId);
+            const tag = document.getElementById('activeProviderTag');
+            tag.innerHTML = active ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span> ${active.name}` : '<span class="text-red-500 font-bold uppercase text-[9px]">Offline</span>';
+            const pipeline = document.getElementById('pipelineDisplay');
+            const steps = [{ id: 'scan', name: 'Quick Scan', icon: 'zap' }, { id: 'research', name: 'Deep Research', icon: 'cpu' }, { id: 'validate', name: 'Claim Validation', icon: 'shield-check' }];
+            pipeline.innerHTML = steps.map(s => `<div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-semibold">${s.name}</span></div>`).join('');
+            refreshIcons();
+        }
+
+        function addLog(type, msg, save = true) {
+            const stream = document.getElementById('logStream');
+            const logItem = document.createElement('div');
+            logItem.className = 'flex gap-2 mb-1';
+            logItem.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : 'text-slate-500'} font-bold">[${type}]</span> <span>${msg}</span>`;
+            stream.prepend(logItem);
+            if (save && state.activeTopicId) {
+                const t = state.topics.find(top => top.id == state.activeTopicId);
+                if (t) { t.logs.push({ type, msg }); saveState(); }
+            }
+        }
+
+        async function initiateResearch() {
+            const query = document.getElementById('mainInput').value.trim();
+            if (!query) return;
+            if (!state.activeTopicId) { createNewTopic(); if (!state.activeTopicId) return; }
+            document.getElementById('runBtn').disabled = true;
+            try {
+                state.phase = 'scan'; updateUI();
+                addLog('SYSTEM', `Vector identified. Starting Quick Scan...`);
+                const scan = await callAI(query, "Triage Agent. Identity 3 distinct patterns/themes. Brief bullet points.");
+                state.phase = 'research'; updateUI();
+                addLog('AI', "Triage complete. Expanding synthesis...");
+                const report = await callAI(`Query: ${query}. Insights: ${scan}`, "Senior Researcher. Detailed technical synthesis in Markdown. Focus on emergent patterns.");
+                state.phase = 'validate'; updateUI();
+                const sources = state.sources.join(', ');
+                addLog('SYSTEM', `Verifying against grounding sources...`);
+                const valid = await callAI(`Report: ${report}. Grounding: ${sources}`, "Fact Checker. Identify potential hallucinations or conflicts.");
+                const t = state.topics.find(top => top.id == state.activeTopicId);
+                if (t) { t.brief = report; t.validation = valid; saveState(); renderCanvas(t.title, report, valid); }
+                state.phase = 'idle'; updateUI();
+                showToast("Synthesis complete.");
+            } catch (err) {
+                addLog('ERROR', err.message); showToast("Kernel Interruption."); state.phase = 'idle'; updateUI();
+            } finally {
+                document.getElementById('runBtn').disabled = false; document.getElementById('mainInput').value = '';
+            }
+        }
+
+        async function callAI(prompt, system) {
+            const p = state.providers.find(pr => pr.id == state.activeProviderId);
+            if (!p) throw new Error("API Provider required.");
+            const isGemini = p.name === 'Gemini' || p.url.includes('generativelanguage');
+            let url = isGemini ? `${p.url}${p.model}:generateContent?key=${p.key}` : p.url;
+            let body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
+            const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${p.key}` }, body: JSON.stringify(body) });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error?.message || "LLM Request Failed");
+            return isGemini ? data.candidates?.[0]?.content?.parts?.[0]?.text : data.choices?.[0]?.message?.content;
+        }
+
+        function renderCanvas(title, report, validation) {
+            document.getElementById('briefContent').innerHTML = `
+                <div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <h1 class="text-4xl font-bold mb-8 gradient-text">${title}</h1>
+                    <div class="space-y-12">
+                        <div class="p-8 rounded-xl glass border-accent/10">
+                            <h2 class="text-xl font-bold text-accent mb-6 flex items-center gap-2"><i data-lucide="file-text"></i> Synthesis Output</h2>
+                            <div class="text-sm leading-relaxed whitespace-pre-wrap">${report}</div>
+                        </div>
+                        <div class="p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                            <h3 class="text-emerald-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Validation Layer</h3>
+                            <div class="text-[11px] italic leading-relaxed opacity-80">${validation}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            refreshIcons();
         }
 
         function downloadActiveTopic() {
