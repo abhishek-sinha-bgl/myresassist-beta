@@ -111,12 +111,12 @@
                         <span class="ml-3 text-xs font-medium opacity-80">Parallel Synthesis</span>
                     </label>
                 </div>
-                <p class="text-[10px] text-slate-400 mb-2 italic leading-relaxed">When Parallel Synthesis is on, all providers marked "Worker" will contribute. One provider must be marked "Active" (Use) to act as Orchestrator.</p>
+                <p class="text-[10px] text-slate-400 mb-2 italic leading-relaxed">Parallel synthesis calls all "Worker" LLMs for extraction. One provider must be marked "Active" (Use) to act as Orchestrator for the final synthesis.</p>
             </div>
 
             <section class="mb-8">
                 <div class="flex justify-between items-end mb-2">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trusted Sources</label>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Grounding Domains</label>
                     <span class="text-[9px] text-slate-500 uppercase italic">Priority domains</span>
                 </div>
                 <div class="flex gap-2">
@@ -136,21 +136,21 @@
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Provider Name</label>
-                        <input id="configName" type="text" class="w-full input-dark p-2 text-xs" placeholder="Personal Gemini 2.0">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Provider Label</label>
+                        <input id="configName" type="text" class="w-full input-dark p-2 text-xs" placeholder="e.g. My OpenRouter Agent">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Pipeline Role</label>
                         <select id="configRole" class="w-full input-dark p-2 text-xs">
-                            <option value="worker">Worker (Research Agent)</option>
-                            <option value="orchestrator" selected>Orchestrator (Synthesis Lead)</option>
+                            <option value="worker">Worker (Researcher)</option>
+                            <option value="orchestrator" selected>Orchestrator (Synthesis)</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="customEndpointGroup" class="hidden">
                     <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Base API URL</label>
-                    <input id="configUrl" type="text" class="w-full input-dark p-2 text-xs mono" placeholder="https://api.openai.com/v1">
+                    <input id="configUrl" type="text" class="w-full input-dark p-2 text-xs mono" placeholder="https://openrouter.ai/api/v1">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -161,23 +161,23 @@
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Selected Model</label>
                         <select id="configModel" class="w-full input-dark p-2 text-xs mono">
-                             <option value="" disabled selected>Select or fetch models...</option>
+                             <option value="" disabled selected>Fetch models first...</option>
                         </select>
                     </div>
                 </div>
                 
                 <button id="fetchModelsBtn" onclick="fetchModels()" class="w-full btn-outline py-2 rounded text-xs">
-                    <span id="fetchBtnText">Fetch & Refresh Models</span>
+                    <span id="fetchBtnText">Fetch & Verify Models</span>
                 </button>
             </div>
 
             <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-white/5">
                 <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="px-6 py-2 rounded text-sm text-slate-400">Cancel</button>
-                <button onclick="saveProvider()" class="px-8 py-2 rounded text-sm bg-white text-black font-bold">Save Provider Configuration</button>
+                <button onclick="saveProvider()" class="px-8 py-2 rounded text-sm bg-white text-black font-bold">Save Provider</button>
             </div>
 
             <div class="mt-8">
-                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Active Profile Library</h3>
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Saved Profiles</h3>
                 <div id="providerList" class="space-y-2"></div>
             </div>
         </div>
@@ -306,14 +306,20 @@
             document.querySelectorAll('.provider-tab').forEach(b => b.classList.remove('tab-active'));
             document.getElementById('tab-'+t).classList.add('tab-active');
             const def = PROVIDER_DEFAULTS[t];
-            document.getElementById('customEndpointGroup').style.display = (t === 'Custom' || t === 'OpenAI') ? 'block' : 'none';
-            document.getElementById('configUrl').value = def.url;
             
-            const select = document.getElementById('configModel');
-            if (def.models && def.models.length > 0) {
-                select.innerHTML = def.models.map(m => `<option value="${m}">${m}</option>`).join('');
-            } else {
-                select.innerHTML = '<option value="" disabled selected>Fetch models...</option>';
+            // Explicit visibility for Custom/OpenAI endpoint field
+            const endpointGroup = document.getElementById('customEndpointGroup');
+            endpointGroup.style.display = (t === 'Custom' || t === 'OpenAI') ? 'block' : 'none';
+            
+            // Populate defaults unless editing
+            if (!state.editingProviderId) {
+                document.getElementById('configUrl').value = def.url;
+                const select = document.getElementById('configModel');
+                if (def.models && def.models.length > 0) {
+                    select.innerHTML = def.models.map(m => `<option value="${m}">${m}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="" disabled selected>Fetch models...</option>';
+                }
             }
         }
 
@@ -326,7 +332,7 @@
             if (tab === 'visualizer') renderSNRGraph();
         }
 
-        // --- PROVIDER CRUD & EDIT ---
+        // --- PROVIDER MANAGEMENT ---
         function resetConfigForm() {
             state.editingProviderId = null;
             document.getElementById('modalTitle').innerText = "Engine Configuration";
@@ -344,36 +350,55 @@
             const role = document.getElementById('configRole').value;
 
             if (!key || !model) return showToast("API Key and Model are required.");
+            if ((state.currentTab === 'Custom' || state.currentTab === 'OpenAI') && !url) return showToast("API Base URL is required for this provider.");
 
-            const payload = { id: state.editingProviderId || Date.now(), name, type: state.currentTab, url, key, model, role };
+            const payload = { 
+                id: state.editingProviderId || Date.now(), 
+                name, 
+                type: state.currentTab, 
+                url: url.replace(/\/+$/, ''), // Clean trailing slashes 
+                key, 
+                model, 
+                role 
+            };
 
             if (state.editingProviderId) {
                 const idx = state.providers.findIndex(p => p.id === state.editingProviderId);
                 state.providers[idx] = payload;
+                showToast("Profile Updated.");
             } else {
                 state.providers.push(payload);
                 if (!state.activeProviderId && role === 'orchestrator') state.activeProviderId = payload.id;
+                showToast("Profile Created.");
             }
 
             saveState();
             renderProviders();
             resetConfigForm();
             updateUI();
-            showToast("Profile Saved.");
         }
 
         function editProvider(id) {
             const p = state.providers.find(x => x.id === id);
             if (!p) return;
+            
             state.editingProviderId = id;
             document.getElementById('modalTitle').innerText = "Editing: " + p.name;
             document.getElementById('configName').value = p.name;
             document.getElementById('configKey').value = p.key;
             document.getElementById('configRole').value = p.role;
-            switchTab(p.type);
+            
+            // Manual tab switch to prevent auto-defaults overwriting current URL
+            state.currentTab = p.type;
+            document.querySelectorAll('.provider-tab').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById('tab-'+p.type).classList.add('tab-active');
+            
+            document.getElementById('customEndpointGroup').style.display = (p.type === 'Custom' || p.type === 'OpenAI') ? 'block' : 'none';
             document.getElementById('configUrl').value = p.url;
+            
             const select = document.getElementById('configModel');
-            select.innerHTML = `<option value="${p.model}" selected>${p.model}</option>` + select.innerHTML;
+            select.innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
+            showToast("Settings loaded for editing.");
         }
 
         function renderProviders() {
@@ -385,10 +410,12 @@
                         <div class="text-xs font-bold text-white truncate">${p.name}</div>
                         <div class="text-[9px] mono opacity-40 truncate">${p.model}</div>
                     </div>
-                    <div class="flex gap-1">
-                        <button onclick="setActiveProvider(${p.id})" class="px-2 py-1 text-[9px] border rounded ${state.activeProviderId == p.id ? 'bg-accent text-black font-bold' : 'hover:bg-white/5 border-white/10'}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
-                        <button onclick="editProvider(${p.id})" class="p-1.5 hover:text-accent"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteProvider(${p.id})" class="p-1.5 text-red-500 hover:bg-red-500/10"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="setActiveProvider(${p.id})" class="px-2 py-1 text-[9px] border border-white/10 rounded uppercase font-bold transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : 'hover:bg-white/5'}">
+                            ${state.activeProviderId == p.id ? 'active' : 'use'}
+                        </button>
+                        <button onclick="editProvider(${p.id})" class="p-1.5 rounded hover:text-accent"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteProvider(${p.id})" class="p-1.5 rounded text-red-500 hover:bg-red-500/10"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
                     </div>
                 </div>
             `).join('') || '<div class="text-center py-4 text-[10px] opacity-30 italic">No providers deployed.</div>';
@@ -403,7 +430,9 @@
             const key = document.getElementById('configKey').value.trim();
             const url = document.getElementById('configUrl').value.trim();
             if (!key) return showToast("API Key required.");
-            document.getElementById('fetchBtnText').innerText = "Connecting...";
+            
+            const btnText = document.getElementById('fetchBtnText');
+            btnText.innerText = "Connecting...";
 
             try {
                 let fetchedModels = [];
@@ -413,10 +442,11 @@
                     if (!res.ok) throw new Error(data.error?.message || "Gemini fail");
                     fetchedModels = data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
                 } else {
+                    // Clean URL for /models endpoint
                     let fetchUrl = url.replace(/\/chat\/completions$/, '').replace(/\/$/, '') + '/models';
                     const res = await fetch(fetchUrl, { headers: { 'Authorization': `Bearer ${key}` }});
                     const data = await res.json();
-                    if (!res.ok) throw new Error("Endpoint returned error.");
+                    if (!res.ok) throw new Error("Endpoint authentication failed.");
                     fetchedModels = data.data.map(m => m.id);
                 }
                 document.getElementById('configModel').innerHTML = fetchedModels.sort().map(m => `<option value="${m}">${m}</option>`).join('');
@@ -424,7 +454,7 @@
             } catch (e) {
                 showToast("Network Error: Check API URL or Key.");
                 console.error(e);
-            } finally { document.getElementById('fetchBtnText').innerText = "Fetch & Refresh Models"; }
+            } finally { btnText.innerText = "Fetch & Refresh Models"; }
         }
 
         async function initiateResearch() {
@@ -457,11 +487,17 @@
                 }
 
                 addLog('AI', 'Step 2: Orchestrating unified Brief...');
-                const brief = await callAI_Specific(activeP, "Synthesize these findings: " + researchBlocks.join("\n\n"), "Chief Scientist. Deliver technical Markdown.");
+                const synthPrompt = `Synthesize these research blocks into a unified technical brief. 
+                    Input Data: ${researchBlocks.join("\n\n---\n\n")}`;
+                const brief = await callAI_Specific(activeP, synthPrompt, "Chief Scientist. Deliver technical Markdown.");
 
                 state.phase = 'validate'; updateUI();
                 addLog('SYSTEM', 'Step 3: Forensic Claim Extraction...');
-                const valid = await callAI_Specific(activeP, brief, "Extract 5 claims as: CLAIM: [Status] | Text | Reason. Identify GAP: Topic. SNR: 0-100.");
+                const validPrompt = `Extract 8-10 claims from: ${brief}. 
+                    Format: CLAIM: [Status] | Text | Reason
+                    Identify GAP: Topic
+                    SNR: 0-100`;
+                const valid = await callAI_Specific(activeP, validPrompt, "Forensic Fact Checker.");
 
                 const parsed = parseValidation(valid);
                 t.brief = brief; t.claims = parsed.claims; t.gaps = parsed.gaps; t.snr = parsed.snr; t.breadth = (researchBlocks.length * 25);
@@ -469,7 +505,8 @@
                 saveState(); loadActiveTopic();
                 showToast("Synthesis Achieved.");
             } catch (err) {
-                addLog('ERROR', "Network Failure or LLM Error. Verify Key & URL.");
+                addLog('ERROR', "Network Failure: Check Provider URL or Key.");
+                showToast("Pipeline Stalled.");
             } finally {
                 state.phase = 'idle'; updateUI(); btn.disabled = false; document.getElementById('mainInput').value = '';
             }
@@ -477,8 +514,11 @@
 
         async function callAI_Specific(p, prompt, system) {
             const isGemini = p.type === 'Gemini' || p.url.includes('generativelanguage');
-            let url = isGemini ? `${p.url.replace(/\/$/, '')}/${p.model}:generateContent?key=${p.key}` : p.url;
-            if (!isGemini && !url.endsWith('/chat/completions')) url = url.replace(/\/$/, '') + '/chat/completions';
+            
+            // Fix URL construction to prevent double segments or missing slashes
+            let cleanUrl = p.url.replace(/\/+$/, '');
+            let url = isGemini ? `${cleanUrl}/${p.model}:generateContent?key=${p.key}` : cleanUrl;
+            if (!isGemini && !url.endsWith('/chat/completions')) url += '/chat/completions';
 
             const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } 
                                   : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
@@ -487,7 +527,7 @@
 
             const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
             const data = await res.json();
-            if (!res.ok) throw new Error("API Failure");
+            if (!res.ok) throw new Error(data.error?.message || "Provider Refused Connection.");
             return isGemini ? data.candidates?.[0]?.content?.parts?.[0]?.text : data.choices?.[0]?.message?.content;
         }
 
@@ -505,11 +545,11 @@
             return { claims, gaps, snr };
         }
 
-        // --- REMAINING UTIL ---
+        // --- TOPIC UTILS ---
         function createNewTopic(parentId = null) {
             const title = prompt("Vector Title:", "Project " + (state.topics.length + 1));
             if (!title) return;
-            const nt = { id: Date.now(), title, parentId, brief: null, claims: [], date: new Date().toISOString(), logs: [] };
+            const nt = { id: Date.now(), title, parentId, brief: null, claims: [], gaps: [], date: new Date().toISOString(), logs: [] };
             state.topics.unshift(nt); state.activeTopicId = nt.id;
             saveState(); renderTopics(); loadActiveTopic();
         }
@@ -519,11 +559,18 @@
             const t = state.topics.find(x => x.id == state.activeTopicId);
             if (!t) return;
             const cx = 300, cy = 200, signal = t.snr || 0, breadth = t.breadth || 0;
-            svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="150" fill="none" stroke="rgba(255,255,255,0.05)" /><line x1="${cx-180}" y1="${cy}" x2="${cx+180}" y2="${cy}" stroke="rgba(255,255,255,0.1)" /><line x1="${cx}" y1="${cy-180}" x2="${cx}" y2="${cy-180}" stroke="rgba(255,255,255,0.1)" /><circle cx="${cx + (breadth * 1.5 - 75)}" cy="${cy - (signal * 1.5 - 75)}" r="8" class="fill-accent ping" />`;
+            svg.innerHTML = `
+                <circle cx="${cx}" cy="${cy}" r="150" fill="none" stroke="rgba(255,255,255,0.05)" />
+                <circle cx="${cx}" cy="${cy}" r="100" fill="none" stroke="rgba(255,255,255,0.05)" />
+                <line x1="${cx-180}" y1="${cy}" x2="${cx+180}" y2="${cy}" stroke="rgba(255,255,255,0.1)" />
+                <line x1="${cx}" y1="${cy-180}" x2="${cx}" y2="${cy+180}" stroke="rgba(255,255,255,0.1)" />
+                <circle cx="${cx + (breadth * 1.5 - 75)}" cy="${cy - (signal * 1.5 - 75)}" r="8" class="fill-accent ping" />
+            `;
         }
 
         function addSource() { const v = document.getElementById('newSource').value.trim(); if(v){ state.sources.push(v); document.getElementById('newSource').value=''; saveState(); renderSources(); }}
         function renderSources() { document.getElementById('sourceList').innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] mono flex items-center gap-2">${s} <button onclick="state.sources=state.sources.filter(x=>x!='${s}');saveState();renderSources();">×</button></div>`).join(''); }
+        
         function saveState() {
             state.multiLlm = document.getElementById('multiLlmToggle').checked;
             localStorage.setItem('myres_providers', JSON.stringify(state.providers));
@@ -533,14 +580,16 @@
             localStorage.setItem('myres_active_topic', state.activeTopicId);
             localStorage.setItem('myres_multi_llm', state.multiLlm);
         }
+        
         function updateUI() {
             const p = state.providers.find(x => x.id == state.activeProviderId);
             document.getElementById('activeProviderTag').innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent inline-block mr-1"></span> Orchestrator: ${p.name}` : '<span class="text-red-500 uppercase text-[9px]">Offline</span>';
             const pipeline = document.getElementById('pipelineDisplay');
-            const steps = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Verification', icon: 'shield-check' }];
+            const steps = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Forensics', icon: 'shield-check' }];
             pipeline.innerHTML = steps.map(s => `<div class="flex items-center gap-3 p-2 rounded-lg transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-semibold">${s.name}</span></div>`).join('');
             refreshIcons();
         }
+        
         function addLog(type, msg, save=true) {
             const s = document.getElementById('logStream');
             const l = document.createElement('div');
@@ -549,8 +598,17 @@
             s.prepend(l);
             if(save && state.activeTopicId) { const t=state.topics.find(x=>x.id==state.activeTopicId); if(t){ if(!t.logs) t.logs=[]; t.logs.push({type, msg}); saveState(); }}
         }
+        
         function toggleKeyVisibility() { const i = document.getElementById('configKey'); i.type = i.type === 'password' ? 'text' : 'password'; }
         function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 3000); }
+        function downloadActiveTopic() {
+            const t = state.topics.find(top => top.id == state.activeTopicId);
+            if (!t || !t.brief) return showToast("Nothing to export.");
+            const content = `# ${t.title}\n\n${t.brief}\n\n## Forensics\n${t.validation || ''}`;
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${t.title.replace(/\s/g, '-')}.md`; a.click();
+        }
+        function clearCanvas() { if(confirm("Clear topic data?")) { const t=state.topics.find(x=>x.id==state.activeTopicId); if(t){ t.brief=null; t.claims=[]; t.logs=[]; saveState(); loadActiveTopic(); }}}
 
         window.onload = () => {
             document.getElementById('multiLlmToggle').checked = state.multiLlm;
