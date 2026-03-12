@@ -143,6 +143,31 @@ textarea.inp{resize:none;line-height:1.6;}
 .claim-card.discarded{opacity:.4;filter:grayscale(.5);}
 .claim-card.grounded{border-left:3px solid var(--accent);}
 .claim-card.ungrounded{border-left:3px solid #f59e0b;}
+/* Position card — user-committed assertion */
+.claim-card.is-position{
+  background:linear-gradient(135deg,var(--bg-card) 0%,rgba(0,200,240,0.04) 100%);
+  border:1px solid rgba(0,200,240,0.35);
+  border-left:4px solid var(--accent);
+  box-shadow:0 0 0 1px rgba(0,200,240,0.08),var(--shadow-lg);
+}
+.claim-card.is-position:hover{border-color:rgba(0,200,240,0.55);}
+.position-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,200,240,0.3);}
+/* Challenge panel inside Position card */
+.challenge-panel{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.challenge-panel summary{font-size:12px;font-weight:700;color:var(--text-label);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;user-select:none;}
+.challenge-panel summary::-webkit-details-marker{display:none;}
+.challenge-panel summary::before{content:'▸';font-size:10px;transition:transform .15s;}
+.challenge-panel[open] summary::before{content:'▾';}
+.challenge-item{margin-top:8px;padding:9px 12px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15);border-radius:var(--radius-sm);}
+.challenge-item.assumption{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2);}
+.challenge-item.counterarg{background:rgba(168,85,247,.05);border-color:rgba(168,85,247,.2);}
+.challenge-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.challenge-item.assumption .challenge-label{color:#f59e0b;}
+.challenge-item.counterarg .challenge-label{color:#a855f7;}
+.challenge-item .challenge-text{font-size:12.5px;line-height:1.55;color:var(--text-secondary);}
+.challenge-needs{font-size:12px;color:var(--text-label);margin-top:8px;padding:7px 10px;background:var(--bg-input);border-radius:var(--radius-sm);border-left:2px solid var(--accent);}
+/* Position author note */
+.position-author{font-size:11.5px;color:var(--accent);font-style:italic;margin-bottom:8px;opacity:.8;}
 /* Source provenance chip on claim card */
 .claim-source-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-family:var(--font-mono);margin-bottom:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .claim-source-chip.grounded{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,200,240,.2);}
@@ -454,7 +479,7 @@ textarea.inp{resize:none;line-height:1.6;}
       <span class="nav-title">Distila</span>
       <div style="font-size:10px;color:var(--text-label);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;font-style:italic">knowledge accumulates · claims persist · contradictions surface</div>
     </div>
-    <span class="nav-badge">V5.6</span>
+    <span class="nav-badge">V5.7</span>
   </div>
   <div id="activeProviderTag" style="display:none" class="nav-badge">
     <span id="activeProviderName">—</span>
@@ -550,6 +575,7 @@ textarea.inp{resize:none;line-height:1.6;}
     <div id="vaultContent" class="tab-content">
       <div class="grounding-filter" id="groundingFilter">
         <button class="grounding-btn active" id="gf-all" onclick="setGroundingFilter('all')">All</button>
+        <button class="grounding-btn" id="gf-positions" onclick="setGroundingFilter('positions')">◈ Positions</button>
         <button class="grounding-btn" id="gf-grounded" onclick="setGroundingFilter('grounded')">🔗 Grounded</button>
         <button class="grounding-btn warn" id="gf-ungrounded" onclick="setGroundingFilter('ungrounded')">⚠ Needs Source</button>
       </div>
@@ -609,6 +635,7 @@ textarea.inp{resize:none;line-height:1.6;}
         <div class="stats-row">
           <div class="stat-item"><div class="stat-val" id="statSnr">—</div><div class="stat-label">Confidence Index</div></div>
           <div class="stat-item"><div class="stat-val" id="statBreadth">—</div><div class="stat-label">Breadth</div></div>
+          <div class="stat-item"><div class="stat-val" id="statPositions" style="color:var(--accent)">—</div><div class="stat-label">Positions</div></div>
           <div class="stat-item"><div class="stat-val" id="statValidated">—</div><div class="stat-label">Validated</div></div>
           <div class="stat-item"><div class="stat-val" id="statAge">—</div><div class="stat-label">Avg Source Age</div></div>
         </div>
@@ -1762,7 +1789,9 @@ async function runStage(stage){
     try{
       const sp=state.providers.find(p=>p.role==='orchestrator'&&!p.disabled)||activeP;
       const claimsSummary=t.claims.filter(c=>!c.discarded).slice(0,30).map(c=>`[${c.status}/${c.confidence}%] ${c.text}`).join('\n');
-      const updated=await callAIWithRetry(sp,`Re-synthesize this research brief using the current claims.\nTOPIC: ${t.title}\nCLAIMS:\n${claimsSummary}\n\nReturn a complete updated brief in markdown format.`,'You are a research synthesizer. Be accurate and structured.');
+      const positions=(t.claims||[]).filter(c=>c.isPosition&&!c.discarded);
+      const positionBlock=positions.length?`\n\nLOAD-BEARING POSITIONS (researcher has personally committed to these — treat as anchors, note where evidence supports or challenges them):\n${positions.map(p=>`• ${p.text}${p.challenges?.strengthAssessment?' ['+p.challenges.strengthAssessment+']':''}`).join('\n')}`:'';
+      const updated=await callAIWithRetry(sp,`Re-synthesize this research brief using the current claims.\nTOPIC: ${t.title}\nCLAIMS:\n${claimsSummary}${positionBlock}\n\nReturn a complete updated brief in markdown format. For any load-bearing positions, note explicitly whether the evidence supports, challenges, or is insufficient to evaluate them.`,'You are a research synthesizer. Be accurate and structured.');
       if(updated&&updated.length>200){t.brief=updated;saveState();renderSynthesis(t);switchTab('synthesis');showToast('Synthesis updated.','success');addLog('ok','Synthesize stage complete.');}
     }catch(e){addLog('err',e.message);showToast('Synthesis failed: '+e.message,'error',true);}
     finally{setPhase('idle');stopProgress();enableRunBtn(true);}
@@ -2058,16 +2087,21 @@ function renderClaims(t){
   if(!t.claims||t.claims.length===0){grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">No Claims Yet</div></div>`;return;}
   let active=t.claims.filter(c=>!c.discarded);
   const disc=t.claims.filter(c=>c.discarded);
-  if(state.groundingFilter==='grounded') active=active.filter(c=>c.sourceDoc?.url);
-  if(state.groundingFilter==='ungrounded') active=active.filter(c=>!c.sourceDoc?.url);
-  const ungroundedCount=t.claims.filter(c=>!c.discarded&&!c.sourceDoc?.url).length;
-  // Update filter button labels
+  const positionCount=active.filter(c=>c.isPosition).length;
+  const ungroundedCount=active.filter(c=>!c.sourceDoc?.url).length;
+  const pfBtn=document.getElementById('gf-positions');
+  if(pfBtn) pfBtn.textContent=`◈ Positions${positionCount?' ('+positionCount+')':''}`;
   const ug=document.getElementById('gf-ungrounded');
   if(ug) ug.textContent=`⚠ Needs Source${ungroundedCount?' ('+ungroundedCount+')':''}`;
+  if(state.groundingFilter==='grounded') active=active.filter(c=>c.sourceDoc?.url);
+  else if(state.groundingFilter==='ungrounded') active=active.filter(c=>!c.sourceDoc?.url);
+  else if(state.groundingFilter==='positions') active=active.filter(c=>c.isPosition);
   if(!active.length&&state.groundingFilter!=='all'){
-    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">${state.groundingFilter==='grounded'?'🔗':'⚠'}</div><div class="empty-title">No ${state.groundingFilter} claims</div></div>`;
+    const emptyIcons={grounded:'🔗',ungrounded:'⚠',positions:'◈'};
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">${emptyIcons[state.groundingFilter]||'🗂️'}</div><div class="empty-title">No ${state.groundingFilter} claims</div></div>`;
     return;
   }
+  active.sort((a,b)=>(b.isPosition?1:0)-(a.isPosition?1:0));
   grid.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:16px">${active.map(c=>renderClaimCard(c,t)).join('')}</div>
   ${disc.length?`<details><summary style="font-size:13px;color:var(--text-label);cursor:pointer;padding:8px 0">${disc.length} discarded</summary><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:10px">${disc.map(c=>renderClaimCard(c,t)).join('')}</div></details>`:''}`;
 }
@@ -2076,26 +2110,44 @@ function renderClaimCard(c,t){
   const valCount=(c.validations||[]).length;
   const isContra=(c.contradicts&&c.contradicts.length>0)||c.status==='CONTESTED';
   const isGrounded=!!(c.sourceDoc?.url);
-  const groundedClass=isGrounded?'grounded':'ungrounded';
+  const isPosition=!!c.isPosition;
+  // Card classes
+  const cardClasses=[
+    isPosition?'is-position':(isGrounded?'grounded':'ungrounded'),
+    c.discarded?'discarded':''
+  ].filter(Boolean).join(' ');
   // Source provenance chip
   let sourceChip='';
   if(isGrounded){
     const domain=c.sourceDoc.url?new URL(c.sourceDoc.url).hostname.replace('www.',''):'';
-    sourceChip=`<a href="${escHTML(c.sourceDoc.url)}" target="_blank" class="claim-source-chip grounded" title="${escHTML(c.sourceDoc.passage||c.sourceDoc.title||'')}" style="text-decoration:none">
-      <img src="https://www.google.com/s2/favicons?sz=12&domain=${escHTML(domain)}" style="width:12px;height:12px;border-radius:2px" onerror="this.style.display='none'">
-      ${escHTML(domain||c.sourceDoc.title||'source')}
-    </a>`;
+    sourceChip=`<a href="${escHTML(c.sourceDoc.url)}" target="_blank" class="claim-source-chip grounded" title="${escHTML(c.sourceDoc.passage||c.sourceDoc.title||'')}" style="text-decoration:none"><img src="https://www.google.com/s2/favicons?sz=12&domain=${escHTML(domain)}" style="width:12px;height:12px;border-radius:2px;margin-right:3px" onerror="this.style.display='none'">${escHTML(domain||c.sourceDoc.title||'source')}</a>`;
   } else {
-    sourceChip=`<span class="claim-source-chip hypothesis" title="No primary source attached — AI-generated hypothesis">⚠ AI hypothesis</span>`;
+    sourceChip=`<span class="claim-source-chip hypothesis" title="No primary source — AI-generated hypothesis">⚠ AI hypothesis</span>`;
   }
-  return`<div class="claim-card ${groundedClass} ${c.discarded?'discarded':''}" id="claim-${c.id}" style="${isContra?'border-color:rgba(168,85,247,.3)':''}">
+  // Challenge panel for positions
+  let challengePanel='';
+  if(isPosition&&c.challenges){
+    const ch=c.challenges;
+    challengePanel=`<details class="challenge-panel">
+      <summary>⚔ Challenges (${(ch.counterarguments||[]).length+(ch.assumptions||[]).length})<span style="margin-left:auto;font-size:11px;color:var(--text-label);font-weight:400">What tries to break this</span></summary>
+      ${(ch.assumptions||[]).map(a=>`<div class="challenge-item assumption"><div class="challenge-label">⚠ Weak assumption</div><div class="challenge-text">${escHTML(a)}</div></div>`).join('')}
+      ${(ch.counterarguments||[]).map(a=>`<div class="challenge-item counterarg"><div class="challenge-label">⚡ Counterargument</div><div class="challenge-text">${escHTML(a)}</div></div>`).join('')}
+      ${ch.mustProve?`<div class="challenge-needs">🎯 To defend this you must establish: ${escHTML(ch.mustProve)}</div>`:''}
+    </details>`;
+  } else if(isPosition&&!c.challenges){
+    challengePanel=`<div style="font-size:12px;color:var(--text-label);margin-top:8px;font-style:italic">Challenge analysis pending…</div>`;
+  }
+  const contraStyle=isContra&&!isPosition?'border-color:rgba(168,85,247,.3)':'';
+  return`<div class="claim-card ${cardClasses}" id="claim-${c.id}" style="${contraStyle}">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        ${isPosition?'<span class="position-badge">◈ Position</span>':''}
         ${getStatusBadge(c.status)}
         ${isContra?'<span class="contra-badge" style="font-size:10px;padding:2px 7px">⚠ Contradiction</span>':''}
       </div>
       ${c.confidence!==undefined?getConfidenceBadgeHTML(c.confidenceRaw||c.confidence,c.confidence,c.citationAgeNote):''}
     </div>
+    ${isPosition&&c.committedAt?`<div class="position-author">Committed ${new Date(c.committedAt).toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})}</div>`:''}
     ${sourceChip}
     <div class="claim-text">${escHTML(c.text)}</div>
     ${c.sourceDoc?.passage?`<div style="font-size:12px;color:var(--text-secondary);line-height:1.5;padding:7px 11px;background:var(--bg-input);border-radius:var(--radius-sm);border-left:2px solid var(--accent);margin-bottom:10px;font-style:italic">"${escHTML(c.sourceDoc.passage.substring(0,200))}${c.sourceDoc.passage.length>200?'…':''}"</div>`:''}
@@ -2108,8 +2160,11 @@ function renderClaimCard(c,t){
     </div>
     ${c.citationAgeNote?`<div style="font-size:12px;color:#f59e0b;padding:5px 9px;background:rgba(245,158,11,.08);border-radius:5px;margin-bottom:10px">⬇ ${escHTML(c.citationAgeNote)}</div>`:''}
     ${(c.validations||[]).length?`<div style="margin-bottom:10px">${c.validations.slice(-2).map(v=>`<div class="validation-entry val-${(v.status||'').toLowerCase().includes('verif')?'verified':'contested'}"><div style="font-size:12.5px;font-weight:600;margin-bottom:2px">${escHTML(v.providerName)}: ${escHTML(v.status)} (${v.confidence}%)</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.5">${escHTML((v.reasoning||'').substring(0,120))}…</div></div>`).join('')}</div>`:''}
+    ${challengePanel}
     <div class="claim-actions">
-      ${!isGrounded&&!c.discarded?`<button onclick="groundClaimFromSources('${c.id}')" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,.3)" title="Find a source passage for this claim">🔗 Ground</button>`:''}
+      ${!c.discarded&&!isPosition?`<button onclick="promoteToPosition('${c.id}')" class="btn btn-ghost btn-sm" style="color:var(--accent);border-color:rgba(0,200,240,.25)" title="I believe this — commit to this claim as your position">◈ I believe this</button>`:''}
+      ${!c.discarded&&isPosition?`<button onclick="demoteFromPosition('${c.id}')" class="btn btn-ghost btn-sm" style="color:var(--text-label)" title="Withdraw position">↩ Withdraw</button>`:''}
+      ${!isGrounded&&!c.discarded?`<button onclick="groundClaimFromSources('${c.id}')" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,.3)" title="Find source passage">🔗 Ground</button>`:''}
       ${others.length&&!c.discarded?`<button onclick="openValidateModal('${c.id}')" class="btn btn-ghost btn-sm">🔍 Validate</button>`:''}
       ${!c.discarded?`<button onclick="discardClaimAction('${c.id}')" class="btn btn-ghost btn-sm" style="color:var(--text-label)">Discard</button>`:`<button onclick="restoreClaim('${c.id}')" class="btn btn-ghost btn-sm">Restore</button>`}
     </div>
@@ -2124,6 +2179,59 @@ function discardClaimAction(id){
 function restoreClaim(id){
   const t=state.topics.find(x=>x.id==state.activeTopicId);if(!t) return;
   const c=t.claims.find(x=>x.id==id);if(c){c.discarded=false;saveState();renderClaims(t);}
+}
+// =====================================================================
+//  POSITIONS (Sprint 2)
+// =====================================================================
+async function promoteToPosition(claimId){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);if(!t) return;
+  const c=t.claims.find(x=>x.id==claimId);if(!c) return;
+  c.isPosition=true;
+  c.committedAt=new Date().toISOString();
+  c.challenges=null; // will be filled by challenge pass
+  saveState();renderClaims(t);
+  addLog('sys',`Position committed: "${c.text.substring(0,60)}…"`);
+  showToast('Position committed. Running challenge analysis…','info');
+  // Kick off async challenge pass — don't block UI
+  challengePosition(claimId);
+}
+function demoteFromPosition(claimId){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);if(!t) return;
+  const c=t.claims.find(x=>x.id==claimId);if(!c) return;
+  c.isPosition=false;
+  c.committedAt=null;
+  c.challenges=null;
+  saveState();renderClaims(t);
+  addLog('sys',`Position withdrawn: "${c.text.substring(0,60)}…"`);
+  showToast('Position withdrawn.','info');
+}
+async function challengePosition(claimId){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);if(!t) return;
+  const c=t.claims.find(x=>x.id==claimId);if(!c||!c.isPosition) return;
+  const activeP=state.providers.find(p=>p.id==state.activeProviderId&&!p.disabled);
+  if(!activeP){addLog('warn','No provider for challenge analysis.');return;}
+  // Build context: other claims in this topic, source docs
+  const otherClaims=(t.claims||[]).filter(x=>x.id!=claimId&&!x.discarded).slice(0,15).map(x=>`[${x.status}] ${x.text}`).join('\n');
+  const sourceContext=(t.sourceDocs||[]).map(d=>d.passages?.map(p=>p.quote).join(' | ')||d.content?.substring(0,500)||'').join('\n');
+  try{
+    const raw=await callAIWithRetry(activeP,
+      `You are a rigorous epistemic challenger. A researcher has committed to the following position:\n\nPOSITION: "${c.text}"\n\nCONTEXT — other claims in this research:\n${otherClaims||'(none yet)'}\n\nSOURCE CONTEXT:\n${sourceContext.substring(0,2000)||'(no sources attached)'}\n\nYour job is to stress-test this position hard. Find what's weak.\n\nReturn ONLY valid JSON:\n{\n  "assumptions": ["hidden assumption 1","hidden assumption 2"],\n  "counterarguments": ["strongest counterargument","second counterargument"],\n  "mustProve": "the single most important thing they must establish to defend this position",\n  "strengthAssessment": "one honest sentence about how defensible this position currently is"\n}`,
+      'You are an adversarial epistemic critic. Be precise and constructive. Respond ONLY with valid JSON.');
+    const result=parseJSON(raw);
+    if(result){
+      // Re-fetch claim in case state changed
+      const t2=state.topics.find(x=>x.id==state.activeTopicId);
+      const c2=t2?.claims.find(x=>x.id==claimId);
+      if(c2&&c2.isPosition){
+        c2.challenges=result;
+        saveState();renderClaims(t2);
+        addLog('ok',`Challenge complete: ${(result.assumptions||[]).length} assumptions, ${(result.counterarguments||[]).length} counterarguments`);
+        showToast('Challenge analysis ready.','success');
+      }
+    }
+  }catch(e){
+    addLog('warn',`Challenge analysis failed: ${e.message}`);
+  }
 }
 async function groundClaimFromSources(claimId){
   const t=state.topics.find(x=>x.id==state.activeTopicId);if(!t) return;
@@ -2229,6 +2337,9 @@ function renderConstellation(t){
 function updateStats(t){
   document.getElementById('statSnr').textContent=t.snr?t.snr+'%':'—';
   document.getElementById('statBreadth').textContent=t.breadth?t.breadth+'%':'—';
+  const positions=(t.claims||[]).filter(c=>c.isPosition&&!c.discarded).length;
+  const posEl=document.getElementById('statPositions');
+  if(posEl) posEl.textContent=positions||'—';
   const val=(t.claims||[]).filter(c=>c.validations?.length>0).length;
   document.getElementById('statValidated').textContent=val||'—';
   // Average citation age
@@ -3575,7 +3686,7 @@ window.addEventListener('load',async()=>{
   const bpill=document.getElementById('basicModePill');
   if(bpill) bpill.classList.toggle('on',state.basicMode);
   // Initialize Knowledge Map if it was last active tab
-  addLog('sys','Distila V5.6 ready — knowledge accumulates, claims persist, contradictions surface.');
+  addLog('sys','Distila V5.7 ready — knowledge accumulates, claims persist, contradictions surface.');
 });
 window.addEventListener('resize',checkMobileLayout);
 </script>
