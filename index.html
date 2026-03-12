@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyResAssist | Research Lab V4.5</title>
+    <title>MyResAssist | Research Lab V4.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -46,6 +46,7 @@
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-val); }
         
+        /* Fixed Dropdown Styling for visibility */
         .input-dark { 
             background: rgba(0, 0, 0, 0.2); 
             border: 1px solid var(--border-val); 
@@ -55,6 +56,20 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
+        select.input-dark {
+            background-color: #1a1b1e !important;
+            color: #ffffff !important;
+        }
+        select.input-dark option {
+            background-color: #1a1b1e !important;
+            color: #ffffff !important;
+        }
+        [data-theme="light"] select.input-dark, 
+        [data-theme="light"] select.input-dark option {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+
         .input-dark:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
         
         /* Layout & Resizing */
@@ -90,7 +105,6 @@
         .claim-card { border: 1px solid var(--border-val); transition: all 0.3s; }
         .claim-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px -10px var(--accent); }
 
-        /* Cognitive Pulse dots */
         @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
         .dot { display: inline-block; animation: blink 1.4s infinite both; }
         .dot:nth-child(2) { animation-delay: 0.2s; }
@@ -245,7 +259,7 @@
 
         <aside id="rightPane" class="side-pane w-80 flex flex-col bg-[#0d0f12] shrink-0 shadow-2xl" style="width: 320px;">
             <div class="flex-1 p-5 overflow-y-auto no-scrollbar flex flex-col">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Log</h3>
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Stream</h3>
                 <div id="logStream" class="space-y-2 text-[10px] mono text-slate-500"></div>
             </div>
             <div class="p-5 border-t border-white/5 bg-black/40 space-y-4">
@@ -256,7 +270,7 @@
                     <button onclick="runPhase('forensics')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent transition-all flex items-center justify-center gap-1.5"><i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> Forensics</button>
                 </div>
                 <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-4 rounded-xl text-xs flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-lg shadow-accent/20 transition-all active:scale-[0.98]">
-                    <i data-lucide="play" class="w-4 h-4"></i> Construct Synthesis Brief
+                    <i data-lucide="play" class="w-4 h-4"></i> Execute Research Synthesis
                 </button>
             </div>
         </aside>
@@ -390,7 +404,10 @@
                     t.snr = parsed.snr;
                     saveState(); loadActiveTopic(); showToast("Forensics Updated.");
                 }
-            } catch(e) { addLog('ERROR', "Extraction failed."); }
+            } catch(e) { 
+                addLog('ERROR', "Phase failed: " + e.message); 
+                console.error(e);
+            }
             finally { state.phase = 'idle'; updateUI(); clearPulseLog(); }
         }
 
@@ -431,7 +448,10 @@
                 t.breadth = (blocks.length * 20) + 15;
                 
                 saveState(); loadActiveTopic(); showToast("Synthesis Achieved.");
-            } catch(e) { addLog('ERROR', "Pipeline stalled."); }
+            } catch(e) { 
+                addLog('ERROR', "Pipeline halted: " + e.message); 
+                console.error(e);
+            }
             finally { state.phase = 'idle'; updateUI(); clearPulseLog(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
         }
 
@@ -440,17 +460,25 @@
             let cleanUrl = p.url.replace(/\/+$/, '');
             let url = isGemini ? `${cleanUrl}/${p.model}:generateContent?key=${p.key}` : cleanUrl;
             if(!isGemini && !url.endsWith('/chat/completions')) url += '/chat/completions';
+            
             const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
             const headers = { 'Content-Type': 'application/json' };
             if(!isGemini) headers['Authorization'] = `Bearer ${p.key}`;
+            
             const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
             const data = await res.json();
+            
+            if(!res.ok) {
+                const errMsg = data.error?.message || data.error || "Unknown API Error";
+                throw new Error(errMsg);
+            }
+
             if(isGemini) return data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.content?.[0]?.parts?.[0]?.text;
             return data.choices?.[0]?.message?.content;
         }
 
         function parseValidation(raw) {
-            // strip potential markdown wrapper
+            if(!raw) return { claims: [], gaps: [], snr: 0 };
             const clean = raw.replace(/```[a-z]*\n/g, '').replace(/```/g, '').trim();
             const lines = clean.split('\n');
             const claims = [], gaps = []; let snr = 80;
@@ -496,7 +524,7 @@
                         <span class="truncate text-[11px] font-bold">${topic.title}</span>
                     </div>
                     <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="createNewTopic(${topic.id})" title="Drill Down"><i data-lucide="git-branch" class="w-3 h-3 hover:text-accent"></i></button>
+                        <button onclick="createNewTopic(${topic.id})" title="Branch Out"><i data-lucide="git-branch" class="w-3 h-3 hover:text-accent"></i></button>
                         <button onclick="archiveTopic(${topic.id})" title="Archive"><i data-lucide="archive" class="w-3 h-3 hover:text-amber-400"></i></button>
                         <button onclick="deleteTopic(${topic.id})" title="Delete"><i data-lucide="trash-2" class="w-3 h-3 hover:text-red-500"></i></button>
                     </div>
@@ -576,7 +604,18 @@
         }
         function renderProviders() {
             const list = document.getElementById('providerList'); if(!list) return;
-            list.innerHTML = state.providers.map(p => `<div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}"><div class="flex-1 overflow-hidden"><div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div><div class="text-xs font-black text-white truncate">${p.name}</div><div class="text-[9px] mono opacity-40 truncate">${p.model}</div></div><div class="flex gap-1 shrink-0"><button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button><button onclick="editProvider(${p.id})" class="p-1.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button><button onclick="deleteProvider(${p.id})" class="p-1.5 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`).join('');
+            list.innerHTML = state.providers.map(p => `<div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
+                    <div class="flex-1 overflow-hidden">
+                        <div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div>
+                        <div class="text-xs font-black text-white truncate">${p.name}</div>
+                        <div class="text-[9px] mono opacity-40 truncate">${p.model}</div>
+                    </div>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
+                        <button onclick="editProvider(${p.id})" class="p-1"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteProvider(${p.id})" class="p-1 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>`).join('');
             refreshIcons();
         }
         function editProvider(id) {
@@ -609,7 +648,7 @@
         function updateUI() {
             const p = state.providers.find(x => x.id == state.activeProviderId);
             const tag = document.getElementById('activeProviderTag');
-            if(tag) tag.innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 font-bold uppercase">Offline</span>';
+            if(tag) tag.innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 font-bold uppercase text-[8px]">Offline</span>';
             const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Analysis', icon: 'shield-check' }];
             const disp = document.getElementById('pipelineDisplay');
             if(disp) disp.innerHTML = pipeline.map(s => `<div class="flex items-center gap-2 p-2.5 rounded-xl transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-3.5 h-3.5"></i><span class="text-[9px] font-black uppercase">${s.name}</span></div>`).join('');
