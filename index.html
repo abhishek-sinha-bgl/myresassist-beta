@@ -63,9 +63,9 @@ textarea.inp{resize:none;line-height:1.6;}
 .btn-icon{padding:8px;border-radius:var(--radius-sm);}
 
 /* ===================== PROGRESS BAR ===================== */
-#progressBar{position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-hover));transform-origin:left;transform:scaleX(0);transition:transform .4s ease;z-index:1000;}
-#progressBar.running{animation:progressSweep 2s ease-in-out infinite;}
-@keyframes progressSweep{0%{transform:scaleX(0);transform-origin:left}50%{transform:scaleX(.7);transform-origin:left}51%{transform-origin:right}100%{transform:scaleX(0);transform-origin:right}}
+#progressBar{position:fixed;top:0;left:0;width:100%;height:4px;background:linear-gradient(90deg,#00c8f0,#6366f1,#00c8f0);background-size:200% 100%;z-index:99999;pointer-events:none;display:none;}
+#progressBar.running{display:block;animation:progressMove 1.5s linear infinite;}
+@keyframes progressMove{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* ===================== NAV ===================== */
 #topNav{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;background:var(--bg-surface);z-index:100;flex-shrink:0;gap:10px;}
@@ -958,37 +958,69 @@ Return ONLY valid JSON:
 // =====================================================================
 async function callAI(provider,userPrompt,systemPrompt,signal){
   if(!provider) throw new Error('No provider specified');
+  // Guard: detect un-decrypted keys
+  const rawKey=(provider.key||'').trim();
+  if(rawKey.startsWith('ENC:')){
+    throw new Error(`Key for "${provider.name}" is encrypted — go to Settings → Security → Decrypt Keys.`);
+  }
+  if(!rawKey){
+    throw new Error(`API key for "${provider.name}" is empty — open Settings → API Providers.`);
+  }
   const isGemini=provider.type==='Gemini'||provider.url.includes('generativelanguage');
-  const isClaude=provider.type==='Claude'||provider.url.includes('anthropic');
-  let url=provider.url.replace(/\/+$/,'');
-  let body,headers={'Content-Type':'application/json'};
+  const isClaude=provider.type==='Claude'||provider.url.includes('anthropic.com');
+  // Normalise base URL: strip all trailing slashes
+  let baseUrl=provider.url.replace(/\/+$/,'');
+  let url,body,headers={'Content-Type':'application/json'};
   if(isGemini){
-    url=`${url}/${provider.model}:generateContent?key=${provider.key}`;
+    // Key in query string. Base must end at /models
+    baseUrl=baseUrl.replace(/\/models\/[^/]+.*$/,'').replace(/\/models\/?$/,'');
+    url=`${baseUrl}/models/${provider.model}:generateContent?key=${rawKey}`;
     body={contents:[{parts:[{text:userPrompt}]}],systemInstruction:{parts:[{text:systemPrompt}]},generationConfig:{temperature:0.3,maxOutputTokens:4096}};
   } else if(isClaude){
-    headers['x-api-key']=provider.key;headers['anthropic-version']='2023-06-01';
+    // x-api-key header, endpoint must end at /messages
+    url=baseUrl.endsWith('/messages')?baseUrl:baseUrl.replace(/\/messages\/?$/,'')+'/messages';
+    headers['x-api-key']=rawKey;headers['anthropic-version']='2023-06-01';
     body={model:provider.model,max_tokens:4096,system:systemPrompt,messages:[{role:'user',content:userPrompt}]};
   } else {
-    if(!url.endsWith('/chat/completions')) url+='/chat/completions';
-    headers['Authorization']=`Bearer ${provider.key}`;
+    // OpenAI-compatible (Groq, OpenAI, OpenRouter, etc.)
+    // Strip any /chat/completions the user may have appended, then re-add cleanly
+    baseUrl=baseUrl.replace(/\/chat\/completions\/?$/,'');
+    url=baseUrl+'/chat/completions';
+    headers['Authorization']=`Bearer ${rawKey}`;
     body={model:provider.model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],temperature:0.3,max_tokens:4096};
   }
   const opts={method:'POST',headers,body:JSON.stringify(body)};
   if(signal) opts.signal=signal;
   let res,text;
   try{ res=await fetch(url,opts); text=await res.text(); }
-  catch(e){ if(e.name==='AbortError') throw e; throw new Error(`Network error: ${e.message}`); }
+  catch(e){ if(e.name==='AbortError') throw e; throw new Error(`Network error calling ${provider.name}: ${e.message}`); }
   let data;
   try{ data=JSON.parse(text); }
-  catch{ throw new Error(`Non-JSON from ${provider.name}. Status: ${res?.status}. Check endpoint/key.`); }
-  if(!res.ok){
-    // Check for rate limit with retry-after
-    if(res.status===429){const ra=res.headers?.get?.('retry-after');throw Object.assign(new Error(data.error?.message||'Rate limited'),'retryAfter',ra?parseInt(ra)*1000:null);}
-    throw new Error(data.error?.message||data.error?.error?.message||`API Error ${res.status}: ${JSON.stringify(data).substring(0,200)}`);
+  catch{
+    const preview=text.substring(0,120).replace(/\n/g,' ');
+    throw new Error(`${provider.name} returned non-JSON (HTTP ${res?.status}). Check endpoint URL. Got: ${preview}`);
   }
-  if(isGemini) return data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  if(!res.ok){
+    if(res.status===429){
+      const ra=res.headers?.get?.('retry-after');
+      const err=new Error(data.error?.message||`Rate limited by ${provider.name}`);
+      err.retryAfter=ra?parseInt(ra)*1000:null;throw err;
+    }
+    if(res.status===401||res.status===403){
+      throw new Error(`Auth failed for ${provider.name} (${res.status}) — verify your API key in Settings.`);
+    }
+    const msg=data.error?.message||data.error?.error?.message||data.message||JSON.stringify(data).substring(0,200);
+    throw new Error(`${provider.name} API ${res.status}: ${msg}`);
+  }
+  if(isGemini){
+    const t=data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!t&&data.candidates?.[0]?.finishReason==='SAFETY') throw new Error(`${provider.name}: blocked by safety filter`);
+    return t||'';
+  }
   if(isClaude) return data.content?.[0]?.text||'';
-  return data.choices?.[0]?.message?.content||'';
+  const content=data.choices?.[0]?.message?.content;
+  if(content==null) throw new Error(`${provider.name}: unexpected response — ${JSON.stringify(data).substring(0,120)}`);
+  return content;
 }
 async function callAIWithRetry(provider,userPrompt,systemPrompt,signal,retries=2){
   for(let i=0;i<=retries;i++){
