@@ -367,9 +367,11 @@ textarea.inp{resize:none;line-height:1.6;}
 .pp-footer{padding:8px 12px 4px;border-top:1px solid var(--border);margin-top:6px;}
 
 /* ===================== BASIC MODE ===================== */
-.pill-toggle.basic-mode{border-color:var(--contested);color:var(--contested);}
-.pill-toggle.basic-mode .pill-dot{background:var(--contested);}
-.pill-toggle.basic-mode.on{border-color:var(--contested);color:var(--contested);background:rgba(245,158,11,.12);}
+/* Basic pill: OFF = grey like Solo pill, ON = amber fill — unmistakable */
+.pill-toggle.basic-mode{border-color:var(--border);color:var(--text-label);}
+.pill-toggle.basic-mode .pill-dot{background:var(--text-label);}
+.pill-toggle.basic-mode.on{border-color:var(--contested);color:#000;background:var(--contested);}
+.pill-toggle.basic-mode.on .pill-dot{background:rgba(0,0,0,0.5);}
 
 /* ===================== LEFT PANE EXPANDED ===================== */
 #leftPane.expanded{width:clamp(260px, calc(100vw - 360px), 700px)!important;}
@@ -1216,11 +1218,13 @@ async function callAI(provider,userPrompt,systemPrompt,signal){
     // .../v1beta/
     baseUrl=baseUrl
       .replace(/:generateContent(\?.*)?$/,'')
-      .replace(/\/models\/[^/]+$/,'')
+      .replace(/\/models\/[^/?]+(\?.*)?$/,'')
       .replace(/\/models\/?$/,'');
-    // baseUrl is now exactly: https://generativelanguage.googleapis.com/v1beta
-    url=`${baseUrl}/models/${provider.model}:generateContent?key=${rawKey}`;
-    console.debug('[Distila] Gemini URL:', url.replace(/key=[^&]+/,'key=***'));
+    // Also sanitise model name — some sync responses return "models/gemini-xxx"
+    const modelName=(provider.model||'').replace(/^models\//,'').replace(/:generateContent$/,'');
+    url=`${baseUrl}/models/${modelName}:generateContent?key=${rawKey}`;
+    // Log constructed URL visibly for debugging (key redacted)
+    addLog('sys',`Gemini → ${url.replace(/key=[^&]+/,'key=***')}`);
     body={contents:[{parts:[{text:userPrompt}]}],systemInstruction:{parts:[{text:systemPrompt}]},generationConfig:{temperature:0.3,maxOutputTokens:4096}};
   } else if(isClaude){
     // x-api-key header, endpoint must end at /messages
@@ -3195,18 +3199,21 @@ function renderTopicTreeFull(){
 window.addEventListener('load',async()=>{
   initResizers();
   setTheme(state.theme);
-  // Migrate: strip any dirty Gemini URLs saved by older versions
+  // Migrate: strip any dirty Gemini URLs AND model names saved by older versions
   let geminiMigrated=false;
   state.providers.forEach(p=>{
     if(p.type==='Gemini'||p.url.includes('generativelanguage.googleapis.com')){
-      const clean=p.url.replace(/\/+$/,'')
+      const cleanUrl=p.url.replace(/\/+$/,'')
         .replace(/:generateContent(\?.*)?$/,'')
-        .replace(/\/models\/[^/]+$/,'')
+        .replace(/\/models\/[^/?]+(\?.*)?$/,'')
         .replace(/\/models\/?$/,'');
-      if(clean!==p.url){p.url=clean;geminiMigrated=true;}
+      const cleanModel=(p.model||'').replace(/^models\//,'').replace(/:generateContent$/,'');
+      if(cleanUrl!==p.url||cleanModel!==p.model){
+        p.url=cleanUrl;p.model=cleanModel;geminiMigrated=true;
+      }
     }
   });
-  if(geminiMigrated) saveState();
+  if(geminiMigrated){saveState();addLog('sys','Gemini URLs auto-corrected from legacy format.');}
   // Load constraints from storage
   state.constraints=load('myres_constraints',{domains:[],scope:'',urls:[]});
   // Initialise parallel pill
