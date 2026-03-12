@@ -1,6 +1,6 @@
 # Distila · Research Intelligence
 
-**[→ Open the app](https://your-live-link-here.com)** &nbsp;·&nbsp; No account &nbsp;·&nbsp; No server &nbsp;·&nbsp; Bring your own keys
+**[→ Open the app]([https://your-live-link-here.com](https://abhishek-sinha-bgl.github.io/myresassist-beta/))** &nbsp;·&nbsp; No account &nbsp;·&nbsp; No server &nbsp;·&nbsp; Bring your own keys
 
 ---
 
