@@ -1,689 +1,2289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyResAssist | Research Lab V4.6</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
-        
-        :root {
-            --bg-deep: #0a0b0e;
-            --bg-sidebar: #0d0f12;
-            --bg-card: rgba(17, 20, 24, 0.9);
-            --accent: #00d1ff;
-            --text-main: #f1f5f9;
-            --text-dim: #94a3b8;
-            --font-primary: 'Inter', sans-serif;
-            --border-val: rgba(255, 255, 255, 0.1);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MyResAssist | Research Lab V5.0</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ===================== THEME VARIABLES ===================== */
+:root {
+  --bg-base:#0a0c10; --bg-surface:#10141a; --bg-card:#161b23;
+  --bg-input:rgba(255,255,255,0.06); --accent:#00c8f0; --accent-dim:rgba(0,200,240,0.15);
+  --accent-hover:#00e5ff; --text-primary:#eef2f7; --text-secondary:#8a9ab5;
+  --text-label:#6b7a94; --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.15);
+  --font-sans:'DM Sans',sans-serif; --font-mono:'DM Mono',monospace; --font-serif:'DM Serif Display',serif;
+  --verified:#22c55e; --contested:#f59e0b; --weak:#ef4444; --neutral:#6b7a94;
+  --shadow-lg:0 20px 60px rgba(0,0,0,0.5); --radius:14px; --radius-sm:8px;
+}
+[data-theme="midnight"] {
+  --bg-base:#070d1a; --bg-surface:#0d1628; --bg-card:#111e36;
+  --accent:#4d9fff; --accent-dim:rgba(77,159,255,0.15); --accent-hover:#6db3ff;
+  --text-primary:#dde8ff; --text-secondary:#7090b8; --text-label:#4a6080;
+  --border:rgba(77,159,255,0.1); --border-strong:rgba(77,159,255,0.25);
+}
+[data-theme="forest"] {
+  --bg-base:#080f09; --bg-surface:#0e1a0f; --bg-card:#122213;
+  --accent:#4ade80; --accent-dim:rgba(74,222,128,0.12); --accent-hover:#86efac;
+  --text-primary:#d1f0d8; --text-secondary:#6b9474; --text-label:#4a6a52;
+  --border:rgba(74,222,128,0.1); --border-strong:rgba(74,222,128,0.22);
+}
+[data-theme="highcontrast"] {
+  --bg-base:#000000; --bg-surface:#0a0a0a; --bg-card:#111111;
+  --accent:#ffd700; --accent-dim:rgba(255,215,0,0.15); --accent-hover:#ffe84d;
+  --text-primary:#ffffff; --text-secondary:#cccccc; --text-label:#999999;
+  --border:rgba(255,255,255,0.2); --border-strong:rgba(255,255,255,0.4);
+}
+[data-theme="light"] {
+  --bg-base:#f0f4f8; --bg-surface:#ffffff; --bg-card:#ffffff;
+  --bg-input:rgba(0,0,0,0.04); --accent:#0070d8; --accent-dim:rgba(0,112,216,0.1);
+  --accent-hover:#0058b0; --text-primary:#0f1a2e; --text-secondary:#4a5a72;
+  --text-label:#6a7890; --border:rgba(0,0,0,0.1); --border-strong:rgba(0,0,0,0.2);
+  --shadow-lg:0 20px 60px rgba(0,0,0,0.12);
+}
+[data-theme="sepia"] {
+  --bg-base:#1a1208; --bg-surface:#221810; --bg-card:#2a1f12;
+  --accent:#e8a045; --accent-dim:rgba(232,160,69,0.15); --accent-hover:#f0b860;
+  --text-primary:#f0e0c0; --text-secondary:#a08060; --text-label:#786040;
+  --border:rgba(232,160,69,0.12); --border-strong:rgba(232,160,69,0.25);
+}
+[data-theme="academic"] {
+  --bg-base:#faf8f3; --bg-surface:#f4f0e8; --bg-card:#ffffff;
+  --bg-input:rgba(0,0,0,0.04); --accent:#8b1a1a; --accent-dim:rgba(139,26,26,0.08);
+  --accent-hover:#6b1414; --text-primary:#1a1208; --text-secondary:#4a3c28;
+  --text-label:#7a6a52; --border:rgba(0,0,0,0.1); --border-strong:rgba(0,0,0,0.2);
+  --font-sans:'Noto Serif',serif; --font-serif:'DM Serif Display',serif;
+  --shadow-lg:0 20px 60px rgba(0,0,0,0.1);
+}
 
-        [data-theme="light"] {
-            --bg-deep: #f8fafc;
-            --bg-sidebar: #f1f5f9;
-            --bg-card: rgba(255, 255, 255, 0.95);
-            --accent: #2563eb;
-            --text-main: #0f172a;
-            --text-dim: #64748b;
-            --border-val: rgba(0, 0, 0, 0.1);
-        }
+/* ===================== BASE ===================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  background: var(--bg-base); color: var(--text-primary);
+  font-family: var(--font-sans); height: 100dvh;
+  display: flex; flex-direction: column; overflow: hidden;
+  transition: background 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+}
+.font-mono { font-family: var(--font-mono); }
+.font-serif { font-family: var(--font-serif); }
 
-        [data-theme="academic"] {
-            --bg-deep: #fdfbf7;
-            --bg-sidebar: #f4f1ea;
-            --bg-card: #ffffff;
-            --accent: #7c2d12;
-            --text-main: #1a1a1a;
-            --text-dim: #57534e;
-            --font-primary: 'Noto Serif', serif;
-            --border-val: rgba(0, 0, 0, 0.15);
-        }
+/* ===================== SCROLLBARS ===================== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-label); }
 
-        body { background-color: var(--bg-deep); color: var(--text-main); font-family: var(--font-primary); overflow: hidden; transition: background-color 0.3s ease; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .glass { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-val); }
-        
-        /* Unified Inputs & Dropdown Contrast Fix */
-        .input-dark { 
-            background: rgba(0, 0, 0, 0.2); 
-            border: 1px solid var(--border-val); 
-            border-radius: 8px; 
-            transition: all 0.2s; 
-            color: inherit; 
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        select.input-dark {
-            background-color: #1a1b1e !important;
-            color: #ffffff !important;
-        }
-        select.input-dark option {
-            background-color: #1a1b1e !important;
-            color: #ffffff !important;
-        }
-        [data-theme="light"] select.input-dark, 
-        [data-theme="light"] select.input-dark option {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-        }
+/* ===================== GLASS / CARD ===================== */
+.glass { background: var(--bg-surface); border: 1px solid var(--border); }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
 
-        .input-dark:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
-        
-        /* Layout & Resizing */
-        .side-pane { position: relative; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s; overflow: hidden; }
-        .side-pane.resizing { transition: none !important; }
-        .side-pane.collapsed { width: 0 !important; opacity: 0; pointer-events: none; border: none !important; }
+/* ===================== INPUTS ===================== */
+.inp {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  font-family: var(--font-sans); font-size: 13.5px; padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s; width: 100%;
+  outline: none;
+}
+.inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.inp::placeholder { color: var(--text-label); }
+select.inp { cursor: pointer; }
+select.inp option { background: var(--bg-card); color: var(--text-primary); }
+textarea.inp { resize: none; line-height: 1.6; }
 
-        .resizer {
-            width: 4px;
-            cursor: col-resize;
-            background: transparent;
-            transition: background 0.2s;
-            position: relative;
-            z-index: 40;
-            flex-shrink: 0;
-        }
-        .resizer:hover, .resizer.active { background: var(--accent); }
+/* ===================== BUTTONS ===================== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border-radius: var(--radius-sm); font-family: var(--font-sans);
+  font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.18s;
+  white-space: nowrap; border: none; padding: 9px 18px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: #000; font-weight: 700; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn-danger { background: transparent; color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.btn-danger:hover { background: rgba(239,68,68,0.1); }
+.btn-sm { font-size: 12px; padding: 6px 12px; gap: 5px; }
+.btn-icon { padding: 8px; border-radius: var(--radius-sm); }
 
-        .btn-outline { border: 1px solid var(--border-val); color: var(--text-dim); transition: all 0.2s; font-size: 0.75rem; font-weight: 700; }
-        .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(0, 209, 255, 0.05); }
-        .btn-action { background: var(--accent); color: #000; font-weight: 800; transition: all 0.2s; }
-        
-        .topic-item { border-left: 3px solid transparent; }
-        .topic-item.active { background: rgba(0, 209, 255, 0.08); border-left: 3px solid var(--accent); color: var(--accent); font-weight: 800; }
-        .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
-        .tab-btn.active { border-bottom: 2px solid var(--accent); color: var(--accent); }
-        .modal-tab { border-bottom: 2px solid transparent; transition: all 0.2s; }
-        .modal-tab.active { border-bottom: 2px solid var(--accent); color: white !important; font-weight: 800; }
+/* ===================== PROGRESS BAR ===================== */
+#progressBar {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+  transform-origin: left; transform: scaleX(0);
+  transition: transform 0.4s ease; z-index: 1000;
+}
+#progressBar.running {
+  animation: progressSweep 2s ease-in-out infinite;
+}
+@keyframes progressSweep {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(0.7); transform-origin: left; }
+  51% { transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
 
-        .synthesis-rendered h1 { font-size: 3rem; font-weight: 900; margin-bottom: 2.5rem; color: var(--accent); line-height: 1; }
-        .synthesis-rendered h2 { font-size: 1.8rem; font-weight: 800; margin-top: 3.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-val); padding-bottom: 0.5rem; }
-        .synthesis-rendered p { margin-bottom: 1.5rem; line-height: 1.8; opacity: 0.9; }
+/* ===================== NAV ===================== */
+#topNav {
+  height: 56px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px;
+  background: var(--bg-surface); z-index: 100; flex-shrink: 0;
+  gap: 12px;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; }
+.nav-logo-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #6366f1));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 15px; color: #000; flex-shrink: 0;
+}
+.nav-title { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
+.nav-badge {
+  font-size: 11px; font-weight: 600; color: var(--text-label);
+  background: var(--bg-input); border: 1px solid var(--border);
+  padding: 3px 8px; border-radius: 99px; white-space: nowrap;
+}
 
-        .claim-card { border: 1px solid var(--border-val); transition: all 0.3s; }
-        .claim-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px -10px var(--accent); }
+/* ===================== LAYOUT ===================== */
+#workspace { flex: 1; display: flex; overflow: hidden; }
 
-        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-        .dot { display: inline-block; animation: blink 1.4s infinite both; }
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
+/* ===================== PANES ===================== */
+.pane {
+  display: flex; flex-direction: column;
+  background: var(--bg-surface); flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s;
+  overflow: hidden;
+}
+.pane.collapsed { width: 0 !important; opacity: 0; pointer-events: none; border: none !important; }
+#leftPane { border-right: 1px solid var(--border); width: 280px; }
+#rightPane { border-left: 1px solid var(--border); width: 320px; }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--border-val); border-radius: 10px; }
-    </style>
+.resizer {
+  width: 4px; flex-shrink: 0; cursor: col-resize;
+  background: transparent; transition: background 0.2s; z-index: 10;
+}
+.resizer:hover, .resizer.dragging { background: var(--accent); }
+
+/* ===================== CENTER PANE ===================== */
+#centerPane { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-base); }
+.tab-bar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 20px; border-bottom: 1px solid var(--border);
+  background: var(--bg-surface); height: 48px; flex-shrink: 0;
+}
+.tab {
+  padding: 6px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  border-radius: 6px; color: var(--text-label); transition: all 0.18s;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.tab:hover { color: var(--text-secondary); background: var(--bg-input); }
+.tab.active { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); opacity: 1; }
+.tab-content { display: none; flex: 1; overflow-y: auto; padding: 32px; }
+.tab-content.active { display: block; }
+#synthesisContent.active { display: flex; flex-direction: column; }
+
+/* ===================== PHASE INDICATOR ===================== */
+#phaseIndicator {
+  display: none; padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: var(--accent-dim); flex-shrink: 0;
+}
+#phaseIndicator.visible { display: flex; align-items: center; gap: 12px; }
+.phase-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--accent);
+  animation: phasePulse 1s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes phasePulse {
+  0%,100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 var(--accent-dim); }
+  50% { opacity: 0.7; transform: scale(1.15); box-shadow: 0 0 0 6px transparent; }
+}
+#phaseText { font-size: 13px; font-weight: 600; color: var(--accent); }
+#phaseDetail { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+#partialWarning {
+  display: none; padding: 10px 20px; border-bottom: 1px solid rgba(245,158,11,0.3);
+  background: rgba(245,158,11,0.08); font-size: 12.5px; color: #f59e0b; font-weight: 500;
+}
+
+/* ===================== SYNTHESIS TYPOGRAPHY ===================== */
+#synthesisView {
+  max-width: 760px; width: 100%; margin: 0 auto; padding-bottom: 60px;
+}
+.synthesis-rendered h1 { font-family: var(--font-serif); font-size: 2.2rem; font-weight: 400; margin-bottom: 8px; color: var(--text-primary); line-height: 1.15; letter-spacing: -0.5px; }
+.synthesis-rendered .meta-bar { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.synthesis-rendered .meta-item { font-size: 12px; color: var(--text-label); font-family: var(--font-mono); }
+.synthesis-rendered .meta-item strong { color: var(--text-secondary); }
+.synthesis-rendered h2 { font-size: 1.1rem; font-weight: 700; margin-top: 36px; margin-bottom: 14px; color: var(--text-primary); letter-spacing: -0.2px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.synthesis-rendered h3 { font-size: 1rem; font-weight: 600; margin-top: 24px; margin-bottom: 10px; color: var(--text-secondary); }
+.synthesis-rendered p { font-size: 15px; line-height: 1.85; color: var(--text-secondary); margin-bottom: 16px; }
+.synthesis-rendered ul, .synthesis-rendered ol { padding-left: 22px; margin-bottom: 16px; }
+.synthesis-rendered li { font-size: 14.5px; line-height: 1.75; color: var(--text-secondary); margin-bottom: 6px; }
+.synthesis-rendered blockquote { border-left: 3px solid var(--accent); padding: 12px 20px; margin: 24px 0; background: var(--accent-dim); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.synthesis-rendered blockquote p { color: var(--text-primary); margin: 0; font-style: italic; }
+.synthesis-rendered strong { color: var(--text-primary); font-weight: 600; }
+.synthesis-rendered .methodology-note { margin-top: 48px; padding: 20px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius); }
+.synthesis-rendered .methodology-note p { font-size: 13px; color: var(--text-label); margin: 0; font-family: var(--font-mono); }
+
+/* ===================== EMPTY STATE ===================== */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; min-height: 320px;
+  gap: 16px; text-align: center; padding: 40px;
+}
+.empty-icon { font-size: 48px; opacity: 0.25; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+.empty-sub { font-size: 14px; color: var(--text-label); max-width: 280px; line-height: 1.6; }
+
+/* ===================== CLAIM CARDS ===================== */
+.claim-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  transition: all 0.2s; position: relative; overflow: hidden;
+}
+.claim-card:hover { border-color: var(--border-strong); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.claim-card.discarded { opacity: 0.4; filter: grayscale(0.5); }
+.claim-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 4px 10px; border-radius: 99px; margin-bottom: 12px;
+}
+.badge-verified { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+.badge-contested { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+.badge-weak { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.badge-unverified { background: rgba(107,122,148,0.15); color: var(--text-label); border: 1px solid var(--border); }
+.claim-text { font-size: 14.5px; font-weight: 500; line-height: 1.65; color: var(--text-primary); margin-bottom: 10px; }
+.claim-reason { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; }
+.claim-provenance {
+  font-size: 11.5px; font-family: var(--font-mono); color: var(--text-label);
+  padding: 8px 12px; background: var(--bg-input); border-radius: var(--radius-sm);
+  margin-bottom: 14px; display: flex; gap: 12px; flex-wrap: wrap;
+}
+.claim-validations { margin-bottom: 14px; }
+.validation-entry {
+  font-size: 12px; padding: 8px 12px; border-radius: var(--radius-sm);
+  margin-bottom: 6px; background: var(--bg-input); border-left: 3px solid var(--border);
+}
+.validation-entry.val-verified { border-left-color: var(--verified); }
+.validation-entry.val-contested { border-left-color: var(--contested); }
+.claim-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ===================== VOID ITEMS ===================== */
+.void-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  display: flex; align-items: center; gap: 16px; transition: all 0.2s;
+}
+.void-item:hover { border-color: var(--accent); }
+.void-text { flex: 1; font-size: 14.5px; font-weight: 500; line-height: 1.5; }
+.void-sub { font-size: 12.5px; color: var(--text-label); margin-top: 3px; }
+
+/* ===================== CONSTELLATION ===================== */
+#constellationSvg { width: 100%; max-height: 440px; }
+.node-circle { cursor: pointer; transition: r 0.2s; }
+.node-circle:hover { filter: brightness(1.3); }
+.node-label { font-size: 11px; fill: var(--text-secondary); pointer-events: none; font-family: var(--font-sans); }
+.node-link { stroke: var(--border-strong); stroke-width: 1; opacity: 0.5; }
+.node-link.support { stroke: var(--verified); opacity: 0.4; }
+.node-link.contradict { stroke: var(--contested); opacity: 0.5; stroke-dasharray: 4,3; }
+.stats-row { display: flex; gap: 32px; justify-content: center; margin-top: 24px; }
+.stat-item { text-align: center; }
+.stat-val { font-size: 2rem; font-weight: 800; color: var(--accent); font-family: var(--font-mono); }
+.stat-label { font-size: 12px; color: var(--text-label); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sparkline-row { display: flex; gap: 3px; align-items: flex-end; height: 32px; margin-top: 8px; }
+.spark-bar { width: 6px; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.7; min-height: 2px; transition: height 0.4s; }
+
+/* ===================== LEFT PANE - TOPIC TREE ===================== */
+.pane-header {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.pane-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); }
+.topic-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  transition: all 0.15s; border-left: 3px solid transparent; margin-bottom: 2px;
+}
+.topic-item:hover { background: var(--bg-input); }
+.topic-item.active { background: var(--accent-dim); border-left-color: var(--accent); }
+.topic-item.active .topic-name { color: var(--accent); font-weight: 700; }
+.topic-name { font-size: 13.5px; font-weight: 500; color: var(--text-secondary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topic-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.topic-item:hover .topic-actions { opacity: 1; }
+.topic-icon-btn {
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  border-radius: 5px; border: none; background: transparent; cursor: pointer;
+  color: var(--text-label); transition: all 0.15s; font-size: 13px;
+}
+.topic-icon-btn:hover { background: var(--bg-input); color: var(--text-primary); }
+.topic-icon-btn.danger:hover { color: #ef4444; }
+.topic-icon-btn.warn:hover { color: #f59e0b; }
+
+/* ===================== RIGHT PANE - COGNITIVE STREAM ===================== */
+#cogStream {
+  flex: 1; overflow-y: auto; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.log-entry {
+  display: flex; gap: 8px; animation: slideIn 0.2s ease;
+  font-size: 13px; line-height: 1.5;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.log-tag {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  font-family: var(--font-mono); white-space: nowrap; padding-top: 1px;
+  flex-shrink: 0;
+}
+.log-tag.ai { color: var(--accent); }
+.log-tag.sys { color: var(--text-label); }
+.log-tag.err { color: #ef4444; }
+.log-tag.ok { color: #22c55e; }
+.log-tag.warn { color: #f59e0b; }
+.log-msg { color: var(--text-secondary); word-break: break-word; white-space: pre-wrap; flex: 1; }
+
+/* phase pulse entry */
+#pulseLine .log-msg { color: var(--accent); font-weight: 600; }
+.pulse-dots span {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); margin: 0 2px; vertical-align: middle;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.pulse-dots span:nth-child(2) { animation-delay: 0.2s; }
+.pulse-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1.2); opacity: 1; }
+}
+
+/* ===================== INPUT AREA ===================== */
+#inputArea {
+  padding: 14px 16px; border-top: 1px solid var(--border);
+  background: var(--bg-surface); flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pipeline-stages { display: flex; gap: 6px; }
+.pipeline-stage {
+  flex: 1; padding: 7px 8px; border-radius: var(--radius-sm);
+  background: var(--bg-input); border: 1px solid var(--border);
+  text-align: center; transition: all 0.2s;
+}
+.pipeline-stage.active { background: var(--accent-dim); border-color: var(--accent); }
+.pipeline-stage-label { font-size: 11px; font-weight: 600; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.3px; }
+.pipeline-stage.active .pipeline-stage-label { color: var(--accent); }
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#mainInput { min-height: 80px; max-height: 160px; }
+
+/* ===================== MODAL ===================== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--bg-surface); border: 1px solid var(--border-strong);
+  border-radius: 20px; width: 100%; max-width: 700px; max-height: 85vh;
+  display: flex; flex-direction: column; box-shadow: var(--shadow-lg);
+  transform: scale(0.96) translateY(10px); transition: transform 0.2s;
+}
+.modal-overlay.open .modal-box { transform: none; }
+.modal-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-tabs { display: flex; gap: 4px; padding: 12px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.modal-tab { padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; color: var(--text-label); border: 1px solid transparent; transition: all 0.15s; }
+.modal-tab:hover { color: var(--text-secondary); }
+.modal-tab.active { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
+.modal-body { flex: 1; overflow-y: auto; padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
+.form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+.form-row.cols2 { grid-template-columns: 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* Brand tabs in modal */
+.brand-tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+.brand-tab { padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); color: var(--text-label); background: transparent; transition: all 0.15s; }
+.brand-tab:hover { color: var(--text-secondary); border-color: var(--border-strong); }
+.brand-tab.active { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
+
+/* Provider cards */
+.provider-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+.provider-card.is-active { border-color: var(--accent); background: var(--accent-dim); }
+.provider-card.is-disabled { opacity: 0.5; }
+.provider-info { flex: 1; min-width: 0; }
+.provider-role { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 3px; }
+.provider-name { font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.provider-model { font-size: 12px; color: var(--text-label); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.provider-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.active-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: phasePulse 2s infinite; flex-shrink: 0; }
+
+/* Toggle switch */
+.toggle-wrap { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.toggle-label { font-size: 13.5px; font-weight: 500; flex: 1; }
+.toggle-sub { font-size: 12px; color: var(--text-label); }
+.toggle {
+  position: relative; width: 44px; height: 24px; cursor: pointer;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0; border-radius: 99px; background: var(--border-strong);
+  transition: background 0.2s;
+}
+.toggle input:checked ~ .toggle-track { background: var(--accent); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: white; transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+/* Theme grid */
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.theme-card {
+  padding: 16px; border-radius: var(--radius); border: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.theme-card:hover { border-color: var(--border-strong); }
+.theme-card.active { border-color: var(--accent); }
+.theme-swatch { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 10px; border: 2px solid rgba(255,255,255,0.15); }
+.theme-name { font-size: 13px; font-weight: 600; }
+
+/* Validate picker */
+.validate-picker {
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); padding: 16px; margin-top: 12px;
+}
+.validate-picker-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary); }
+
+/* Source tags */
+.source-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 99px; padding: 5px 12px; font-size: 13px; font-family: var(--font-mono);
+}
+.source-tag button { color: var(--text-label); cursor: pointer; background: none; border: none; font-size: 14px; line-height: 1; }
+.source-tag button:hover { color: #ef4444; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 500;
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); padding: 14px 20px; min-width: 260px;
+  box-shadow: var(--shadow-lg); display: none;
+  animation: toastIn 0.25s ease;
+  max-width: calc(100vw - 48px);
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } }
+#toast.show { display: flex; align-items: center; gap: 12px; }
+.toast-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.toast-icon.success { background: rgba(34,197,94,0.2); color: #22c55e; }
+.toast-icon.error { background: rgba(239,68,68,0.2); color: #ef4444; }
+.toast-icon.info { background: var(--accent-dim); color: var(--accent); }
+.toast-msg { font-size: 13.5px; color: var(--text-primary); flex: 1; }
+.toast-close { color: var(--text-label); cursor: pointer; background: none; border: none; font-size: 16px; }
+
+/* Topic name modal */
+#topicNameModal .modal-box { max-width: 420px; }
+
+/* ===================== MOBILE ===================== */
+@media (max-width: 767px) {
+  #leftPane, #rightPane, #leftResizer, #rightResizer { display: none !important; }
+  #centerPane { width: 100%; }
+  .tab-content { padding: 16px; }
+  #synthesisView { max-width: 100%; }
+  
+  /* Mobile drawer */
+  #mobileDrawer {
+    position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.7);
+    display: none;
+  }
+  #mobileDrawer.open { display: flex; }
+  #drawerPanel {
+    width: 280px; background: var(--bg-surface); border-right: 1px solid var(--border);
+    height: 100%; overflow-y: auto; animation: drawerSlide 0.25s ease;
+  }
+  @keyframes drawerSlide { from { transform: translateX(-100%); } }
+  #drawerClose { position: absolute; right: 16px; top: 16px; }
+
+  /* Mobile bottom bar */
+  #mobileBottomBar {
+    display: flex; border-top: 1px solid var(--border);
+    background: var(--bg-surface); flex-shrink: 0;
+  }
+  .mobile-tab-btn {
+    flex: 1; padding: 12px 8px; text-align: center; cursor: pointer;
+    border: none; background: none; color: var(--text-label);
+    font-size: 11px; font-weight: 600; transition: color 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .mobile-tab-btn .mtab-icon { font-size: 18px; }
+  .mobile-tab-btn.active { color: var(--accent); }
+
+  /* Mobile FAB */
+  #mobileFab {
+    position: fixed; bottom: 80px; right: 20px; z-index: 150;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent); color: #000; font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    transition: all 0.2s;
+  }
+  #mobileFab:active { transform: scale(0.92); }
+
+  /* Mobile input sheet */
+  #mobileInputSheet {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 250;
+    background: var(--bg-surface); border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0; padding: 20px 16px;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  #mobileInputSheet.open { transform: translateY(0); }
+  #mobileInputSheet textarea { min-height: 100px; }
+
+  .tab-bar { display: none; }
+  #topNav .nav-title { display: block; font-size: 13px; }
+}
+
+/* ===================== DESKTOP HIDE MOBILE UI ===================== */
+@media (min-width: 768px) {
+  #mobileDrawer, #mobileBottomBar, #mobileFab, #mobileInputSheet { display: none !important; }
+}
+
+/* ===================== TOPIC TREE DEPTH ===================== */
+.depth-1 { padding-left: 24px; }
+.depth-2 { padding-left: 40px; }
+
+/* ===================== EXPORT ===================== */
+.export-bar { display: flex; gap: 8px; padding: 0 0 20px; justify-content: flex-end; }
+
+/* ===================== SECTION DIVIDER ===================== */
+.section-divider { height: 1px; background: var(--border); margin: 28px 0; }
+</style>
 </head>
-<body class="h-screen flex flex-col" data-theme="dark">
+<body data-theme="dark">
 
-    <!-- Top Navigation -->
-    <nav class="h-14 border-b border-white/5 flex items-center justify-between px-4 glass shrink-0 z-50">
-        <div class="flex items-center gap-2">
-            <button onclick="togglePane('left')" class="p-2 hover:text-accent transition-colors" title="Toggle Discovery Tree">
-                <i data-lucide="menu" class="w-5 h-5"></i>
-            </button>
-            <div class="flex items-center gap-2 ml-1">
-                <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg">R</div>
-                <span class="font-bold tracking-tight text-sm hidden sm:block uppercase tracking-tighter">MyResAssist Lab</span>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-4">
-            <div id="activeProviderTag" class="text-[9px] font-black mono text-slate-400 hidden lg:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5 uppercase"></div>
-            
-            <div class="flex items-center bg-black/20 rounded-lg p-0.5 border border-white/10">
-                <button onclick="setTheme('dark')" class="p-1.5 rounded theme-btn" id="tbtn-dark"><i data-lucide="moon" class="w-3.5 h-3.5"></i></button>
-                <button onclick="setTheme('light')" class="p-1.5 rounded theme-btn" id="tbtn-light"><i data-lucide="sun" class="w-3.5 h-3.5"></i></button>
-                <button onclick="setTheme('academic')" class="p-1.5 rounded theme-btn" id="tbtn-academic"><i data-lucide="book" class="w-3.5 h-3.5"></i></button>
-            </div>
-            
-            <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-accent p-2 transition-colors"><i data-lucide="settings" class="w-4 h-4"></i></button>
-            
-            <button onclick="togglePane('right')" class="p-2 hover:text-accent transition-colors" title="Toggle Command Center">
-                <i data-lucide="layout-panel-right" class="w-5 h-5"></i>
-            </button>
-        </div>
-    </nav>
+<!-- Progress Bar -->
+<div id="progressBar"></div>
 
-    <!-- Tabbed Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
-        <div class="glass w-full max-w-3xl h-[640px] rounded-3xl p-0 modal-enter overflow-hidden border border-white/10 shadow-2xl flex flex-col transition-all">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center shrink-0 bg-white/5">
-                <h2 class="text-xl font-black tracking-tighter uppercase">Lab Command Center</h2>
-                <button onclick="toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
-            </div>
-            
-            <div class="flex bg-black/20 px-8 gap-8 border-b border-white/5 shrink-0">
-                <button onclick="switchSettingsTab('providers')" class="modal-tab py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 active" id="stab-providers">API Providers</button>
-                <button onclick="switchSettingsTab('sources')" class="modal-tab py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500" id="stab-sources">Authoritative Sources</button>
-                <button onclick="switchSettingsTab('themes')" class="modal-tab py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500" id="stab-themes">Themes</button>
-            </div>
+<!-- Top Nav -->
+<nav id="topNav">
+  <button onclick="toggleLeftPane()" class="btn btn-icon btn-ghost" title="Toggle Tree" style="flex-shrink:0">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <!-- Mobile: hamburger opens drawer -->
+  <button onclick="openMobileDrawer()" class="btn btn-icon btn-ghost" id="mobileMenuBtn" style="display:none;flex-shrink:0">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="nav-logo" style="flex:1;min-width:0">
+    <div class="nav-logo-icon">R</div>
+    <span class="nav-title">MyResAssist Lab</span>
+    <span class="nav-badge" id="navBadge">V5.0</span>
+  </div>
+  <div id="activeProviderTag" style="display:none" class="nav-badge">
+    <span id="activeProviderName">—</span>
+  </div>
+  <!-- Theme quick toggle -->
+  <div style="display:flex;gap:4px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px">
+    <button onclick="setTheme('dark')" title="Dark" class="btn btn-icon" id="tbtn-dark" style="padding:6px">🌑</button>
+    <button onclick="setTheme('light')" title="Light" class="btn btn-icon" id="tbtn-light" style="padding:6px">☀️</button>
+    <button onclick="setTheme('academic')" title="Academic" class="btn btn-icon" id="tbtn-academic" style="padding:6px">📜</button>
+  </div>
+  <button onclick="openModal('settingsModal')" class="btn btn-icon btn-ghost" title="Settings">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+  <button onclick="toggleRightPane()" class="btn btn-icon btn-ghost" title="Toggle Stream" style="flex-shrink:0">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+  </button>
+</nav>
 
-            <div class="flex-1 overflow-y-auto p-8 no-scrollbar bg-black/10">
-                <div id="settings-providers" class="settings-content space-y-6">
-                    <div class="flex items-center justify-between p-4 bg-accent/5 rounded-2xl border border-accent/20 mb-6">
-                        <div>
-                            <h3 class="text-xs font-bold uppercase text-accent">Parallel Synthesis</h3>
-                            <p class="text-[10px] text-slate-400 italic">Query all configured 'Worker' agents simultaneously.</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="multiLlmToggle" class="sr-only peer" onchange="saveState()">
-                            <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-                        </label>
-                    </div>
-                    <div class="flex gap-4 border-b border-white/5 pb-4 mb-6">
-                        <button onclick="switchProviderBrand('Claude')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-Claude">Claude</button>
-                        <button onclick="switchProviderBrand('OpenAI')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-OpenAI">OpenAI</button>
-                        <button onclick="switchProviderBrand('Gemini')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-Gemini">Gemini</button>
-                        <button onclick="switchProviderBrand('Custom')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-Custom">Custom</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Label</label><input id="configName" type="text" class="input-dark p-3" placeholder="Profile Name"></div>
-                        <div class="flex flex-col gap-1.5"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Role</label><select id="configRole" class="input-dark p-3"><option value="worker">Worker</option><option value="orchestrator">Orchestrator</option></select></div>
-                        <div class="flex flex-col gap-1.5 col-span-2"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">API Endpoint</label><input id="configUrl" type="text" class="input-dark p-3 mono" placeholder="https://api.openai.com/v1"></div>
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Secret Key</label>
-                            <input id="configKey" type="password" class="input-dark p-3 mono" placeholder="sk-...">
-                        </div>
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Model ID</label>
-                            <select id="configModel" class="input-dark p-3 mono"></select>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center pt-6 border-t border-white/5">
-                        <button onclick="fetchModels()" class="btn-outline px-4 py-2 rounded-xl text-[10px] uppercase font-black">Sync Models</button>
-                        <button onclick="saveProvider()" class="btn-action px-6 py-2 rounded-xl text-xs uppercase font-black">Commit Agent</button>
-                    </div>
-                    <div id="providerList" class="space-y-2 mt-8"></div>
-                </div>
-                <div id="settings-sources" class="settings-content hidden space-y-6">
-                    <h3 class="text-xs font-black uppercase tracking-widest text-accent">Authoritative Sources</h3>
-                    <div class="flex gap-2">
-                        <input id="newSource" type="text" placeholder="e.g. imf.org, worldbank.org, .edu" class="flex-1 input-dark p-3">
-                        <button onclick="addSource()" class="btn-action px-6 rounded-xl text-xs uppercase font-black">+ Add</button>
-                    </div>
-                    <div id="sourceList" class="flex flex-wrap gap-2 mt-4"></div>
-                </div>
-                <div id="settings-themes" class="settings-content hidden space-y-8">
-                    <div class="grid grid-cols-3 gap-4">
-                        <button onclick="setTheme('dark')" class="p-6 rounded-2xl border border-white/5 bg-[#0a0b0e] text-center hover:border-accent group transition-all"><i data-lucide="moon" class="mx-auto mb-2 text-slate-400 group-hover:text-accent"></i><div class="text-[10px] font-black uppercase">Night</div></button>
-                        <button onclick="setTheme('light')" class="p-6 rounded-2xl border border-white/5 bg-[#f8fafc] text-center hover:border-accent group transition-all"><i data-lucide="sun" class="mx-auto mb-2 text-slate-900 group-hover:text-accent"></i><div class="text-[10px] font-black uppercase text-slate-900">Light</div></button>
-                        <button onclick="setTheme('academic')" class="p-6 rounded-2xl border border-white/5 bg-[#f4f1ea] text-center hover:border-accent group transition-all"><i data-lucide="book" class="mx-auto mb-2 text-slate-900 group-hover:text-accent"></i><div class="text-[10px] font-black uppercase text-slate-900">Paper</div></button>
-                    </div>
-                </div>
-            </div>
-            <div class="p-6 border-t border-white/5 shrink-0 flex justify-end bg-white/5">
-                <button onclick="toggleModal('settingsModal')" class="px-8 py-2.5 rounded-xl text-xs text-slate-400 font-bold hover:text-white">Close Settings</button>
-            </div>
-        </div>
+<!-- Workspace -->
+<div id="workspace">
+  <!-- Left Pane: Discovery Tree -->
+  <aside id="leftPane" class="pane">
+    <div class="pane-header">
+      <span class="pane-label">Discovery Tree</span>
+      <button onclick="openTopicNameModal(null)" class="btn btn-icon btn-ghost btn-sm" title="New Topic">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
     </div>
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <input type="text" id="topicSearch" placeholder="Search topics…" class="inp" style="font-size:13px;padding:8px 12px" oninput="renderTopics()">
+    </div>
+    <div id="topicList" style="flex:1;overflow-y:auto;padding:8px"></div>
+    <div style="padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0">
+      <button onclick="toggleArchiveView()" id="archiveToggleBtn" class="btn btn-ghost" style="width:100%;font-size:12px">View Archive</button>
+    </div>
+  </aside>
+  <div id="leftResizer" class="resizer"></div>
 
-    <!-- Main Workspace -->
-    <main class="flex-1 flex overflow-hidden">
-        <aside id="leftPane" class="side-pane w-72 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0" style="width: 288px;">
-            <div class="p-5 border-b border-white/5">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Discovery Tree</h3>
-                    <button onclick="createNewTopic()" class="p-1 hover:text-accent transition-colors"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
-                </div>
-                <div class="relative mb-2">
-                    <input type="text" id="topicSearch" oninput="renderTopics()" placeholder="Search projects..." class="w-full bg-black/20 border border-white/5 rounded-lg py-1.5 px-3 text-[11px] focus:outline-none focus:border-accent/50 text-white">
-                    <i data-lucide="search" class="absolute right-3 top-2 w-3 h-3 opacity-30"></i>
-                </div>
+  <!-- Center Pane -->
+  <section id="centerPane">
+    <!-- Phase indicator -->
+    <div id="phaseIndicator">
+      <div class="phase-dot"></div>
+      <span id="phaseText">Processing…</span>
+      <span id="phaseDetail"></span>
+      <button onclick="cancelResearch()" class="btn btn-ghost btn-sm" style="margin-left:8px">Cancel</button>
+    </div>
+    <div id="partialWarning"></div>
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab active" id="tab-synthesis" onclick="switchTab('synthesis')">Synthesis</button>
+      <button class="tab" id="tab-vault" onclick="switchTab('vault')">Claims Vault</button>
+      <button class="tab" id="tab-constellation" onclick="switchTab('constellation')">Signal Map</button>
+      <button class="tab" id="tab-voids" onclick="switchTab('voids')">Voids</button>
+      <div style="flex:1"></div>
+      <button onclick="exportResearch()" class="btn btn-ghost btn-sm" title="Export" id="exportBtn" style="margin:8px 0">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+    </div>
+    <!-- Tab contents -->
+    <div id="synthesisContent" class="tab-content active">
+      <div id="synthesisView">
+        <div class="empty-state">
+          <div class="empty-icon">🔬</div>
+          <div class="empty-title">Research Lab Ready</div>
+          <div class="empty-sub">Enter a research question in the Cognitive Stream, then press Execute to begin your analysis pipeline.</div>
+        </div>
+      </div>
+    </div>
+    <div id="vaultContent" class="tab-content">
+      <div id="claimGrid">
+        <div class="empty-state">
+          <div class="empty-icon">🗂️</div>
+          <div class="empty-title">Claims Vault Empty</div>
+          <div class="empty-sub">Run a research pipeline to extract and validate factual claims.</div>
+        </div>
+      </div>
+    </div>
+    <div id="constellationContent" class="tab-content">
+      <div style="max-width:600px;margin:0 auto">
+        <svg id="constellationSvg" viewBox="0 0 600 440">
+          <text x="300" y="220" text-anchor="middle" fill="var(--text-label)" font-size="14" font-family="var(--font-sans)">No claims data yet. Run research to populate.</text>
+        </svg>
+        <div class="stats-row">
+          <div class="stat-item"><div class="stat-val" id="statSnr">—</div><div class="stat-label">Confidence Index</div></div>
+          <div class="stat-item"><div class="stat-val" id="statBreadth">—</div><div class="stat-label">Claim Breadth</div></div>
+          <div class="stat-item"><div class="stat-val" id="statValidated">—</div><div class="stat-label">Validated</div></div>
+        </div>
+        <div style="text-align:center;margin-top:24px">
+          <div class="form-label" style="margin-bottom:8px">Confidence History</div>
+          <div class="sparkline-row" id="sparkline" style="justify-content:center"></div>
+        </div>
+      </div>
+    </div>
+    <div id="voidsContent" class="tab-content">
+      <div id="voidList">
+        <div class="empty-state">
+          <div class="empty-icon">🕳️</div>
+          <div class="empty-title">No Knowledge Voids</div>
+          <div class="empty-sub">Research gaps and unexplored questions will appear here after analysis.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="rightResizer" class="resizer"></div>
+
+  <!-- Right Pane: Cognitive Stream + Input -->
+  <aside id="rightPane" class="pane">
+    <div class="pane-header">
+      <span class="pane-label">Cognitive Stream</span>
+      <button onclick="clearLog()" class="btn btn-ghost btn-sm" style="font-size:12px">Clear</button>
+    </div>
+    <div id="cogStream"></div>
+    <div id="inputArea">
+      <!-- Pipeline stages -->
+      <div class="pipeline-stages" id="pipelineStages">
+        <div class="pipeline-stage" id="stage-scan"><div class="pipeline-stage-label">Scan</div></div>
+        <div class="pipeline-stage" id="stage-research"><div class="pipeline-stage-label">Research</div></div>
+        <div class="pipeline-stage" id="stage-validate"><div class="pipeline-stage-label">Validate</div></div>
+        <div class="pipeline-stage" id="stage-synthesize"><div class="pipeline-stage-label">Synthesize</div></div>
+      </div>
+      <textarea id="mainInput" class="inp" placeholder="Enter your research question… (Ctrl+Enter to execute)" rows="4"></textarea>
+      <div class="quick-actions">
+        <button onclick="runPhase('scan')" class="btn btn-ghost" style="font-size:12.5px">
+          ⚡ Quick Scan
+        </button>
+        <button onclick="runPhase('forensics')" class="btn btn-ghost" style="font-size:12.5px">
+          🛡 Forensics
+        </button>
+      </div>
+      <button id="runBtn" onclick="initiateResearch()" class="btn btn-primary" style="width:100%;padding:13px;font-size:14px;font-weight:700;letter-spacing:0.3px">
+        ▶ Execute Research Pipeline
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- Mobile Bottom Bar -->
+<div id="mobileBottomBar">
+  <button class="mobile-tab-btn active" id="mtab-synthesis" onclick="switchTab('synthesis');setMobileTab('synthesis')">
+    <span class="mtab-icon">📄</span>Synthesis
+  </button>
+  <button class="mobile-tab-btn" id="mtab-vault" onclick="switchTab('vault');setMobileTab('vault')">
+    <span class="mtab-icon">🗂</span>Vault
+  </button>
+  <button class="mobile-tab-btn" id="mtab-constellation" onclick="switchTab('constellation');setMobileTab('constellation')">
+    <span class="mtab-icon">🕸</span>Map
+  </button>
+  <button class="mobile-tab-btn" id="mtab-voids" onclick="switchTab('voids');setMobileTab('voids')">
+    <span class="mtab-icon">🕳</span>Voids
+  </button>
+</div>
+
+<!-- Mobile FAB -->
+<button id="mobileFab" onclick="openMobileInput()">✏️</button>
+
+<!-- Mobile Drawer -->
+<div id="mobileDrawer" onclick="closeMobileDrawer(event)">
+  <div id="drawerPanel">
+    <button id="drawerClose" onclick="closeMobileDrawer()" class="btn btn-ghost btn-sm">✕ Close</button>
+    <div style="padding:60px 0 0">
+      <div class="pane-header">
+        <span class="pane-label">Discovery Tree</span>
+        <button onclick="openTopicNameModal(null);closeMobileDrawer()" class="btn btn-icon btn-ghost btn-sm">+</button>
+      </div>
+      <div style="padding:10px 12px">
+        <input type="text" id="topicSearchMobile" placeholder="Search topics…" class="inp" style="font-size:13px;padding:8px 12px" oninput="document.getElementById('topicSearch').value=this.value;renderTopics()">
+      </div>
+      <div id="topicListMobile" style="padding:8px"></div>
+      <div style="padding:10px 12px;border-top:1px solid var(--border)">
+        <button onclick="toggleArchiveView()" class="btn btn-ghost" style="width:100%;font-size:12px">View Archive</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Input Sheet -->
+<div id="mobileInputSheet">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <span style="font-size:14px;font-weight:700">Research Question</span>
+    <button onclick="closeMobileInput()" class="btn btn-ghost btn-sm">✕</button>
+  </div>
+  <textarea id="mainInputMobile" class="inp" placeholder="Enter your research question…" rows="4" style="margin-bottom:12px"></textarea>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    <button onclick="syncMobileInput();runPhase('scan')" class="btn btn-ghost" style="font-size:12.5px">⚡ Quick Scan</button>
+    <button onclick="syncMobileInput();runPhase('forensics')" class="btn btn-ghost" style="font-size:12.5px">🛡 Forensics</button>
+  </div>
+  <button onclick="syncMobileInput();initiateResearch();closeMobileInput()" class="btn btn-primary" style="width:100%;padding:13px;font-size:14px;font-weight:700">▶ Execute Pipeline</button>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <div class="toast-icon" id="toastIcon">✓</div>
+  <span class="toast-msg" id="toastMsg"></span>
+  <button class="toast-close" onclick="hideToast()">✕</button>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" onclick="overlayClose(event,'settingsModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Lab Command Center</span>
+      <button onclick="closeModal('settingsModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="stab-providers" onclick="switchSettingsTab('providers')">API Providers</button>
+      <button class="modal-tab" id="stab-sources" onclick="switchSettingsTab('sources')">Sources</button>
+      <button class="modal-tab" id="stab-themes" onclick="switchSettingsTab('themes')">Themes</button>
+    </div>
+    <div class="modal-body">
+      <!-- Providers Tab -->
+      <div id="stab-content-providers">
+        <div class="toggle-wrap" style="margin-bottom:18px">
+          <div>
+            <div class="toggle-label">Parallel Synthesis</div>
+            <div class="toggle-sub">Query all Worker agents simultaneously</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="multiLlmToggle" onchange="saveState()">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <!-- New/Edit Provider Form -->
+        <div id="providerFormBox" style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
+          <div style="font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:14px" id="formTitle">Add New Provider</div>
+          <div class="brand-tabs" id="brandTabs">
+            <button class="brand-tab active" id="b-Gemini" onclick="switchBrand('Gemini')">Gemini</button>
+            <button class="brand-tab" id="b-OpenAI" onclick="switchBrand('OpenAI')">OpenAI</button>
+            <button class="brand-tab" id="b-Claude" onclick="switchBrand('Claude')">Claude</button>
+            <button class="brand-tab" id="b-Custom" onclick="switchBrand('Custom')">Custom</button>
+          </div>
+          <div class="form-row cols2">
+            <div class="form-group">
+              <label class="form-label">Label</label>
+              <input id="cfgName" type="text" class="inp" placeholder="e.g. GPT-4o Worker">
             </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-1 no-scrollbar" id="topicList"></div>
-            <div class="p-4 border-t border-white/5 bg-black/20">
-                <button onclick="toggleArchiveView()" id="archiveToggleBtn" class="w-full text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-accent py-2 transition-all">View Archive</button>
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select id="cfgRole" class="inp">
+                <option value="worker">Worker</option>
+                <option value="orchestrator">Orchestrator</option>
+              </select>
             </div>
-        </aside>
-
-        <div id="leftResizer" class="resizer"></div>
-
-        <section class="flex-1 flex flex-col relative overflow-hidden bg-[#050505]">
-            <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-accent/5 blur-[140px] rounded-full pointer-events-none"></div>
-            <div class="h-12 flex items-center px-8 border-b border-white/5 shrink-0 z-10 glass gap-8">
-                <button onclick="switchCenterTab('synthesis')" class="tab-btn active text-[10px] uppercase font-black tracking-widest h-full" id="tab-synthesis">Synthesis</button>
-                <button onclick="switchCenterTab('vault')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full" id="tab-vault">Claims Vault</button>
-                <button onclick="switchCenterTab('visualizer')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full" id="tab-visualizer">Signal Map</button>
-                <button onclick="switchCenterTab('gaps')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full" id="tab-gaps">Voids</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">API Endpoint</label>
+              <input id="cfgUrl" type="text" class="inp font-mono" placeholder="https://…">
             </div>
-            <div id="canvas" class="flex-1 p-8 lg:p-14 overflow-y-auto z-10 no-scrollbar">
-                <div id="synthesisView" class="animate-in fade-in slide-in-from-bottom-6 duration-700 synthesis-rendered pb-32"></div>
-                <div id="vaultView" class="hidden max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20" id="claimGrid"></div>
-                <div id="visualizerView" class="hidden h-full flex flex-col items-center justify-center animate-in fade-in zoom-in-95">
-                    <svg id="snrGraph" viewBox="0 0 500 500" width="450" height="450" class="max-w-full h-auto"></svg>
-                    <div class="mt-10 grid grid-cols-2 gap-16 text-center">
-                        <div><div class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Confidence</div><div class="text-4xl font-black text-accent" id="statSignal">0%</div></div>
-                        <div><div class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Breadth</div><div class="text-4xl font-black text-purple-600" id="statBreadth">0%</div></div>
-                    </div>
-                </div>
-                <div id="gapsView" class="hidden max-w-3xl mx-auto space-y-4" id="gapList"></div>
+          </div>
+          <div class="form-row cols2">
+            <div class="form-group">
+              <label class="form-label">Secret Key</label>
+              <input id="cfgKey" type="password" class="inp font-mono" placeholder="sk-…">
             </div>
-        </section>
-
-        <div id="rightResizer" class="resizer"></div>
-
-        <aside id="rightPane" class="side-pane w-80 flex flex-col bg-[#0d0f12] shrink-0 shadow-2xl" style="width: 320px;">
-            <div class="flex-1 p-5 overflow-y-auto no-scrollbar flex flex-col">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Stream</h3>
-                <div id="logStream" class="space-y-2 text-[10px] mono text-slate-500"></div>
+            <div class="form-group">
+              <label class="form-label">Model</label>
+              <select id="cfgModel" class="inp font-mono"></select>
             </div>
-            <div class="p-5 border-t border-white/5 bg-black/40 space-y-4">
-                <div id="pipelineDisplay" class="space-y-1"></div>
-                <textarea id="mainInput" placeholder="Refine discovery vector..." class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent h-24 resize-none transition-all"></textarea>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="runPhase('scan')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent transition-all flex items-center justify-center gap-1.5"><i data-lucide="zap" class="w-3 h-3 text-amber-400"></i> Quick Scan</button>
-                    <button onclick="runPhase('forensics')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent transition-all flex items-center justify-center gap-1.5"><i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> Forensics</button>
-                </div>
-                <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-4 rounded-xl text-xs flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-lg shadow-accent/20 transition-all active:scale-[0.98]">
-                    <i data-lucide="play" class="w-4 h-4"></i> Execute Research Synthesis
-                </button>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:16px;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;gap:8px">
+              <button onclick="fetchModels()" class="btn btn-ghost btn-sm">↻ Sync Models</button>
+              <button onclick="cancelEdit()" class="btn btn-ghost btn-sm" id="cancelEditBtn" style="display:none">Cancel</button>
             </div>
-        </aside>
-    </main>
+            <button onclick="saveProvider()" class="btn btn-primary btn-sm" id="saveProviderBtn">Add Provider</button>
+          </div>
+        </div>
+        <!-- Provider List -->
+        <div id="providerList"></div>
+      </div>
+      <!-- Sources Tab -->
+      <div id="stab-content-sources" style="display:none">
+        <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Add authoritative domains for grounding research validation (e.g. <span class="font-mono" style="font-size:12px">nature.com</span>, <span class="font-mono" style="font-size:12px">nih.gov</span>).</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input id="newSource" type="text" class="inp" placeholder="e.g. pubmed.ncbi.nlm.nih.gov">
+          <button onclick="addSource()" class="btn btn-primary" style="flex-shrink:0">Add</button>
+        </div>
+        <div id="sourceList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <!-- Themes Tab -->
+      <div id="stab-content-themes" style="display:none">
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('settingsModal')" class="btn btn-ghost">Close</button>
+    </div>
+  </div>
+</div>
 
-    <script>
-        const PROVIDER_DEFAULTS = {
-            Gemini: { url: 'https://generativelanguage.googleapis.com/v1beta/models/', models: ['gemini-2.0-flash-exp', 'gemini-1.5-pro'] },
-            OpenAI: { url: 'https://api.openai.com/v1', models: ['gpt-4o', 'o1-preview'] },
-            Claude: { url: 'https://api.anthropic.com/v1/messages', models: ['claude-3-5-sonnet-latest'] },
-            Custom: { url: '', models: [] }
-        };
+<!-- Topic Name Modal -->
+<div class="modal-overlay" id="topicNameModal" onclick="overlayClose(event,'topicNameModal')">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title" id="topicModalTitle">New Research Topic</span>
+      <button onclick="closeModal('topicNameModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-body" style="padding:24px">
+      <div class="form-group">
+        <label class="form-label">Topic Name</label>
+        <input id="topicNameInput" type="text" class="inp" placeholder="e.g. Impact of AI on Healthcare" style="font-size:15px;padding:12px 16px">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('topicNameModal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="confirmTopicName()" class="btn btn-primary">Create Topic</button>
+    </div>
+  </div>
+</div>
 
-        let state = {
-            providers: JSON.parse(localStorage.getItem('myres_providers') || '[]'),
-            activeProviderId: localStorage.getItem('myres_active_id') || null,
-            sources: JSON.parse(localStorage.getItem('myres_trusted_sources') || '[]'),
-            topics: JSON.parse(localStorage.getItem('myres_topics') || '[]'),
-            activeTopicId: localStorage.getItem('myres_active_topic') || null,
-            theme: localStorage.getItem('myres_theme') || 'dark',
-            centerTab: 'synthesis',
-            settingsTab: 'providers',
-            providerBrand: 'Gemini',
-            phase: 'idle',
-            multiLlm: localStorage.getItem('myres_multi_llm') === 'true',
-            showArchived: false,
-            leftPaneCollapsed: false,
-            rightPaneCollapsed: false,
-            editingProviderId: null
-        };
+<!-- Validate Modal -->
+<div class="modal-overlay" id="validateModal" onclick="overlayClose(event,'validateModal')">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-header">
+      <span class="modal-title">Validate Claim</span>
+      <button onclick="closeModal('validateModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="validateClaimPreview" style="background:var(--bg-input);border-radius:var(--radius);padding:16px;margin-bottom:18px;font-size:14px;line-height:1.6;color:var(--text-primary)"></div>
+      <div class="form-group">
+        <label class="form-label">Validate Against</label>
+        <select id="validateProviderSelect" class="inp"></select>
+      </div>
+      <div id="validateResult" style="display:none;margin-top:18px"></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('validateModal')" class="btn btn-ghost">Close</button>
+      <button onclick="executeValidation()" class="btn btn-primary" id="executeValidateBtn">Run Validation</button>
+    </div>
+  </div>
+</div>
 
-        // --- RESIZER ENGINE ---
-        function initResizers() {
-            const leftPane = document.getElementById('leftPane');
-            const rightPane = document.getElementById('rightPane');
-            const leftResizer = document.getElementById('leftResizer');
-            const rightResizer = document.getElementById('rightResizer');
-            let isResizingLeft = false;
-            let isResizingRight = false;
+<script>
+// =====================================================================
+//  CONSTANTS & DEFAULTS
+// =====================================================================
+const PROVIDER_DEFAULTS = {
+  Gemini: { url: 'https://generativelanguage.googleapis.com/v1beta/models/', models: ['gemini-2.5-pro-exp-03-25','gemini-2.0-flash','gemini-1.5-pro','gemini-1.5-flash'] },
+  OpenAI: { url: 'https://api.openai.com/v1', models: ['gpt-4o','gpt-4o-mini','o1','o1-mini','gpt-4-turbo'] },
+  Claude: { url: 'https://api.anthropic.com/v1/messages', models: ['claude-opus-4-6','claude-sonnet-4-6','claude-haiku-4-5-20251001'] },
+  Custom: { url: '', models: [] }
+};
 
-            leftResizer.addEventListener('mousedown', () => { isResizingLeft = true; leftPane.classList.add('resizing'); document.body.style.cursor = 'col-resize'; });
-            rightResizer.addEventListener('mousedown', () => { isResizingRight = true; rightPane.classList.add('resizing'); document.body.style.cursor = 'col-resize'; });
+const THEMES = [
+  { id:'dark',    name:'Night',       bg:'#0a0c10', accent:'#00c8f0', emoji:'🌑' },
+  { id:'midnight',name:'Midnight',    bg:'#070d1a', accent:'#4d9fff', emoji:'🌊' },
+  { id:'forest',  name:'Forest',      bg:'#080f09', accent:'#4ade80', emoji:'🌿' },
+  { id:'highcontrast',name:'High Contrast', bg:'#000000', accent:'#ffd700', emoji:'⬛' },
+  { id:'light',   name:'Light',       bg:'#f0f4f8', accent:'#0070d8', emoji:'☀️' },
+  { id:'sepia',   name:'Sepia',       bg:'#1a1208', accent:'#e8a045', emoji:'🕯️' },
+  { id:'academic',name:'Academic',    bg:'#faf8f3', accent:'#8b1a1a', emoji:'📜' }
+];
 
-            document.addEventListener('mousemove', (e) => {
-                if (isResizingLeft) {
-                    const newWidth = Math.max(150, Math.min(500, e.clientX));
-                    leftPane.style.width = newWidth + 'px';
-                }
-                if (isResizingRight) {
-                    const newWidth = Math.max(150, Math.min(600, window.innerWidth - e.clientX));
-                    rightPane.style.width = newWidth + 'px';
-                }
-            });
+// =====================================================================
+//  STATE
+// =====================================================================
+let state = {
+  providers: load('myres_providers', []),
+  activeProviderId: load('myres_active_id', null),
+  sources: load('myres_sources', []),
+  topics: load('myres_topics', []),
+  activeTopicId: load('myres_active_topic', null),
+  theme: load('myres_theme', 'dark'),
+  multiLlm: load('myres_multi', false),
+  showArchived: false,
+  leftCollapsed: false,
+  rightCollapsed: false,
+  editing: null,
+  pendingParentId: null,
+  pendingTopicEdit: null,
+  currentPhase: 'idle',
+  abortController: null,
+  currentValidatingClaimId: null,
+  snrHistory: load('myres_snr_history', [])
+};
 
-            document.addEventListener('mouseup', () => {
-                if (isResizingLeft || isResizingRight) {
-                    isResizingLeft = false; isResizingRight = false;
-                    leftPane.classList.remove('resizing'); rightPane.classList.remove('resizing');
-                    document.body.style.cursor = 'default';
-                }
-            });
+function load(key, def) {
+  try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : def; }
+  catch { return def; }
+}
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+function saveState() {
+  save('myres_providers', state.providers);
+  save('myres_active_id', state.activeProviderId);
+  save('myres_sources', state.sources);
+  save('myres_topics', state.topics);
+  save('myres_active_topic', state.activeTopicId);
+  save('myres_theme', state.theme);
+  save('myres_multi', state.multiLlm);
+  save('myres_snr_history', state.snrHistory);
+}
+
+// =====================================================================
+//  PROMPTS ENGINE
+// =====================================================================
+const PROMPTS = {
+  quickScan(topic, existingClaims) {
+    return `You are a research analyst performing a rapid topic scan.
+
+TOPIC: "${topic}"
+${existingClaims.length ? `EXISTING CLAIMS IN KB:\n${existingClaims.map(c=>c.text).join('\n')}` : ''}
+
+Perform a structured rapid scan. Identify the most important claims, themes, and initial unknowns.
+
+Return ONLY valid JSON (no markdown, no commentary) in this exact structure:
+{
+  "themes": ["theme1","theme2","theme3","theme4","theme5"],
+  "initialClaims": [
+    {"text":"claim text","confidence":"high|medium|low","reasoning":"brief reasoning"}
+  ],
+  "unknowns": ["unknown1","unknown2"],
+  "scanSummary": "2-3 sentence overview of the topic landscape"
+}`;
+  },
+
+  deepResearch(topic, scanData, existingClaims, sources) {
+    return `You are a senior research analyst performing rigorous deep analysis.
+
+TOPIC: "${topic}"
+INITIAL SCAN SUMMARY: ${scanData.scanSummary || ''}
+IDENTIFIED THEMES: ${(scanData.themes||[]).join(', ')}
+${existingClaims.length ? `EXISTING KB CLAIMS:\n${existingClaims.map(c=>`- [${c.status}] ${c.text}`).join('\n')}` : ''}
+${sources.length ? `AUTHORITATIVE SOURCES TO REFERENCE: ${sources.join(', ')}` : ''}
+
+Perform deep multi-perspective research analysis. For each key claim:
+- Assess evidence strength (peer-reviewed > government data > industry reports > journalism > opinion)
+- Identify credible opposing arguments
+- Note contradictions with existing KB claims if any
+
+Return ONLY valid JSON:
+{
+  "claims": [
+    {
+      "text": "specific factual claim",
+      "status": "VERIFIED|CONTESTED|WEAK|UNVERIFIED",
+      "confidence": 0-100,
+      "reasoning": "evidence and reasoning",
+      "evidenceType": "peer-reviewed|government|industry|journalism|opinion",
+      "contradicts": [],
+      "supports": []
+    }
+  ],
+  "gaps": [
+    {"text":"research gap description","importance":"high|medium|low"}
+  ],
+  "snr": 0-100,
+  "breadth": 0-100
+}`;
+  },
+
+  synthesize(topic, claims, gaps, workerBlocks, sources, providerNames) {
+    return `You are a lead research synthesizer producing a professional research brief.
+
+TOPIC: "${topic}"
+CONTRIBUTING ANALYSES: ${providerNames.join(', ')}
+${sources.length ? `AUTHORITATIVE SOURCES: ${sources.join(', ')}` : ''}
+
+VALIDATED CLAIMS:
+${claims.map(c=>`[${c.status} | ${c.confidence||0}% confidence] ${c.text}\nEvidence: ${c.reasoning||''}`).join('\n\n')}
+
+RESEARCH GAPS:
+${gaps.map(g=>typeof g==='object'?g.text:g).join('\n')}
+
+WORKER ANALYSES:
+${workerBlocks.map((b,i)=>`--- Analysis ${i+1} ---\n${b}`).join('\n\n')}
+
+Write a PROFESSIONAL RESEARCH BRIEF suitable for peer review and knowledge sharing.
+
+Structure it EXACTLY as follows using markdown:
+
+# [Descriptive Title for "${topic}"]
+
+> **Research Date:** [today's date] | **Confidence Index:** [X]% | **Sources Consulted:** [list key sources]
+
+## Executive Summary
+[3-5 sentence abstract suitable for a journal. State the key finding, significance, and state of evidence.]
+
+## Key Findings
+[Numbered findings, each with evidence strength. Be specific and cite the type of evidence.]
+
+## Contested Territory
+[Claims where evidence conflicts. Present each side neutrally. This section is critical for intellectual honesty.]
+
+## Knowledge Gaps
+[Unexplored questions and why they matter for the field.]
+
+## Socratic Challenge
+[What fundamental assumptions in this research might be wrong? What if the dominant paradigm is flawed? This is adversarial analysis — be incisive.]
+
+## Conclusions
+[Synthesized conclusion weighing all evidence. What can be stated with confidence? What remains uncertain?]
+
+---
+*Methodology Note: Analysis generated via ${providerNames.join(', ')}. ${claims.length} claims extracted. Confidence index based on evidence quality weighting.*`;
+  },
+
+  validateClaim(claim, topic, existingClaims, sources) {
+    return `You are an independent fact-checker performing rigorous claim validation.
+
+TOPIC CONTEXT: "${topic}"
+CLAIM TO VALIDATE: "${claim.text}"
+ORIGINAL ASSESSMENT: ${claim.status} (${claim.confidence||0}% confidence)
+ORIGINAL REASONING: ${claim.reasoning||''}
+
+RELATED CLAIMS IN KB:
+${existingClaims.filter(c=>c.id!==claim.id).slice(0,8).map(c=>`[${c.status}] ${c.text}`).join('\n')}
+
+${sources.length ? `AUTHORITATIVE DOMAINS: ${sources.join(', ')}` : ''}
+
+Perform independent validation. Do NOT simply agree with the original assessment.
+
+Return ONLY valid JSON:
+{
+  "validationStatus": "VERIFIED|CONTESTED|REFUTED|INSUFFICIENT_EVIDENCE",
+  "confidence": 0-100,
+  "reasoning": "detailed reasoning for your assessment",
+  "supportingEvidence": "what strengthens this claim",
+  "contradictingEvidence": "what weakens this claim",
+  "recommendation": "ACCEPT|REVISE|REJECT"
+}`;
+  },
+
+  socraticChallenge(topic, claims, synthesis) {
+    return `You are a Socratic philosopher and adversarial critic.
+
+TOPIC: "${topic}"
+RESEARCH SYNTHESIS EXCERPT: ${synthesis ? synthesis.substring(0,1000) : ''}
+KEY CLAIMS: ${claims.slice(0,10).map(c=>c.text).join('\n')}
+
+Your task: identify what might be FUNDAMENTALLY WRONG with this research.
+
+Challenge:
+1. Hidden assumptions that are never questioned
+2. Selection bias in what was researched vs. ignored
+3. Paradigm constraints — what if the entire framing is wrong?
+4. Logical gaps between evidence and conclusions
+5. Alternative explanations that would invalidate key claims
+
+Be intellectually ruthless. This is not gentle critique — this is adversarial stress-testing.
+
+Return ONLY valid JSON:
+{
+  "challenges": [
+    {"assumption":"what is being assumed","challenge":"why it might be wrong","severity":"high|medium|low"}
+  ],
+  "alternativeFraming": "a radically different way to interpret all this evidence",
+  "blindSpots": ["blindspot1","blindspot2","blindspot3"]
+}`;
+  },
+
+  deltaUpdate(topic, existingBrief, changedClaims, action) {
+    return `You are updating a research brief to reflect new validation data.
+
+TOPIC: "${topic}"
+ACTION: ${action}
+CHANGED CLAIMS: ${JSON.stringify(changedClaims)}
+
+EXISTING BRIEF (first 2000 chars):
+${existingBrief ? existingBrief.substring(0,2000) : ''}
+
+Update the CONTESTED TERRITORY and CONCLUSIONS sections only to reflect the new claim status.
+Return ONLY the updated full markdown brief. Do not add commentary.`;
+  }
+};
+
+// =====================================================================
+//  API LAYER
+// =====================================================================
+async function callAI(provider, userPrompt, systemPrompt, signal) {
+  if (!provider) throw new Error('No provider specified');
+  const isGemini = provider.type === 'Gemini' || provider.url.includes('generativelanguage');
+  let url = provider.url.replace(/\/+$/, '');
+  
+  let body, headers = { 'Content-Type': 'application/json' };
+
+  if (isGemini) {
+    url = `${url}/${provider.model}:generateContent?key=${provider.key}`;
+    body = {
+      contents: [{ parts: [{ text: userPrompt }] }],
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      generationConfig: { temperature: 0.3, maxOutputTokens: 4096 }
+    };
+  } else if (provider.type === 'Claude') {
+    headers['x-api-key'] = provider.key;
+    headers['anthropic-version'] = '2023-06-01';
+    body = {
+      model: provider.model,
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    };
+  } else {
+    if (!url.endsWith('/chat/completions')) url += '/chat/completions';
+    headers['Authorization'] = `Bearer ${provider.key}`;
+    body = {
+      model: provider.model,
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      temperature: 0.3, max_tokens: 4096
+    };
+  }
+
+  const fetchOpts = { method: 'POST', headers, body: JSON.stringify(body) };
+  if (signal) fetchOpts.signal = signal;
+
+  const res = await fetch(url, fetchOpts);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error(`Non-JSON response from ${provider.name}. Check endpoint/key.`); }
+  if (!res.ok) throw new Error(data.error?.message || data.error?.error?.message || `API Error ${res.status}`);
+
+  if (isGemini) return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (provider.type === 'Claude') return data.content?.[0]?.text || '';
+  return data.choices?.[0]?.message?.content || '';
+}
+
+async function callAIWithRetry(provider, userPrompt, systemPrompt, signal, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await callAI(provider, userPrompt, systemPrompt, signal);
+    } catch (e) {
+      if (e.name === 'AbortError') throw e;
+      if (attempt === retries) throw e;
+      const delay = Math.pow(2, attempt) * 1000;
+      addLog('warn', `${provider.name} failed (attempt ${attempt+1}), retrying in ${delay/1000}s… ${e.message}`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+function parseJSON(raw) {
+  if (!raw) return null;
+  const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  try { return JSON.parse(cleaned); }
+  catch {
+    // Try to extract JSON from within the text
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) { try { return JSON.parse(match[0]); } catch {} }
+    return null;
+  }
+}
+
+// =====================================================================
+//  RESEARCH PIPELINE
+// =====================================================================
+let researchCancelled = false;
+
+function cancelResearch() {
+  researchCancelled = true;
+  if (state.abortController) state.abortController.abort();
+  setPhase('idle');
+  addLog('warn', 'Research cancelled by user.');
+  enableRunBtn(true);
+}
+
+async function initiateResearch() {
+  const q = document.getElementById('mainInput').value.trim();
+  if (!q) { showToast('Enter a research question first.', 'error'); return; }
+
+  const activeP = state.providers.find(p => p.id == state.activeProviderId && !p.disabled);
+  if (!activeP) { showToast('No active provider. Configure one in Settings.', 'error'); return; }
+
+  if (!state.activeTopicId) openTopicNameModal(null, q);
+  let t = state.topics.find(x => x.id == state.activeTopicId);
+  if (!t) { showToast('Select or create a topic first.', 'error'); return; }
+
+  researchCancelled = false;
+  state.abortController = new AbortController();
+  const sig = state.abortController.signal;
+  enableRunBtn(false);
+  startProgress();
+
+  try {
+    // ---- PHASE A: QUICK SCAN ----
+    setPhase('scan', 'Phase 1 of 4 — Quick Scan');
+    addLog('sys', `Initiating scan: "${q}"`);
+    const scanPrompt = PROMPTS.quickScan(q, t.claims || []);
+    const scanRaw = await callAIWithRetry(activeP, scanPrompt, 'You are a structured research analyst. Always respond with valid JSON only.', sig);
+    if (researchCancelled) return;
+    const scanData = parseJSON(scanRaw) || { themes:[], initialClaims:[], unknowns:[], scanSummary: scanRaw.substring(0,300) };
+    addLog('ai', `Scan complete — ${scanData.themes?.length||0} themes, ${scanData.initialClaims?.length||0} initial signals`);
+
+    // ---- PHASE B: DEEP RESEARCH (workers or solo) ----
+    setPhase('research', 'Phase 2 of 4 — Deep Research');
+    const workers = state.providers.filter(p => p.role === 'worker' && !p.disabled);
+    const orchestrator = state.providers.find(p => p.role === 'orchestrator' && !p.disabled) || activeP;
+    let workerBlocks = [], failedWorkers = [], providerNames = [];
+
+    if (state.multiLlm && workers.length > 0) {
+      addLog('sys', `Querying ${workers.length} worker agents in parallel…`);
+      const researchPrompt = PROMPTS.deepResearch(q, scanData, t.claims||[], state.sources);
+      const results = await Promise.allSettled(
+        workers.map(p => callAIWithRetry(p, researchPrompt, 'You are a structured research analyst. Always respond with valid JSON only.', sig))
+      );
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled' && r.value) {
+          workerBlocks.push(r.value);
+          providerNames.push(workers[i].name);
+          addLog('ok', `${workers[i].name} responded successfully`);
+        } else {
+          failedWorkers.push(workers[i].name);
+          addLog('err', `${workers[i].name} failed: ${r.reason?.message || 'Unknown error'}`);
         }
+      });
+      if (failedWorkers.length > 0) showPartialWarning(`${failedWorkers.join(', ')} failed — synthesis based on ${workerBlocks.length}/${workers.length} agents`);
+      if (workerBlocks.length === 0) {
+        addLog('warn', 'All workers failed, falling back to active provider…');
+        const fallback = await callAIWithRetry(activeP, PROMPTS.deepResearch(q, scanData, t.claims||[], state.sources), 'You are a structured research analyst. Always respond with valid JSON only.', sig);
+        workerBlocks = [fallback]; providerNames = [activeP.name];
+      }
+    } else {
+      addLog('sys', `Single-provider deep research via ${activeP.name}…`);
+      const block = await callAIWithRetry(activeP, PROMPTS.deepResearch(q, scanData, t.claims||[], state.sources), 'You are a structured research analyst. Always respond with valid JSON only.', sig);
+      workerBlocks = [block]; providerNames = [activeP.name];
+    }
+    if (researchCancelled) return;
 
-        // --- UI CORE ---
-        function refreshIcons() { lucide.createIcons(); }
+    // Extract claims from worker blocks
+    let rawClaims = [];
+    workerBlocks.forEach((block, i) => {
+      const parsed = parseJSON(block);
+      if (parsed?.claims) {
+        parsed.claims.forEach(c => {
+          rawClaims.push({
+            ...c, id: Date.now() + Math.random(),
+            sourceProvider: { id: workers[i]?.id || activeP.id, name: providerNames[i] },
+            sourceLayer: 'worker',
+            validations: [], timestamp: new Date().toISOString(),
+            discarded: false
+          });
+        });
+      }
+      // Also collect gaps and snr from last worker
+      const pd = parseJSON(block);
+      if (pd?.gaps) t.gaps = (t.gaps||[]).concat(pd.gaps);
+      if (pd?.snr) t.snr = pd.snr;
+      if (pd?.breadth) t.breadth = pd.breadth;
+    });
+    addLog('ai', `Extracted ${rawClaims.length} raw claims across ${workerBlocks.length} agents`);
 
-        function togglePane(side) {
-            if(side === 'left') {
-                state.leftPaneCollapsed = !state.leftPaneCollapsed;
-                document.getElementById('leftPane').classList.toggle('collapsed', state.leftPaneCollapsed);
-                document.getElementById('leftResizer').style.display = state.leftPaneCollapsed ? 'none' : 'block';
-            } else {
-                state.rightPaneCollapsed = !state.rightPaneCollapsed;
-                document.getElementById('rightPane').classList.toggle('collapsed', state.rightPaneCollapsed);
-                document.getElementById('rightResizer').style.display = state.rightPaneCollapsed ? 'none' : 'block';
-            }
-        }
+    // Detect contradictions within new claims
+    rawClaims = detectContradictions(rawClaims, t.claims||[]);
+    if (researchCancelled) return;
 
-        function setTheme(t) {
-            state.theme = t; document.body.setAttribute('data-theme', t); localStorage.setItem('myres_theme', t);
-            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('bg-white/10', 'text-accent'));
-            const activeBtn = document.getElementById(`tbtn-${t}`);
-            if(activeBtn) activeBtn.classList.add('bg-white/10', 'text-accent');
-            refreshIcons();
-        }
+    // ---- PHASE C: VALIDATE (synthesis-level claims extraction) ----
+    setPhase('validate', 'Phase 3 of 4 — Forensic Validation');
+    // Merge new claims with existing, dedup by similarity
+    const allClaims = mergeClaims(t.claims || [], rawClaims);
 
-        function switchSettingsTab(tab) {
-            state.settingsTab = tab;
-            document.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
-            const btn = document.getElementById(`stab-${tab}`);
-            if(btn) btn.classList.add('active');
-            document.querySelectorAll('.settings-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`settings-${tab}`).classList.remove('hidden');
-        }
+    // ---- PHASE D: SYNTHESIZE ----
+    setPhase('synthesize', 'Phase 4 of 4 — Synthesis + Socratic Challenge');
+    const synthPrompt = PROMPTS.synthesize(q, allClaims, t.gaps||[], workerBlocks, state.sources, providerNames);
+    const synthProvider = state.multiLlm ? orchestrator : activeP;
+    addLog('sys', `Synthesis via ${synthProvider.name}…`);
+    const brief = await callAIWithRetry(synthProvider, synthPrompt, 'You are a professional research synthesizer. Write in scholarly, publication-ready prose.', sig);
+    if (researchCancelled) return;
+    addLog('ok', 'Synthesis brief generated');
 
-        function toggleModal(id) {
-            const m = document.getElementById(id); m.classList.toggle('hidden');
-            if (id === 'settingsModal') { renderProviders(); renderSources(); switchProviderBrand(state.providerBrand); }
-        }
+    // Socratic Challenge (auto-phase)
+    const socraticRaw = await callAIWithRetry(synthProvider, PROMPTS.socraticChallenge(q, allClaims, brief), 'You are a critical philosopher. Always respond with valid JSON only.', sig).catch(e => { addLog('warn','Socratic phase failed: '+e.message); return null; });
+    const socratic = socraticRaw ? parseJSON(socraticRaw) : null;
+    if (socratic) addLog('ai', `Socratic challenge: ${socratic.challenges?.length||0} assumptions challenged`);
 
-        function switchCenterTab(tab) {
-            state.centerTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-            ['synthesisView', 'vaultView', 'visualizerView', 'gapsView'].forEach(v => {
-                const el = document.getElementById(v);
-                if(el) el.classList.add('hidden');
-            });
-            document.getElementById(tab + 'View').classList.remove('hidden');
-            if (tab === 'visualizer') setTimeout(renderSNRGraph, 50);
-        }
+    // Update topic
+    t.brief = brief;
+    t.claims = allClaims;
+    t.gaps = dedupGaps(t.gaps||[]);
+    t.socratic = socratic;
+    t.snrHistory = [...(t.snrHistory||[]), t.snr||0].slice(-12);
+    state.snrHistory = t.snrHistory;
 
-        // --- RELIABILITY PIPELINE V5.1 ---
-        async function runPhase(phase) {
-            const q = document.getElementById('mainInput').value.trim();
-            const activeP = state.providers.find(p => p.id == state.activeProviderId);
-            if(!activeP) return showToast("Assign agent.");
-            const t = state.topics.find(x => x.id == state.activeTopicId) || createNewTopic();
-            state.phase = phase === 'scan' ? 'scan' : 'validate'; updateUI();
+    saveState();
+    loadActiveTopic();
+    switchTab('synthesis');
+    showToast('Research pipeline complete.', 'success');
+    addLog('ok', `Pipeline complete. ${allClaims.length} claims. SNR: ${t.snr||0}%`);
 
-            try {
-                if(phase === 'scan') {
-                    addPulseLog('Triage active...');
-                    const scan = await callAI_Specific(activeP, q || t.title, "Triage Agent. Identify 5 themes. Semantic check. Brief.");
-                    addLog('AI', "Triage Complete: " + scan.substring(0, 150) + "...");
-                } else if(phase === 'forensics') {
-                    addPulseLog('Generating forensic claims...');
-                    const forensic = await callAI_Specific(activeP, `Context: ${t.brief}. Follow-up: ${q}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. SNR: Value%.`, "Structural Parser.");
-                    const parsed = parseValidation(forensic);
-                    t.claims = [...(t.claims || []), ...parsed.claims].slice(-30);
-                    t.snr = parsed.snr;
-                    saveState(); loadActiveTopic(); showToast("Forensics Updated.");
-                }
-            } catch(e) { 
-                addLog('ERROR', "Phase failed: " + e.message); 
-            }
-            finally { state.phase = 'idle'; updateUI(); clearPulseLog(); }
-        }
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    addLog('err', `Pipeline failed: ${e.message}`);
+    showToast(`Error: ${e.message}`, 'error', true);
+  } finally {
+    setPhase('idle');
+    stopProgress();
+    enableRunBtn(true);
+    hidePartialWarning();
+  }
+}
 
-        async function initiateResearch() {
-            const q = document.getElementById('mainInput').value.trim();
-            if(!q) return;
-            const activeP = state.providers.find(p => p.id == state.activeProviderId);
-            if(!activeP) return showToast("Assign orchestrator.");
-            if(!state.activeTopicId) createNewTopic();
-            const btn = document.getElementById('runBtn'); btn.disabled = true;
-            const t = state.topics.find(x => x.id == state.activeTopicId);
+async function runPhase(phase) {
+  const q = document.getElementById('mainInput').value.trim();
+  const activeP = state.providers.find(p => p.id == state.activeProviderId && !p.disabled);
+  if (!activeP) return showToast('No active provider.', 'error');
+  const t = state.topics.find(x => x.id == state.activeTopicId);
+  if (!t) return showToast('Select a topic first.', 'error');
 
-            try {
-                state.phase = 'scan'; updateUI();
-                addPulseLog('Cognitive Triage Phase 1...');
-                const scan = await callAI_Specific(activeP, q, "Triage Agent. Theme Scanning.");
-                
-                state.phase = 'research'; updateUI();
-                const workers = state.providers.filter(p => p.role === 'worker');
-                let blocks = [];
-                addPulseLog(`Extracting from ${workers.length || 1} agents...`);
-                if(state.multiLlm && workers.length > 0) {
-                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, `Vector: ${q}\nContext: ${scan}`, "Expert extraction.")));
-                } else {
-                    blocks = [await callAI_Specific(activeP, `Vector: ${q}\nScan Data: ${scan}`, "Technical synthesis.")];
-                }
+  researchCancelled = false;
+  state.abortController = new AbortController();
+  enableRunBtn(false);
+  startProgress();
 
-                addPulseLog('Constructing Synthesis Brief...');
-                const synth = await callAI_Specific(activeP, `Synthesize: ${blocks.join("\n\n")}. Markdown format.`, "Senior Lead Architect.");
-                t.brief = synth;
-                renderSynthesis(t);
+  try {
+    if (phase === 'scan') {
+      setPhase('scan', 'Quick Scan');
+      const raw = await callAIWithRetry(activeP, PROMPTS.quickScan(q||t.title, t.claims||[]), 'You are a structured research analyst. Always respond with valid JSON only.', state.abortController.signal);
+      const data = parseJSON(raw);
+      addLog('ai', `Quick scan: ${data?.themes?.join(', ') || raw.substring(0,120)}`);
+      if (data?.scanSummary) addLog('sys', data.scanSummary);
+      showToast('Quick scan complete.', 'success');
+    } else if (phase === 'forensics') {
+      setPhase('validate', 'Forensic Extraction');
+      const context = `TOPIC: ${t.title}\nBRIEF: ${(t.brief||'').substring(0,1000)}\nFOLLOW-UP: ${q}`;
+      const raw = await callAIWithRetry(activeP, PROMPTS.deepResearch(t.title, { scanSummary: context, themes: [] }, t.claims||[], state.sources), 'You are a structured research analyst. Always respond with valid JSON only.', state.abortController.signal);
+      const parsed = parseJSON(raw);
+      if (parsed?.claims) {
+        const newClaims = parsed.claims.map(c => ({
+          ...c, id: Date.now() + Math.random(),
+          sourceProvider: { id: activeP.id, name: activeP.name },
+          sourceLayer: 'forensics', validations: [],
+          timestamp: new Date().toISOString(), discarded: false
+        }));
+        t.claims = mergeClaims(t.claims||[], newClaims);
+        if (parsed.snr) t.snr = parsed.snr;
+        saveState(); loadActiveTopic();
+      }
+      showToast('Forensic extraction complete.', 'success');
+      addLog('ok', `${parsed?.claims?.length||0} claims extracted`);
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') { addLog('err', e.message); showToast(`Error: ${e.message}`, 'error', true); }
+  } finally {
+    setPhase('idle'); stopProgress(); enableRunBtn(true);
+  }
+}
 
-                state.phase = 'validate'; updateUI();
-                addPulseLog('Phase 4: Forensics Generation...');
-                const forensicData = await callAI_Specific(activeP, `Brief: ${synth}. Sources: ${state.sources.join(',')}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. GAP: Topic. SNR: Value%.`, "Structural Parser.");
-                const parsed = parseValidation(forensicData);
-                t.claims = parsed.claims; t.snr = parsed.snr; t.gaps = parsed.gaps;
-                t.breadth = (blocks.length * 20) + 15;
-                
-                saveState(); loadActiveTopic(); showToast("Synthesis Achieved.");
-            } catch(e) { 
-                addLog('ERROR', "Pipeline halted: " + e.message); 
-            }
-            finally { state.phase = 'idle'; updateUI(); clearPulseLog(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
-        }
+// =====================================================================
+//  CLAIM VALIDATION
+// =====================================================================
+let pendingValidationClaimId = null;
 
-        async function callAI_Specific(p, prompt, system) {
-            const isGemini = p.type === 'Gemini' || p.url.includes('generativelanguage');
-            let cleanUrl = p.url.replace(/\/+$/, '');
-            let url = isGemini ? `${cleanUrl}/${p.model}:generateContent?key=${p.key}` : cleanUrl;
-            if(!isGemini && !url.endsWith('/chat/completions')) url += '/chat/completions';
-            
-            const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
-            const headers = { 'Content-Type': 'application/json' };
-            if(!isGemini) headers['Authorization'] = `Bearer ${p.key}`;
-            
-            const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-            const text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (e) {
-                throw new Error("Server returned non-JSON response. Check API endpoint and Key.");
-            }
-            
-            if(!res.ok) {
-                const errMsg = data.error?.message || data.error || "Unknown API Error";
-                throw new Error(errMsg);
-            }
+function openValidateModal(claimId) {
+  const t = state.topics.find(x => x.id == state.activeTopicId);
+  if (!t) return;
+  const claim = t.claims.find(c => c.id == claimId);
+  if (!claim) return;
+  pendingValidationClaimId = claimId;
 
-            if(isGemini) return data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.content?.[0]?.parts?.[0]?.text;
-            return data.choices?.[0]?.message?.content;
-        }
+  document.getElementById('validateClaimPreview').innerHTML = `
+    <div style="margin-bottom:10px">${getStatusBadge(claim.status)}</div>
+    <div style="font-weight:600;margin-bottom:8px;font-size:15px">${escHTML(claim.text)}</div>
+    <div style="font-size:13px;color:var(--text-secondary)">${escHTML(claim.reasoning||'')}</div>
+    ${claim.sourceProvider ? `<div style="font-size:12px;color:var(--text-label);margin-top:10px;font-family:var(--font-mono)">Source: ${escHTML(claim.sourceProvider.name)}</div>` : ''}
+  `;
 
-        function parseValidation(raw) {
-            if(!raw) return { claims: [], gaps: [], snr: 0 };
-            const clean = raw.replace(/```[a-z]*\n/g, '').replace(/```/g, '').trim();
-            const lines = clean.split('\n');
-            const claims = [], gaps = []; let snr = 80;
-            lines.forEach(l => {
-                const line = l.trim();
-                if (line.startsWith('CLAIM:')) {
-                    const p = line.replace('CLAIM:', '').split('|');
-                    claims.push({ status: p[0]?.trim() || '[?]', text: p[1]?.trim() || line, reason: p[2]?.trim() || 'Extracted analysis.' });
-                } else if (line.startsWith('GAP:')) gaps.push(line.replace('GAP:', '').trim());
-                else if (line.startsWith('SNR:')) snr = parseInt(line.replace('SNR:', '').replace(/\D/g, '')) || 80;
-            });
-            return { claims, gaps, snr };
-        }
+  // Populate provider selector — exclude the claim's original provider
+  const sel = document.getElementById('validateProviderSelect');
+  const eligible = state.providers.filter(p => !p.disabled && p.id != claim.sourceProvider?.id);
+  sel.innerHTML = eligible.length
+    ? eligible.map(p => `<option value="${p.id}">${escHTML(p.name)} (${escHTML(p.model)})</option>`).join('')
+    : '<option disabled>No other providers configured</option>';
+  
+  document.getElementById('validateResult').style.display = 'none';
+  document.getElementById('executeValidateBtn').disabled = !eligible.length;
+  openModal('validateModal');
+}
 
-        // --- TOPICS ---
-        function createNewTopic(parentId = null) {
-            const title = prompt("Discovery Name:", "Untitled Vector");
-            if (!title) return;
-            const nt = { id: Date.now(), title, parentId, brief: null, claims: [], gaps: [], snr: 0, breadth: 0, date: new Date().toISOString(), archived: false };
-            state.topics.unshift(nt); state.activeTopicId = nt.id;
-            saveState(); renderTopics(); loadActiveTopic();
-        }
+async function executeValidation() {
+  const t = state.topics.find(x => x.id == state.activeTopicId);
+  if (!t) return;
+  const claim = t.claims.find(c => c.id == pendingValidationClaimId);
+  if (!claim) return;
 
-        function renderTopics() {
-            const list = document.getElementById('topicList'); if(!list) return;
-            const search = document.getElementById('topicSearch').value.toLowerCase();
-            list.innerHTML = '';
-            const roots = state.topics.filter(t => !t.parentId);
-            roots.forEach(t => renderTopicNode(t, list, 0, search));
-            refreshIcons();
-        }
+  const sel = document.getElementById('validateProviderSelect');
+  const provider = state.providers.find(p => p.id == sel.value);
+  if (!provider) return;
 
-        function renderTopicNode(topic, container, depth, search) {
-            const matchesSearch = topic.title.toLowerCase().includes(search);
-            const matchesArchive = state.showArchived ? topic.archived : !topic.archived;
-            if (matchesArchive && (search === '' || matchesSearch)) {
-                const node = document.createElement('div');
-                node.className = `topic-item group flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all ${state.activeTopicId == topic.id ? 'active' : 'text-slate-400 hover:bg-white/5'}`;
-                node.style.marginLeft = `${depth * 14}px`;
-                node.innerHTML = `
-                    <div class="flex items-center gap-2 truncate flex-1" onclick="switchTopic(${topic.id})">
-                        <i data-lucide="${depth === 0 ? 'folder' : 'chevron-right'}" class="w-3.5 h-3.5 opacity-30"></i>
-                        <span class="truncate text-[11px] font-bold">${topic.title}</span>
-                    </div>
-                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="createNewTopic(${topic.id})" title="Branch Out"><i data-lucide="git-branch" class="w-3 h-3 hover:text-accent"></i></button>
-                        <button onclick="archiveTopic(${topic.id})" title="Archive"><i data-lucide="archive" class="w-3 h-3 hover:text-amber-400"></i></button>
-                        <button onclick="deleteTopic(${topic.id})" title="Delete"><i data-lucide="trash-2" class="w-3 h-3 hover:text-red-500"></i></button>
-                    </div>
-                `;
-                container.appendChild(node);
-            }
-            state.topics.filter(t => t.parentId == topic.id).forEach(c => renderTopicNode(c, container, depth + 1, search));
-        }
+  const btn = document.getElementById('executeValidateBtn');
+  btn.disabled = true; btn.textContent = 'Validating…';
 
-        function switchTopic(id) { state.activeTopicId = id; saveState(); renderTopics(); loadActiveTopic(); }
-        function archiveTopic(id) { const t = state.topics.find(x => x.id === id); if(t) t.archived = !t.archived; saveState(); renderTopics(); }
-        function deleteTopic(id) { if(confirm("Discard project and branches?")) { state.topics = state.topics.filter(t => t.id !== id && t.parentId !== id); if(state.activeTopicId === id) state.activeTopicId = null; saveState(); renderTopics(); loadActiveTopic(); }}
-        function toggleArchiveView() { state.showArchived = !state.showArchived; document.getElementById('archiveToggleBtn').innerText = state.showArchived ? "Active Discovery" : "View Archive"; renderTopics(); }
+  try {
+    const raw = await callAIWithRetry(provider, PROMPTS.validateClaim(claim, t.title, t.claims, state.sources), 'You are a rigorous fact-checker. Always respond with valid JSON only.');
+    const result = parseJSON(raw);
+    if (!result) throw new Error('Could not parse validation response');
 
-        // --- RENDERERS ---
-        function renderSynthesis(t) { document.getElementById('synthesisView').innerHTML = marked.parse(t.brief || ''); }
-        function loadActiveTopic() {
-            const t = state.topics.find(x => x.id == state.activeTopicId);
-            if (!t) return;
-            const synthesis = document.getElementById('synthesisView');
-            const vault = document.getElementById('claimGrid');
-            const gaps = document.getElementById('gapList');
-            if (t.brief) {
-                synthesis.innerHTML = marked.parse(t.brief);
-                vault.innerHTML = t.claims.map(c => `<div class="claim-card p-6 rounded-3xl bg-white/5"><div class="text-[9px] font-black uppercase mb-3 text-accent">${c.status}</div><p class="text-xs font-bold text-white mb-2 leading-relaxed">${c.text}</p><p class="text-[10px] opacity-40 italic leading-relaxed">${c.reason}</p></div>`).join('');
-                gaps.innerHTML = (t.gaps || []).map(g => `<div class="p-4 rounded-xl glass border-white/5 flex items-center justify-between group"><div class="text-sm font-bold text-white">${g}</div><button onclick="drillDown('${g}')" class="btn-outline text-[9px] px-3 py-1 rounded uppercase font-black">Drill Down</button></div>`).join('');
-            } else {
-                synthesis.innerHTML = `<div class="text-center py-48 opacity-10 uppercase text-xs mono">Initializing Discovery: ${t.title}</div>`;
-                vault.innerHTML = gaps.innerHTML = '';
-            }
-            document.getElementById('statSignal').innerText = (t.snr || 0) + '%';
-            document.getElementById('statBreadth').innerText = (t.breadth || 0) + '%';
-            updateUI();
-        }
-        function renderSNRGraph() {
-            const svg = document.getElementById('snrGraph');
-            const t = state.topics.find(x => x.id == state.activeTopicId);
-            if(!t) return;
-            const signal = t.snr || 0, breadth = t.breadth || 0, cx = 250, cy = 250;
-            const x = cx + ((breadth * 2.2) - 110); const y = cy - ((signal * 2.2) - 110);
-            svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="220" fill="none" stroke="rgba(0,209,255,0.04)" stroke-width="2" /><circle cx="${cx}" cy="${cy}" r="150" fill="none" stroke="rgba(0,209,255,0.04)" /><line x1="40" y1="250" x2="460" y2="250" stroke="rgba(255,255,255,0.05)" /><line x1="250" y1="40" x2="250" y2="460" stroke="rgba(255,255,255,0.05)" /><circle cx="${x}" cy="${y}" r="12" fill="var(--accent)" style="filter: drop-shadow(0 0 10px var(--accent))" />`;
-        }
+    // Append to claim's validation history
+    claim.validations = claim.validations || [];
+    claim.validations.push({
+      providerId: provider.id, providerName: provider.name,
+      status: result.validationStatus, confidence: result.confidence,
+      reasoning: result.reasoning, supporting: result.supportingEvidence,
+      contradicting: result.contradictingEvidence, recommendation: result.recommendation,
+      timestamp: new Date().toISOString()
+    });
 
-        // --- PROVIDERS & UTILS ---
-        function switchProviderBrand(b) {
-            state.providerBrand = b;
-            document.querySelectorAll('.brand-tab').forEach(btn => btn.classList.remove('text-accent', 'border-b', 'border-accent'));
-            const brandBtn = document.getElementById('b-'+b);
-            if(brandBtn) brandBtn.classList.add('text-accent', 'border-b', 'border-accent');
-            const urlInput = document.getElementById('configUrl');
-            if(urlInput) urlInput.disabled = (b !== 'Custom');
-            if(!state.editingProviderId) {
-                if(urlInput) urlInput.value = PROVIDER_DEFAULTS[b].url;
-                const models = PROVIDER_DEFAULTS[b].models;
-                const modelSel = document.getElementById('configModel');
-                if(modelSel) modelSel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option disabled selected>Sync required</option>';
-            }
-        }
-        function saveProvider() {
-            const name = document.getElementById('configName').value.trim() || state.providerBrand;
-            const url = document.getElementById('configUrl').value.trim();
-            const key = document.getElementById('configKey').value.trim();
-            const model = document.getElementById('configModel').value;
-            const role = document.getElementById('configRole').value;
-            if(!key || !model) return showToast("Missing data.");
-            const p = { id: state.editingProviderId || Date.now(), name, type: state.providerBrand, url, key, model, role };
-            if(state.editingProviderId) {
-                const idx = state.providers.findIndex(x => x.id === state.editingProviderId);
-                state.providers[idx] = p;
-            } else {
-                state.providers.push(p);
-                if(!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id;
-            }
-            saveState(); renderProviders(); resetConfigForm(); showToast("Secured.");
-        }
-        function renderProviders() {
-            const list = document.getElementById('providerList'); if(!list) return;
-            list.innerHTML = state.providers.map(p => `<div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
-                    <div class="flex-1 overflow-hidden">
-                        <div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div>
-                        <div class="text-xs font-black text-white truncate">${p.name}</div>
-                        <div class="text-[9px] mono opacity-40 truncate">${p.model}</div>
-                    </div>
-                    <div class="flex gap-1 shrink-0">
-                        <button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
-                        <button onclick="editProvider(${p.id})" class="p-1"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteProvider(${p.id})" class="p-1 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
-                </div>`).join('');
-            refreshIcons();
-        }
-        function editProvider(id) {
-            const p = state.providers.find(x => x.id === id);
-            state.editingProviderId = id;
-            document.getElementById('configName').value = p.name;
-            document.getElementById('configKey').value = p.key;
-            document.getElementById('configRole').value = p.role;
-            switchProviderBrand(p.type);
-            document.getElementById('configUrl').value = p.url;
-            document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
-        }
-        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
-        function deleteProvider(id) { state.providers = state.providers.filter(x => x.id != id); saveState(); renderProviders(); updateUI(); }
-        function resetConfigForm() { state.editingProviderId = null; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
-        function addSource() { const v = document.getElementById('newSource').value.trim(); if(v) { state.sources.push(v); document.getElementById('newSource').value = ''; saveState(); renderSources(); }}
-        function renderSources() { const list = document.getElementById('sourceList'); if(!list) return; list.innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] mono flex items-center gap-2">${s} <button onclick="state.sources=state.sources.filter(x=>x!='${s}');saveState();renderSources();"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join(''); refreshIcons(); }
+    // Update claim status if recommendation is strong
+    if (result.recommendation === 'REJECT') claim.status = 'WEAK';
+    else if (result.recommendation === 'ACCEPT' && result.confidence > 75) claim.status = 'VERIFIED';
+    else if (result.validationStatus === 'CONTESTED') claim.status = 'CONTESTED';
 
-        function saveState() {
-            const multiToggle = document.getElementById('multiLlmToggle');
-            if(multiToggle) state.multiLlm = multiToggle.checked;
-            localStorage.setItem('myres_providers', JSON.stringify(state.providers));
-            localStorage.setItem('myres_active_id', state.activeProviderId);
-            localStorage.setItem('myres_trusted_sources', JSON.stringify(state.sources));
-            localStorage.setItem('myres_topics', JSON.stringify(state.topics));
-            localStorage.setItem('myres_active_topic', state.activeTopicId);
-            localStorage.setItem('myres_multi_llm', state.multiLlm);
-            localStorage.setItem('myres_theme', state.theme);
-        }
-        function updateUI() {
-            const p = state.providers.find(x => x.id == state.activeProviderId);
-            const tag = document.getElementById('activeProviderTag');
-            if(tag) tag.innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 font-bold uppercase text-[8px]">Offline</span>';
-            const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Verification', icon: 'shield-check' }];
-            const disp = document.getElementById('pipelineDisplay');
-            if(disp) disp.innerHTML = pipeline.map(s => `<div class="flex items-center gap-2 p-2.5 rounded-xl transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-3.5 h-3.5"></i><span class="text-[9px] font-black uppercase">${s.name}</span></div>`).join('');
-            refreshIcons();
-        }
-        function addLog(type, msg) {
-            const s = document.getElementById('logStream'); if(!s) return;
-            const l = document.createElement('div'); l.className = 'flex gap-2 mb-1 animate-in slide-in-from-left-2';
-            l.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : (type === 'ERROR' ? 'text-red-500' : 'text-slate-500')} font-black">[${type}]</span> <span>${msg}</span>`;
-            s.prepend(l);
-        }
-        function addPulseLog(msg) {
-            const s = document.getElementById('logStream'); if(!s) return;
-            let p = document.getElementById('pulse-log');
-            if(!p) { p = document.createElement('div'); p.id = 'pulse-log'; p.className = 'flex gap-2 mb-2 text-accent italic font-bold'; s.prepend(p); }
-            p.innerHTML = `<span>[PROCESS]</span> <span>${msg} <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>`;
-        }
-        function clearPulseLog() { const p = document.getElementById('pulse-log'); if(p) p.remove(); }
-        function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 3000); }
+    // Show result
+    const resDiv = document.getElementById('validateResult');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px">
+          ${getStatusBadge(result.validationStatus)}
+          <span style="font-size:13px;font-family:var(--font-mono);color:var(--text-label)">${result.confidence}% confidence</span>
+        </div>
+        <div style="font-size:13.5px;line-height:1.6;margin-bottom:10px;color:var(--text-primary)">${escHTML(result.reasoning||'')}</div>
+        ${result.supportingEvidence ? `<div style="font-size:13px;color:#22c55e;margin-bottom:6px">✓ ${escHTML(result.supportingEvidence)}</div>` : ''}
+        ${result.contradictingEvidence ? `<div style="font-size:13px;color:#f59e0b">⚠ ${escHTML(result.contradictingEvidence)}</div>` : ''}
+        <div style="margin-top:12px;font-size:12px;font-family:var(--font-mono);color:var(--text-label)">Validated by: ${escHTML(provider.name)}</div>
+      </div>
+    `;
 
-        window.onload = () => {
-            const multiToggle = document.getElementById('multiLlmToggle');
-            if(multiToggle) multiToggle.checked = state.multiLlm;
-            initResizers(); setTheme(state.theme); renderTopics(); loadActiveTopic(); updateUI(); refreshIcons();
-            document.getElementById('mainInput').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch(); });
-        };
-    </script>
+    saveState(); loadActiveTopic();
+
+    // Trigger delta synthesis update if brief exists
+    if (t.brief) scheduleDelataUpdate(t, claim);
+    showToast('Validation complete.', 'success');
+  } catch (e) {
+    showToast(`Validation failed: ${e.message}`, 'error', true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Run Validation';
+  }
+}
+
+let deltaTimer = null;
+function scheduleDelataUpdate(t, changedClaim) {
+  // Debounce — don't re-synthesize on every single validation
+  clearTimeout(deltaTimer);
+  deltaTimer = setTimeout(async () => {
+    const activeP = state.providers.find(p => p.id == state.activeProviderId && !p.disabled);
+    if (!activeP || !t.brief) return;
+    try {
+      addLog('sys', 'Delta synthesis update…');
+      const updated = await callAIWithRetry(activeP, PROMPTS.deltaUpdate(t.title, t.brief, [changedClaim], `Claim status updated to ${changedClaim.status}`), 'You are a research synthesizer. Update the brief to reflect new validation data.');
+      if (updated && updated.length > 200) { t.brief = updated; saveState(); renderSynthesis(t); addLog('ok', 'Living synthesis updated.'); }
+    } catch(e) { addLog('warn', 'Delta update failed: '+e.message); }
+  }, 3000);
+}
+
+// =====================================================================
+//  CLAIM UTILITIES
+// =====================================================================
+function detectContradictions(newClaims, existingClaims) {
+  // Simple keyword-based contradiction detection
+  // A more robust approach would use embeddings, but this works client-side
+  const allClaims = [...existingClaims, ...newClaims];
+  newClaims.forEach(nc => {
+    const ncWords = new Set(nc.text.toLowerCase().split(/\s+/).filter(w=>w.length>4));
+    allClaims.forEach(ec => {
+      if (ec.id === nc.id) return;
+      const ecWords = new Set(ec.text.toLowerCase().split(/\s+/).filter(w=>w.length>4));
+      const overlap = [...ncWords].filter(w=>ecWords.has(w)).length;
+      const similarity = overlap / Math.max(ncWords.size, ecWords.size);
+      if (similarity > 0.4) {
+        // Check for negation words suggesting contradiction
+        const negWords = ['not','no','never','false','incorrect','misleading','overstated','contrary'];
+        const ncHasNeg = nc.text.toLowerCase().split(/\s+/).some(w=>negWords.includes(w));
+        const ecHasNeg = ec.text.toLowerCase().split(/\s+/).some(w=>negWords.includes(w));
+        if (ncHasNeg !== ecHasNeg) { nc.contradicts = nc.contradicts || []; nc.contradicts.push(ec.id); }
+        else { nc.supports = nc.supports || []; nc.supports.push(ec.id); }
+      }
+    });
+  });
+  return newClaims;
+}
+
+function mergeClaims(existing, incoming) {
+  const merged = [...existing];
+  incoming.forEach(nc => {
+    const dup = merged.find(ec => {
+      const overlap = textSimilarity(ec.text, nc.text);
+      return overlap > 0.7;
+    });
+    if (!dup) merged.push(nc);
+    else {
+      // Update confidence if new validation is stronger
+      if ((nc.confidence||0) > (dup.confidence||0)) { dup.confidence = nc.confidence; dup.reasoning = nc.reasoning; }
+    }
+  });
+  return merged.slice(-50); // Cap at 50 claims
+}
+
+function textSimilarity(a, b) {
+  const wa = new Set(a.toLowerCase().split(/\s+/).filter(w=>w.length>3));
+  const wb = new Set(b.toLowerCase().split(/\s+/).filter(w=>w.length>3));
+  const inter = [...wa].filter(w=>wb.has(w)).length;
+  return inter / Math.max(wa.size, wb.size);
+}
+
+function dedupGaps(gaps) {
+  const seen = new Set();
+  return gaps.filter(g => {
+    const key = (typeof g==='object'?g.text:g).substring(0,40);
+    if (seen.has(key)) return false; seen.add(key); return true;
+  });
+}
+
+// =====================================================================
+//  TOPIC MANAGEMENT
+// =====================================================================
+let topicModalParentId = null;
+
+function openTopicNameModal(parentId, prefill = '') {
+  topicModalParentId = parentId;
+  document.getElementById('topicModalTitle').textContent = parentId ? 'New Branch Topic' : 'New Research Topic';
+  document.getElementById('topicNameInput').value = prefill;
+  openModal('topicNameModal');
+  setTimeout(() => document.getElementById('topicNameInput').focus(), 100);
+}
+
+function confirmTopicName() {
+  const title = document.getElementById('topicNameInput').value.trim();
+  if (!title) { document.getElementById('topicNameInput').focus(); return; }
+  const nt = {
+    id: Date.now(), title, parentId: topicModalParentId,
+    brief: null, claims: [], gaps: [], socratic: null,
+    snr: 0, breadth: 0, snrHistory: [],
+    date: new Date().toISOString(), archived: false
+  };
+  state.topics.unshift(nt);
+  state.activeTopicId = nt.id;
+  saveState(); renderTopics(); loadActiveTopic();
+  closeModal('topicNameModal');
+  // Focus input after creating topic
+  document.getElementById('mainInput').focus();
+}
+
+function renderTopics() {
+  const list = document.getElementById('topicList');
+  const listMobile = document.getElementById('topicListMobile');
+  const search = (document.getElementById('topicSearch').value || '').toLowerCase();
+  const html = buildTopicTree(search);
+  if (list) list.innerHTML = html;
+  if (listMobile) listMobile.innerHTML = html;
+}
+
+function buildTopicTree(search) {
+  const roots = state.topics.filter(t => !t.parentId);
+  return roots.map(t => buildTopicNode(t, 0, search)).join('');
+}
+
+function buildTopicNode(topic, depth, search) {
+  const matchSearch = search === '' || topic.title.toLowerCase().includes(search);
+  const matchArchive = state.showArchived ? topic.archived : !topic.archived;
+  if (!matchArchive) return '';
+  const children = state.topics.filter(t => t.parentId == topic.id);
+  const isActive = state.activeTopicId == topic.id;
+  const indent = depth > 0 ? `padding-left:${depth*18+12}px` : 'padding-left:12px';
+  const show = matchSearch || children.some(c => c.title.toLowerCase().includes(search));
+  if (!show) return '';
+  
+  return `<div class="topic-item ${isActive?'active':''}" style="${indent}" onclick="switchTopic(${topic.id})">
+    <span style="font-size:12px;margin-right:6px;opacity:0.4">${depth===0?'📁':'↳'}</span>
+    <span class="topic-name">${escHTML(topic.title)}</span>
+    <div class="topic-actions">
+      <button class="topic-icon-btn" onclick="event.stopPropagation();openTopicNameModal(${topic.id})" title="Branch">⤷</button>
+      <button class="topic-icon-btn warn" onclick="event.stopPropagation();archiveTopic(${topic.id})" title="Archive">⊙</button>
+      <button class="topic-icon-btn danger" onclick="event.stopPropagation();deleteTopic(${topic.id})" title="Delete">✕</button>
+    </div>
+  </div>` + children.map(c => buildTopicNode(c, depth+1, search)).join('');
+}
+
+function switchTopic(id) { state.activeTopicId = id; saveState(); renderTopics(); loadActiveTopic(); }
+function archiveTopic(id) { const t = state.topics.find(x=>x.id===id); if(t){t.archived=!t.archived;saveState();renderTopics();} }
+function deleteTopic(id) {
+  if (!confirm('Delete this topic and all its branches?')) return;
+  const toRemove = new Set([id]);
+  state.topics.filter(t=>t.parentId===id).forEach(t=>toRemove.add(t.id));
+  state.topics = state.topics.filter(t=>!toRemove.has(t.id));
+  if (toRemove.has(state.activeTopicId)) state.activeTopicId = state.topics[0]?.id || null;
+  saveState(); renderTopics(); loadActiveTopic();
+}
+function toggleArchiveView() {
+  state.showArchived = !state.showArchived;
+  document.getElementById('archiveToggleBtn').textContent = state.showArchived ? 'Show Active' : 'View Archive';
+  renderTopics();
+}
+function drillDown(gapText) {
+  openTopicNameModal(state.activeTopicId, gapText);
+}
+
+// =====================================================================
+//  RENDERERS
+// =====================================================================
+function loadActiveTopic() {
+  const t = state.topics.find(x => x.id == state.activeTopicId);
+  updateNavBadge();
+  if (!t) {
+    document.getElementById('synthesisView').innerHTML = `<div class="empty-state"><div class="empty-icon">🔬</div><div class="empty-title">No Topic Selected</div><div class="empty-sub">Create a topic from the Discovery Tree to begin research.</div></div>`;
+    document.getElementById('claimGrid').innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">Claims Vault Empty</div></div>`;
+    document.getElementById('voidList').innerHTML = `<div class="empty-state"><div class="empty-icon">🕳️</div><div class="empty-title">No Voids</div></div>`;
+    return;
+  }
+  renderSynthesis(t);
+  renderClaims(t);
+  renderVoids(t);
+  renderConstellation(t);
+  updateStats(t);
+}
+
+function renderSynthesis(t) {
+  const el = document.getElementById('synthesisView');
+  if (!t.brief) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-title">Initializing: ${escHTML(t.title)}</div><div class="empty-sub">Enter your research question and execute the pipeline.</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="synthesis-rendered">${marked.parse(t.brief)}</div>`;
+  // Socratic appendix if available
+  if (t.socratic?.challenges?.length) {
+    const socEl = document.createElement('div');
+    socEl.style.cssText = 'margin-top:40px;padding:24px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:14px';
+    socEl.innerHTML = `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#ef4444;margin-bottom:14px">⚔ Socratic Challenge Layer</div>
+    ${t.socratic.challenges.map(ch=>`<div style="margin-bottom:14px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm)">
+      <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px">${escHTML(ch.assumption||'')}</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">${escHTML(ch.challenge||'')}</div>
+      <div style="font-size:11px;color:var(--text-label);margin-top:6px;text-transform:uppercase;letter-spacing:0.3px">Severity: ${ch.severity||'medium'}</div>
+    </div>`).join('')}
+    ${t.socratic.alternativeFraming ? `<div style="padding:12px;border-left:3px solid #ef4444;background:var(--bg-input);border-radius:0 8px 8px 0;margin-top:8px">
+      <div style="font-size:12px;font-weight:700;color:#ef4444;margin-bottom:6px">Alternative Framing</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">${escHTML(t.socratic.alternativeFraming)}</div>
+    </div>` : ''}`;
+    el.querySelector('.synthesis-rendered').appendChild(socEl);
+  }
+}
+
+function renderClaims(t) {
+  const grid = document.getElementById('claimGrid');
+  if (!t.claims || t.claims.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">No Claims Yet</div><div class="empty-sub">Run research or forensics to extract factual claims.</div></div>`;
+    return;
+  }
+  const active = t.claims.filter(c => !c.discarded);
+  const discarded = t.claims.filter(c => c.discarded);
+  grid.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:20px">
+      ${active.map(c => renderClaimCard(c, t)).join('')}
+    </div>
+    ${discarded.length ? `<details style="margin-top:16px"><summary style="font-size:13px;color:var(--text-label);cursor:pointer;padding:8px 0">${discarded.length} discarded claim(s)</summary><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-top:12px">${discarded.map(c=>renderClaimCard(c,t)).join('')}</div></details>` : ''}
+  `;
+}
+
+function renderClaimCard(c, t) {
+  const otherProviders = state.providers.filter(p => !p.disabled && p.id != c.sourceProvider?.id);
+  const canValidate = otherProviders.length > 0;
+  const validCount = (c.validations||[]).length;
+  
+  return `<div class="claim-card ${c.discarded?'discarded':''}" id="claim-${c.id}">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+      ${getStatusBadge(c.status)}
+      ${c.confidence ? `<span style="font-size:12px;font-family:var(--font-mono);color:var(--text-label)">${c.confidence}%</span>` : ''}
+    </div>
+    <div class="claim-text">${escHTML(c.text)}</div>
+    ${c.reasoning ? `<div class="claim-reason">${escHTML(c.reasoning)}</div>` : ''}
+    <div class="claim-provenance">
+      <span>📡 ${escHTML(c.sourceProvider?.name || 'Unknown')}</span>
+      <span>${c.sourceLayer || 'synthesis'}</span>
+      ${c.evidenceType ? `<span>📚 ${c.evidenceType}</span>` : ''}
+      ${validCount ? `<span style="color:var(--accent)">✓ ${validCount} validation${validCount>1?'s':''}</span>` : ''}
+    </div>
+    ${c.validations?.length ? `<div class="claim-validations">${c.validations.slice(-2).map(v=>`
+      <div class="validation-entry val-${v.status?.toLowerCase().includes('verify')||v.status==='VERIFIED'?'verified':'contested'}">
+        <div style="font-size:12.5px;font-weight:600;margin-bottom:3px">${escHTML(v.providerName)}: ${escHTML(v.status)} (${v.confidence}%)</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5">${escHTML((v.reasoning||'').substring(0,120))}${(v.reasoning||'').length>120?'…':''}</div>
+      </div>`).join('')}</div>` : ''}
+    <div class="claim-actions">
+      ${canValidate && !c.discarded ? `<button onclick="openValidateModal('${c.id}')" class="btn btn-ghost btn-sm">🔍 Validate</button>` : ''}
+      ${!c.discarded ? `<button onclick="discardClaim('${c.id}')" class="btn btn-ghost btn-sm" style="color:var(--text-label)">Discard</button>` : `<button onclick="restoreClaim('${c.id}')" class="btn btn-ghost btn-sm">Restore</button>`}
+    </div>
+  </div>`;
+}
+
+function discardClaim(id) {
+  const t = state.topics.find(x=>x.id==state.activeTopicId); if(!t) return;
+  const c = t.claims.find(x=>x.id==id); if(c) { c.discarded = true; saveState(); renderClaims(t); }
+}
+function restoreClaim(id) {
+  const t = state.topics.find(x=>x.id==state.activeTopicId); if(!t) return;
+  const c = t.claims.find(x=>x.id==id); if(c) { c.discarded = false; saveState(); renderClaims(t); }
+}
+
+function renderVoids(t) {
+  const list = document.getElementById('voidList');
+  if (!t.gaps || t.gaps.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🕳️</div><div class="empty-title">No Knowledge Voids</div><div class="empty-sub">Research gaps will be identified during deep analysis.</div></div>`;
+    return;
+  }
+  list.innerHTML = t.gaps.map(g => {
+    const text = typeof g === 'object' ? g.text : g;
+    const imp = typeof g === 'object' ? g.importance : 'medium';
+    return `<div class="void-item">
+      <div style="font-size:16px">${imp==='high'?'🔴':imp==='low'?'🟢':'🟡'}</div>
+      <div class="void-text">
+        <div>${escHTML(text)}</div>
+        ${imp ? `<div class="void-sub">Importance: ${imp}</div>` : ''}
+      </div>
+      <button onclick="drillDown('${escAttr(text)}')" class="btn btn-ghost btn-sm">↳ Drill Down</button>
+    </div>`;
+  }).join('');
+}
+
+function renderConstellation(t) {
+  const svg = document.getElementById('constellationSvg');
+  if (!t.claims || t.claims.length === 0) {
+    svg.innerHTML = `<text x="300" y="220" text-anchor="middle" fill="var(--text-label)" font-size="14" font-family="var(--font-sans)">No claims data. Run research to populate.</text>`;
+    return;
+  }
+  const W = 600, H = 440;
+  const claims = t.claims.filter(c=>!c.discarded).slice(0, 20);
+  const n = claims.length;
+  
+  // Layout: place nodes in a force-inspired circular arrangement
+  const positions = [];
+  claims.forEach((c, i) => {
+    const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+    const r = 130 + (c.confidence||50) * 0.5;
+    positions.push({ x: W/2 + r * Math.cos(angle), y: H/2 + r * Math.sin(angle) });
+  });
+
+  const statusColor = { VERIFIED: '#22c55e', CONTESTED: '#f59e0b', WEAK: '#ef4444', UNVERIFIED: '#6b7a94' };
+  
+  let svgContent = '';
+  // Draw links
+  claims.forEach((c, i) => {
+    (c.supports||[]).forEach(sid => {
+      const j = claims.findIndex(x=>x.id==sid);
+      if (j>=0) svgContent += `<line x1="${positions[i].x}" y1="${positions[i].y}" x2="${positions[j].x}" y2="${positions[j].y}" class="node-link support"/>`;
+    });
+    (c.contradicts||[]).forEach(cid => {
+      const j = claims.findIndex(x=>x.id==cid);
+      if (j>=0) svgContent += `<line x1="${positions[i].x}" y1="${positions[i].y}" x2="${positions[j].x}" y2="${positions[j].y}" class="node-link contradict"/>`;
+    });
+  });
+  // Draw nodes
+  claims.forEach((c, i) => {
+    const {x,y} = positions[i];
+    const r = 6 + ((c.confidence||50) / 100) * 10;
+    const col = statusColor[c.status] || '#6b7a94';
+    const label = c.text.split(' ').slice(0,4).join(' ');
+    const validDot = c.validations?.length ? `<circle cx="${x+r}" cy="${y-r}" r="4" fill="var(--accent)" stroke="var(--bg-base)" stroke-width="1.5"/>` : '';
+    svgContent += `<g>
+      <circle cx="${x}" cy="${y}" r="${r+4}" fill="${col}" opacity="0.1"/>
+      <circle cx="${x}" cy="${y}" r="${r}" fill="${col}" opacity="0.85" class="node-circle" onclick="openValidateModal('${c.id}')" title="${escAttr(c.text)}"/>
+      ${validDot}
+      <text x="${x}" y="${y+r+14}" text-anchor="middle" class="node-label" font-size="10">${escHTML(label)}…</text>
+    </g>`;
+  });
+  // Legend
+  svgContent += `
+    <g transform="translate(16,${H-60})">
+      <circle cx="6" cy="6" r="5" fill="#22c55e" opacity="0.85"/><text x="16" y="10" class="node-label" font-size="10">Verified</text>
+      <circle cx="6" cy="22" r="5" fill="#f59e0b" opacity="0.85"/><text x="16" y="26" class="node-label" font-size="10">Contested</text>
+      <circle cx="6" cy="38" r="5" fill="#ef4444" opacity="0.85"/><text x="16" y="42" class="node-label" font-size="10">Weak</text>
+    </g>`;
+  svg.innerHTML = svgContent;
+}
+
+function updateStats(t) {
+  document.getElementById('statSnr').textContent = t.snr ? t.snr+'%' : '—';
+  document.getElementById('statBreadth').textContent = t.breadth ? t.breadth+'%' : '—';
+  const validated = (t.claims||[]).filter(c=>c.validations?.length>0).length;
+  document.getElementById('statValidated').textContent = validated || '—';
+  
+  // Sparkline
+  const hist = t.snrHistory || [];
+  const spark = document.getElementById('sparkline');
+  if (hist.length > 1) {
+    const max = Math.max(...hist, 1);
+    spark.innerHTML = hist.map(v => `<div class="spark-bar" style="height:${Math.max(4,(v/max)*28)}px"></div>`).join('');
+  } else {
+    spark.innerHTML = '<div style="font-size:12px;color:var(--text-label)">History builds with each run</div>';
+  }
+}
+
+// =====================================================================
+//  PROVIDER MANAGEMENT
+// =====================================================================
+function switchBrand(brand) {
+  state.providerBrand = brand;
+  document.querySelectorAll('.brand-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('b-'+brand)?.classList.add('active');
+  // Clear all fields for new entry — empty defaults
+  if (!state.editing) {
+    document.getElementById('cfgName').value = '';
+    document.getElementById('cfgKey').value = '';
+    document.getElementById('cfgUrl').value = PROVIDER_DEFAULTS[brand]?.url || '';
+    const models = PROVIDER_DEFAULTS[brand]?.models || [];
+    document.getElementById('cfgModel').innerHTML = models.map(m=>`<option value="${m}">${m}</option>`).join('') || '<option value="">Sync models first</option>';
+  }
+  document.getElementById('cfgUrl').disabled = (brand !== 'Custom');
+}
+
+async function fetchModels() {
+  const key = document.getElementById('cfgKey').value.trim();
+  const url = document.getElementById('cfgUrl').value.trim();
+  const brand = state.providerBrand;
+  if (!key) { showToast('Enter API key first.', 'error'); return; }
+  showToast('Syncing models…', 'info');
+  try {
+    let models = [];
+    if (brand === 'Gemini') {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+      if (!res.ok) throw new Error('Invalid key or quota exceeded');
+      const d = await res.json();
+      models = d.models.filter(m=>m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name.split('/').pop());
+    } else if (brand === 'Claude') {
+      const res = await fetch('https://api.anthropic.com/v1/models', { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' } });
+      if (!res.ok) throw new Error('Invalid key');
+      const d = await res.json(); models = d.data?.map(m=>m.id) || PROVIDER_DEFAULTS.Claude.models;
+    } else {
+      const base = url.replace(/\/chat\/completions$/, '').replace(/\/$/, '');
+      const res = await fetch(base+'/models', { headers: { 'Authorization': `Bearer ${key}` } });
+      if (!res.ok) throw new Error('Cannot fetch models');
+      const d = await res.json(); models = d.data?.map(m=>m.id)?.sort() || [];
+    }
+    document.getElementById('cfgModel').innerHTML = models.map(m=>`<option value="${m}">${m}</option>`).join('');
+    showToast(`${models.length} models synced.`, 'success');
+  } catch (e) { showToast(`Sync failed: ${e.message}`, 'error', true); }
+}
+
+function saveProvider() {
+  const name = document.getElementById('cfgName').value.trim();
+  const key = document.getElementById('cfgKey').value.trim();
+  const url = document.getElementById('cfgUrl').value.trim();
+  const model = document.getElementById('cfgModel').value;
+  const role = document.getElementById('cfgRole').value;
+  if (!key) { showToast('API key is required.', 'error'); return; }
+  if (!model) { showToast('Select a model.', 'error'); return; }
+  const label = name || `${state.providerBrand} ${role}`;
+  const p = { id: state.editing || Date.now(), name: label, type: state.providerBrand, url, key, model, role, disabled: false };
+  if (state.editing) {
+    const idx = state.providers.findIndex(x=>x.id===state.editing);
+    if (idx>=0) state.providers[idx] = p;
+    state.editing = null;
+  } else {
+    state.providers.push(p);
+    if (!state.activeProviderId) state.activeProviderId = p.id;
+  }
+  saveState(); renderProviders(); resetForm();
+  showToast(state.editing ? 'Provider updated.' : 'Provider added.', 'success');
+  updateNavBadge();
+}
+
+function editProvider(id) {
+  const p = state.providers.find(x=>x.id===id);
+  if (!p) return;
+  state.editing = id;
+  switchBrand(p.type);
+  document.getElementById('cfgName').value = p.name;
+  document.getElementById('cfgKey').value = p.key;
+  document.getElementById('cfgUrl').value = p.url;
+  document.getElementById('cfgUrl').disabled = (p.type !== 'Custom');
+  document.getElementById('cfgRole').value = p.role;
+  document.getElementById('cfgModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
+  document.getElementById('formTitle').textContent = `Editing: ${p.name}`;
+  document.getElementById('saveProviderBtn').textContent = 'Save Changes';
+  document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+}
+
+function cancelEdit() {
+  state.editing = null; resetForm();
+}
+
+function resetForm() {
+  state.editing = null;
+  document.getElementById('cfgName').value = '';
+  document.getElementById('cfgKey').value = '';
+  document.getElementById('cfgUrl').value = PROVIDER_DEFAULTS[state.providerBrand||'Gemini'].url;
+  document.getElementById('cfgModel').innerHTML = (PROVIDER_DEFAULTS[state.providerBrand||'Gemini'].models||[]).map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('formTitle').textContent = 'Add New Provider';
+  document.getElementById('saveProviderBtn').textContent = 'Add Provider';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+function setActiveProvider(id) {
+  state.activeProviderId = id;
+  saveState(); renderProviders(); updateNavBadge();
+  showToast('Active provider updated.', 'success');
+}
+
+function toggleProviderDisabled(id) {
+  const p = state.providers.find(x=>x.id===id);
+  if (p) { p.disabled = !p.disabled; saveState(); renderProviders(); }
+}
+
+function deleteProvider(id) {
+  if (!confirm('Remove this provider?')) return;
+  state.providers = state.providers.filter(x=>x.id!=id);
+  if (state.activeProviderId == id) state.activeProviderId = state.providers[0]?.id || null;
+  saveState(); renderProviders(); updateNavBadge();
+}
+
+function renderProviders() {
+  const list = document.getElementById('providerList');
+  if (!list) return;
+  const toggle = document.getElementById('multiLlmToggle');
+  if (toggle) toggle.checked = state.multiLlm;
+  if (state.providers.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-label);font-size:13.5px">No providers configured yet. Add one above.</div>`;
+    return;
+  }
+  list.innerHTML = state.providers.map(p => `
+    <div class="provider-card ${state.activeProviderId==p.id?'is-active':''} ${p.disabled?'is-disabled':''}">
+      <div class="provider-info">
+        <div class="provider-role">${p.role}${state.activeProviderId==p.id?' · ACTIVE':''}</div>
+        <div class="provider-name">${escHTML(p.name)}</div>
+        <div class="provider-model">${escHTML(p.type)} · ${escHTML(p.model)}</div>
+      </div>
+      <div class="provider-actions">
+        ${state.activeProviderId==p.id ? '<div class="active-dot"></div>' : ''}
+        <button onclick="setActiveProvider(${p.id})" class="btn btn-ghost btn-sm" title="Set Active" ${state.activeProviderId==p.id?'disabled':''}>
+          ${state.activeProviderId==p.id ? '✓ Active' : 'Use'}
+        </button>
+        <button onclick="toggleProviderDisabled(${p.id})" class="btn btn-ghost btn-sm" title="${p.disabled?'Enable':'Disable'}">
+          ${p.disabled ? '▶ Enable' : '⏸ Disable'}
+        </button>
+        <button onclick="editProvider(${p.id})" class="btn btn-ghost btn-sm">Edit</button>
+        <button onclick="deleteProvider(${p.id})" class="btn btn-danger btn-sm">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// =====================================================================
+//  SOURCES
+// =====================================================================
+function addSource() {
+  const v = document.getElementById('newSource').value.trim();
+  if (!v) return;
+  if (state.sources.includes(v)) { showToast('Already added.', 'info'); return; }
+  state.sources.push(v);
+  document.getElementById('newSource').value = '';
+  saveState(); renderSources();
+}
+function removeSource(s) { state.sources = state.sources.filter(x=>x!==s); saveState(); renderSources(); }
+function renderSources() {
+  const list = document.getElementById('sourceList');
+  if (!list) return;
+  list.innerHTML = state.sources.map(s=>`<div class="source-tag"><span class="font-mono" style="font-size:12.5px">${escHTML(s)}</span><button onclick="removeSource('${escAttr(s)}')" title="Remove">✕</button></div>`).join('') || '<div style="font-size:13.5px;color:var(--text-label)">No sources added yet.</div>';
+}
+
+// =====================================================================
+//  THEMES
+// =====================================================================
+function renderThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  if (!grid) return;
+  grid.innerHTML = THEMES.map(t => `
+    <div class="theme-card ${state.theme===t.id?'active':''}" onclick="setTheme('${t.id}')" style="background:${t.bg}">
+      <div class="theme-swatch" style="background:${t.accent}"></div>
+      <div class="theme-name" style="color:${t.accent};font-size:13px">${t.emoji} ${t.name}</div>
+    </div>`).join('');
+}
+
+function setTheme(id) {
+  state.theme = id;
+  document.body.setAttribute('data-theme', id);
+  save('myres_theme', id);
+  renderThemeGrid();
+  // Update quick toggle indicators
+  document.querySelectorAll('[id^="tbtn-"]').forEach(b => b.style.opacity = '0.5');
+  const active = document.getElementById('tbtn-'+id);
+  if (active) active.style.opacity = '1';
+}
+
+// =====================================================================
+//  LAYOUT
+// =====================================================================
+function toggleLeftPane() {
+  state.leftCollapsed = !state.leftCollapsed;
+  document.getElementById('leftPane').classList.toggle('collapsed', state.leftCollapsed);
+  document.getElementById('leftResizer').style.visibility = state.leftCollapsed ? 'hidden' : 'visible';
+}
+function toggleRightPane() {
+  state.rightCollapsed = !state.rightCollapsed;
+  document.getElementById('rightPane').classList.toggle('collapsed', state.rightCollapsed);
+  document.getElementById('rightResizer').style.visibility = state.rightCollapsed ? 'hidden' : 'visible';
+}
+
+function initResizers() {
+  const setup = (resizerId, paneId, side) => {
+    const resizer = document.getElementById(resizerId);
+    const pane = document.getElementById(paneId);
+    if (!resizer || !pane) return;
+    let dragging = false;
+    resizer.addEventListener('mousedown', e => { dragging=true; resizer.classList.add('dragging'); document.body.style.cursor='col-resize'; e.preventDefault(); });
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      if (side === 'left') pane.style.width = Math.max(180, Math.min(480, e.clientX)) + 'px';
+      else pane.style.width = Math.max(200, Math.min(560, window.innerWidth - e.clientX)) + 'px';
+    });
+    document.addEventListener('mouseup', () => { if(dragging){dragging=false;resizer.classList.remove('dragging');document.body.style.cursor='';} });
+  };
+  setup('leftResizer','leftPane','left');
+  setup('rightResizer','rightPane','right');
+}
+
+// =====================================================================
+//  TABS
+// =====================================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.id==='tab-'+tab));
+  ['synthesisContent','vaultContent','constellationContent','voidsContent'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  document.getElementById(tab==='synthesis'?'synthesisContent':tab==='vault'?'vaultContent':tab==='constellation'?'constellationContent':'voidsContent')?.classList.add('active');
+  if (tab === 'constellation') { const t=state.topics.find(x=>x.id==state.activeTopicId); if(t) renderConstellation(t); }
+}
+
+function setMobileTab(tab) {
+  document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mtab-'+tab)?.classList.add('active');
+}
+
+// =====================================================================
+//  MODAL MANAGEMENT
+// =====================================================================
+function openModal(id) {
+  document.getElementById(id)?.classList.add('open');
+  if (id === 'settingsModal') { renderProviders(); renderSources(); renderThemeGrid(); switchBrand(state.providerBrand||'Gemini'); }
+}
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+function overlayClose(e, id) { if (e.target.classList.contains('modal-overlay')) closeModal(id); }
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.modal-tab').forEach(b => b.classList.toggle('active', b.id==='stab-'+tab));
+  ['providers','sources','themes'].forEach(t => {
+    const el = document.getElementById('stab-content-'+t);
+    if (el) el.style.display = t===tab ? 'block' : 'none';
+  });
+}
+
+// =====================================================================
+//  MOBILE
+// =====================================================================
+function openMobileDrawer() { document.getElementById('mobileDrawer').classList.add('open'); }
+function closeMobileDrawer(e) {
+  if (!e || e.target===document.getElementById('mobileDrawer') || e.type==='click') document.getElementById('mobileDrawer').classList.remove('open');
+}
+function openMobileInput() {
+  document.getElementById('mobileInputSheet').classList.add('open');
+  document.getElementById('mainInputMobile').value = document.getElementById('mainInput').value;
+  setTimeout(()=>document.getElementById('mainInputMobile').focus(),300);
+}
+function closeMobileInput() { document.getElementById('mobileInputSheet').classList.remove('open'); }
+function syncMobileInput() { document.getElementById('mainInput').value = document.getElementById('mainInputMobile').value; }
+
+// =====================================================================
+//  UI HELPERS
+// =====================================================================
+function setPhase(phase, detail) {
+  state.currentPhase = phase;
+  const ind = document.getElementById('phaseIndicator');
+  const stages = ['scan','research','validate','synthesize'];
+  stages.forEach(s => document.getElementById('stage-'+s)?.classList.toggle('active', s===phase));
+  if (phase === 'idle') {
+    ind.classList.remove('visible');
+  } else {
+    ind.classList.add('visible');
+    document.getElementById('phaseText').textContent = detail || phase;
+    document.getElementById('phaseDetail').textContent = '';
+  }
+}
+
+function startProgress() { document.getElementById('progressBar').classList.add('running'); }
+function stopProgress() { document.getElementById('progressBar').classList.remove('running'); }
+
+function enableRunBtn(enabled) {
+  const btn = document.getElementById('runBtn');
+  if (btn) { btn.disabled = !enabled; btn.textContent = enabled ? '▶ Execute Research Pipeline' : '⏳ Running…'; }
+}
+
+function showPartialWarning(msg) {
+  const el = document.getElementById('partialWarning');
+  el.textContent = '⚠ Partial results: ' + msg; el.style.display = 'block';
+}
+function hidePartialWarning() { document.getElementById('partialWarning').style.display = 'none'; }
+
+let toastTimer;
+function showToast(msg, type='info', persist=false) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  document.getElementById('toastIcon').textContent = icons[type]||'ℹ';
+  document.getElementById('toastIcon').className = 'toast-icon '+type;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  if (!persist) toastTimer = setTimeout(hideToast, 4000);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+function addLog(type, msg) {
+  const stream = document.getElementById('cogStream');
+  if (!stream) return;
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const tagClass = {ai:'ai',sys:'sys',err:'err',ok:'ok',warn:'warn'}[type]||'sys';
+  const tagLabel = {ai:'AI',sys:'SYS',err:'ERR',ok:'OK',warn:'WARN'}[type]||'SYS';
+  entry.innerHTML = `<span class="log-tag ${tagClass}">[${tagLabel}]</span><span class="log-msg">${escHTML(msg)}</span>`;
+  stream.prepend(entry);
+  // Cap log at 80 entries
+  while (stream.children.length > 80) stream.removeChild(stream.lastChild);
+}
+
+function clearLog() { const s = document.getElementById('cogStream'); if(s) s.innerHTML = ''; }
+
+function updateNavBadge() {
+  const p = state.providers.find(x=>x.id==state.activeProviderId);
+  const tag = document.getElementById('activeProviderTag');
+  const name = document.getElementById('activeProviderName');
+  if (p && tag && name) { name.textContent = p.name; tag.style.display = 'flex'; }
+  else if (tag) tag.style.display = 'none';
+}
+
+// =====================================================================
+//  EXPORT
+// =====================================================================
+function exportResearch() {
+  const t = state.topics.find(x=>x.id==state.activeTopicId);
+  if (!t || !t.brief) { showToast('No synthesis to export.', 'error'); return; }
+  const ts = new Date().toISOString().split('T')[0];
+  const md = `${t.brief}\n\n---\n\n## Claims Data\n\n${(t.claims||[]).map(c=>`**[${c.status}]** ${c.text}\n*${c.reasoning||''}*\n`).join('\n')}\n\n## Research Gaps\n\n${(t.gaps||[]).map(g=>`- ${typeof g==='object'?g.text:g}`).join('\n')}`;
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `research-${t.title.replace(/\s+/g,'-').toLowerCase()}-${ts}.md`;
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('Exported as Markdown.', 'success');
+}
+
+// =====================================================================
+//  UTILITY
+// =====================================================================
+function escHTML(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { if (!s) return ''; return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function getStatusBadge(status) {
+  const map = { VERIFIED:'badge-verified', CONTESTED:'badge-contested', WEAK:'badge-weak', UNVERIFIED:'badge-unverified' };
+  const icons = { VERIFIED:'✓', CONTESTED:'⚡', WEAK:'⚠', UNVERIFIED:'?' };
+  const cls = map[status] || 'badge-unverified';
+  return `<span class="claim-badge ${cls}">${icons[status]||'?'} ${status||'UNVERIFIED'}</span>`;
+}
+
+// =====================================================================
+//  MOBILE RESPONSIVE
+// =====================================================================
+function checkMobileLayout() {
+  const isMobile = window.innerWidth < 768;
+  document.getElementById('mobileMenuBtn').style.display = isMobile ? 'flex' : 'none';
+  // On mobile, hide desktop menu
+  const desktopMenu = document.querySelector('#topNav button:first-child');
+  if (desktopMenu) desktopMenu.style.display = isMobile ? 'none' : 'flex';
+}
+
+// =====================================================================
+//  INIT
+// =====================================================================
+window.addEventListener('load', () => {
+  initResizers();
+  setTheme(state.theme);
+  renderTopics();
+  loadActiveTopic();
+  updateNavBadge();
+  checkMobileLayout();
+
+  // Keyboard shortcuts
+  document.getElementById('mainInput').addEventListener('keydown', e => {
+    if ((e.metaKey||e.ctrlKey) && e.key==='Enter') { e.preventDefault(); initiateResearch(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+      closeMobileInput(); closeMobileDrawer();
+    }
+  });
+
+  // Brand default on first load
+  switchBrand('Gemini');
+  // Set initial theme indicators
+  document.querySelectorAll('[id^="tbtn-"]').forEach(b => b.style.opacity = b.id==='tbtn-'+state.theme ? '1' : '0.5');
+
+  // Multi-LLM toggle sync
+  const tog = document.getElementById('multiLlmToggle');
+  if (tog) { tog.checked = state.multiLlm; tog.addEventListener('change', ()=>{ state.multiLlm=tog.checked; saveState(); }); }
+});
+
+window.addEventListener('resize', checkMobileLayout);
+</script>
 </body>
 </html>
