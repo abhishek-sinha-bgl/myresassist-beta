@@ -337,6 +337,19 @@ textarea.inp{resize:none;line-height:1.6;}
 }
 .mobile-share-btn{display:none;}
 
+
+/* ===================== TOPIC TREE FULL VIEW ===================== */
+.cat-filter-btn{padding:5px 13px;border-radius:99px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-label);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+.cat-filter-btn:hover{border-color:var(--border-strong);color:var(--text-secondary);}
+.cat-filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.tree-topic-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.tree-topic-row:hover{border-color:var(--border-strong);transform:translateX(2px);}
+.tree-topic-row.tree-active{border-color:var(--accent);background:var(--accent-dim);}
+.tree-children{margin-left:22px;border-left:2px solid var(--border);padding-left:12px;margin-top:4px;margin-bottom:4px;}
+.tree-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.tree-cat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.user-cat-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);}
+
 /* ===================== PROVIDER QUICK-SELECT POPUP ===================== */
 #providerPopup{position:fixed;z-index:400;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--radius);padding:8px;box-shadow:var(--shadow-lg);min-width:220px;max-width:300px;display:none;animation:toastIn .18s ease;}
 #providerPopup.open{display:block;}
@@ -435,6 +448,7 @@ textarea.inp{resize:none;line-height:1.6;}
       <button class="tab" id="tab-constellation" onclick="switchTab('constellation')">Signal Map</button>
       <button class="tab" id="tab-voids" onclick="switchTab('voids')">Voids</button>
       <button class="tab" id="tab-knowledgemap" onclick="switchTab('knowledgemap')">Knowledge Map</button>
+      <button class="tab" id="tab-topics" onclick="switchTab('topics')">Topic Tree</button>
       <div style="flex:1"></div>
       <button onclick="exportResearch('md')" class="btn btn-ghost btn-sm" style="margin:8px 4px 8px 0" id="exportBtn">⬇ Export</button>
       <!-- Desktop share -->
@@ -498,6 +512,54 @@ textarea.inp{resize:none;line-height:1.6;}
           <text x="410" y="240" text-anchor="middle" fill="var(--text-label)" font-size="14">Click "Rebuild Graph" to visualize your topics.</text>
         </svg>
         <div id="kmTopicList" style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px"></div>
+      </div>
+    </div>
+    <div id="topicsContent" class="tab-content">
+      <div style="max-width:900px;margin:0 auto">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">Topic Tree</div>
+            <div style="font-size:13px;color:var(--text-label)">Full topic hierarchy with category management</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="openCategoryManager()" class="btn btn-ghost btn-sm">🏷 Manage Categories</button>
+            <button onclick="openTopicNameModal(null)" class="btn btn-primary btn-sm">+ New Topic</button>
+          </div>
+        </div>
+        <!-- Category filter bar -->
+        <div id="catFilterBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="cat-filter-btn active" data-cat="all" onclick="setCatFilter('all')">All</button>
+        </div>
+        <!-- Tree view -->
+        <div id="topicTreeFull"></div>
+      </div>
+    </div>
+
+    <!-- Category Manager Modal -->
+    <div class="modal-overlay" id="catManagerModal" onclick="overlayClose(event,'catManagerModal')">
+      <div class="modal-box" style="max-width:500px">
+        <div class="modal-header">
+          <span class="modal-title">Manage Categories</span>
+          <button onclick="closeModal('catManagerModal')" class="btn btn-icon btn-ghost">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">
+            Define your own categories. Topics can be manually assigned or auto-categorized by AI.
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input id="newCatName" type="text" class="inp" placeholder="Category name (e.g. Work, Personal, Research)">
+            <input id="newCatColor" type="color" value="#00c8f0" style="width:42px;height:42px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;background:var(--bg-input)">
+            <button onclick="addUserCategory()" class="btn btn-primary btn-sm" style="flex-shrink:0">Add</button>
+          </div>
+          <div id="userCatList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px"></div>
+          <div style="border-top:1px solid var(--border);padding-top:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--text-label);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Assign Active Topic</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap" id="assignCatBtns"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button onclick="closeModal('catManagerModal')" class="btn btn-ghost">Close</button>
+        </div>
       </div>
     </div>
     <div id="voidsContent" class="tab-content">
@@ -998,7 +1060,7 @@ Do NOT cite Tier 4 sources as primary evidence. Downgrade confidence if only Tie
 
 For each claim, provide real citations with years and the credibility tier of your evidence.
 Return ONLY valid JSON:
-{"claims":[{"text":"claim","status":"VERIFIED|CONTESTED|WEAK|UNVERIFIED","confidence":0-100,"reasoning":"evidence and source tier","evidenceType":"peer-reviewed|government|industry|journalism|opinion","credibilityTier":1,"citationYears":[2023,2024],"citations":["Author et al. (2023)"],"mayBeOutdated":false}],"gaps":[{"text":"gap","importance":"high|medium|low"}],"snr":0-100,"breadth":0-100,"allCitations":"comma-separated list of all sources with years","knowledgeCutoffWarning":"note any stale-knowledge risks"}\`;
+{"claims":[{"text":"claim","status":"VERIFIED|CONTESTED|WEAK|UNVERIFIED","confidence":0-100,"reasoning":"evidence and source tier","evidenceType":"peer-reviewed|government|industry|journalism|opinion","credibilityTier":1,"citationYears":[2023,2024],"citations":["Author et al. (2023)"],"mayBeOutdated":false}],"gaps":[{"text":"gap","importance":"high|medium|low"}],"snr":0-100,"breadth":0-100,"allCitations":"comma-separated list of all sources with years","knowledgeCutoffWarning":"note any stale-knowledge risks"}`;
   },
   synthesize(topic,claims,gaps,workerBlocks,sources,providerNames,constraints){
     const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
@@ -1679,6 +1741,8 @@ function drillDown(gapText){openTopicNameModal(state.activeTopicId,gapText);}
 // =====================================================================
 function loadActiveTopic(){
   const t=state.topics.find(x=>x.id==state.activeTopicId);
+  // Keep topic tree in sync if visible
+  if(document.getElementById('topicsContent')?.classList.contains('active')){renderCatFilterBar();renderTopicTreeFull();}
   updateNavBadge();updateTokenDisplay();updateConstraintIndicator();
   if(!t){
     document.getElementById('synthesisView').innerHTML=`<div class="empty-state"><div class="empty-icon">🔬</div><div class="empty-title">No Topic Selected</div><div class="empty-sub">Create a topic from the Discovery Tree.</div></div>`;
@@ -2132,11 +2196,12 @@ function initResizers(){
 // =====================================================================
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab));
-  const map={synthesis:'synthesisContent',vault:'vaultContent',constellation:'constellationContent',voids:'voidsContent',knowledgemap:'knowledgemapContent'};
+  const map={synthesis:'synthesisContent',vault:'vaultContent',constellation:'constellationContent',voids:'voidsContent',knowledgemap:'knowledgemapContent',topics:'topicsContent'};
   Object.values(map).forEach(id=>{const el=document.getElementById(id);if(el) el.classList.remove('active');});
   const target=document.getElementById(map[tab]);if(target) target.classList.add('active');
   if(tab==='constellation'){const t=state.topics.find(x=>x.id==state.activeTopicId);if(t) renderConstellation(t);}
   if(tab==='knowledgemap') buildKnowledgeGraph();
+  if(tab==='topics'){renderCatFilterBar();renderTopicTreeFull();}
 }
 function setMobileTab(tab){document.querySelectorAll('.mobile-tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('mtab-'+tab)?.classList.add('active');}
 
@@ -2502,6 +2567,160 @@ function buildMiniTopicGraph(container){
     </g>`;
   }).join('');
   container.innerHTML=`<svg viewBox="0 0 ${W} ${svgH}" style="width:100%;height:auto">${nodesSvg}</svg>`;
+}
+
+
+// =====================================================================
+//  TOPIC TREE FULL VIEW + USER CATEGORIES
+// =====================================================================
+let activeCatFilter='all';
+const USER_CATS_KEY='distila_user_cats';
+
+function loadUserCats(){return load(USER_CATS_KEY,[]);}
+function saveUserCats(cats){save(USER_CATS_KEY,cats);}
+
+function addUserCategory(){
+  const name=document.getElementById('newCatName').value.trim();
+  const color=document.getElementById('newCatColor').value;
+  if(!name) return;
+  const cats=loadUserCats();
+  if(cats.find(c=>c.name.toLowerCase()===name.toLowerCase())){showToast('Category already exists.','warn');return;}
+  cats.push({id:Date.now(),name,color});
+  saveUserCats(cats);
+  document.getElementById('newCatName').value='';
+  renderUserCatList();renderCatFilterBar();renderTopicTreeFull();
+  showToast(`Category "${name}" added.`,'success');
+}
+
+function removeUserCategory(id){
+  let cats=loadUserCats().filter(c=>c.id!==id);
+  saveUserCats(cats);
+  // Remove cat from any topics that used it
+  state.topics.forEach(t=>{if(t.userCategory===id){delete t.userCategory;delete t.userCategoryName;}});
+  saveState();
+  renderUserCatList();renderCatFilterBar();renderTopicTreeFull();
+}
+
+function assignCategoryToTopic(catId,catName,color){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(!t){showToast('Select a topic first.','error');return;}
+  t.userCategory=catId;t.userCategoryName=catName;t.userCategoryColor=color;
+  saveState();renderTopics();renderCatFilterBar();renderTopicTreeFull();
+  showToast(`"${t.title}" → ${catName}`,'success');
+}
+
+function openCategoryManager(){
+  renderUserCatList();renderAssignBtns();
+  openModal('catManagerModal');
+}
+
+function renderUserCatList(){
+  const cats=loadUserCats();
+  const el=document.getElementById('userCatList');if(!el) return;
+  if(!cats.length){el.innerHTML=`<div style="font-size:13px;color:var(--text-label);text-align:center;padding:12px">No categories yet. Add one above.</div>`;return;}
+  el.innerHTML=cats.map(c=>`
+    <div class="user-cat-row">
+      <div style="width:16px;height:16px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
+      <span style="flex:1;font-size:13.5px;font-weight:500">${escHTML(c.name)}</span>
+      <button onclick="assignCategoryToTopic(${c.id},'${escAttr(c.name)}','${c.color}')" class="btn btn-ghost btn-sm">Assign to Active Topic</button>
+      <button onclick="removeUserCategory(${c.id})" class="btn btn-danger btn-sm" style="padding:5px 8px">✕</button>
+    </div>`).join('');
+}
+
+function renderAssignBtns(){
+  const cats=loadUserCats();
+  const el=document.getElementById('assignCatBtns');if(!el) return;
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(!cats.length){el.innerHTML=`<div style="font-size:13px;color:var(--text-label)">No categories defined.</div>`;return;}
+  el.innerHTML=cats.map(c=>`
+    <button onclick="assignCategoryToTopic(${c.id},'${escAttr(c.name)}','${c.color}')" 
+      class="btn btn-ghost btn-sm" style="border-color:${c.color};color:${c.color}">
+      ${escHTML(c.name)} ${t?.userCategory===c.id?'✓':''}
+    </button>`).join('');
+}
+
+function setCatFilter(cat){
+  activeCatFilter=cat;
+  document.querySelectorAll('.cat-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));
+  renderTopicTreeFull();
+}
+
+function renderCatFilterBar(){
+  const bar=document.getElementById('catFilterBar');if(!bar) return;
+  const cats=loadUserCats();
+  // Also collect AI categories
+  const aiCats=[...new Set(state.topics.map(t=>t.category).filter(Boolean))];
+  let html=`<button class="cat-filter-btn ${activeCatFilter==='all'?'active':''}" data-cat="all" onclick="setCatFilter('all')">All</button>`;
+  // User-defined categories
+  cats.forEach(c=>{
+    html+=`<button class="cat-filter-btn ${activeCatFilter===String(c.id)?'active':''}" data-cat="${c.id}" onclick="setCatFilter('${c.id}')" style="${activeCatFilter===String(c.id)?`border-color:${c.color};color:${c.color};background:${c.color}22`:`border-color:${c.color}66;color:${c.color}`}">${escHTML(c.name)}</button>`;
+  });
+  // AI categories (if different)
+  aiCats.forEach(cat=>{
+    const alreadyUser=cats.find(c=>c.name===cat);
+    if(!alreadyUser) html+=`<button class="cat-filter-btn ${activeCatFilter==='ai_'+cat?'active':''}" data-cat="ai_${cat}" onclick="setCatFilter('ai_${escAttr(cat)}')">${escHTML(cat)}</button>`;
+  });
+  bar.innerHTML=html;
+}
+
+function renderTopicTreeFull(){
+  const el=document.getElementById('topicTreeFull');if(!el) return;
+  const cats=loadUserCats();
+  const catMap={};cats.forEach(c=>catMap[c.id]={name:c.name,color:c.color});
+  
+  // Filter topics
+  const filtered=state.topics.filter(t=>{
+    if(t.archived&&!state.showArchived) return false;
+    if(activeCatFilter==='all') return true;
+    // User cat filter
+    const numId=parseInt(activeCatFilter);
+    if(!isNaN(numId)) return t.userCategory===numId;
+    // AI cat filter
+    if(activeCatFilter.startsWith('ai_')) return t.category===activeCatFilter.slice(3);
+    return true;
+  });
+
+  // Build tree: group by category, then hierarchy
+  const rootTopics=filtered.filter(t=>!t.parentId);
+  
+  if(!rootTopics.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🌳</div><div class="empty-title">No topics match this filter</div></div>`;
+    return;
+  }
+
+  function renderRow(t,depth){
+    const isActive=state.activeTopicId==t.id;
+    const cat=t.userCategory?catMap[t.userCategory]:null;
+    const aiCat=t.category;
+    const children=filtered.filter(c=>c.parentId==t.id);
+    const indent=depth>0?`<div class="tree-children">`:''
+    const indentClose=depth>0?'</div>':''
+    const claimsCount=(t.claims||[]).filter(c=>!c.discarded).length;
+    const snr=t.snr||0;
+    return`${indent}<div class="tree-topic-row ${isActive?'tree-active':''}" onclick="switchTopic(${t.id});switchTab('synthesis')">
+      ${cat?`<div class="tree-cat-dot" style="background:${cat.color}" title="${escAttr(cat.name)}"></div>`
+           :`<div class="tree-cat-dot" style="background:var(--border-strong)"></div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(t.title)}</div>
+        <div style="display:flex;gap:10px;margin-top:3px;flex-wrap:wrap">
+          ${cat?`<span class="tree-cat-label" style="color:${cat.color}">${escHTML(cat.name)}</span>`:''}
+          ${aiCat&&(!cat||cat.name!==aiCat)?`<span class="tree-cat-label" style="color:var(--text-label)">AI: ${escHTML(aiCat)}</span>`:''}
+          <span style="font-size:12px;color:var(--text-label)">${claimsCount} claims</span>
+          ${snr?`<span style="font-size:12px;color:${snr>70?'#22c55e':snr>45?'#f59e0b':'#ef4444'}">${snr}% confidence</span>`:''}
+          ${t.brief?`<span style="font-size:12px;color:var(--accent)">● Brief</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-shrink:0">
+        <button onclick="event.stopPropagation();openCategoryManager()" class="btn btn-ghost btn-sm" title="Set category" style="padding:5px 8px">🏷</button>
+        <button onclick="event.stopPropagation();openTopicNameModal(${t.id})" class="btn btn-ghost btn-sm" title="Add branch" style="padding:5px 8px">⤷</button>
+        <button onclick="event.stopPropagation();deleteTopic(${t.id})" class="btn btn-danger btn-sm" style="padding:5px 8px">✕</button>
+      </div>
+    </div>
+    ${children.length?`<div class="tree-children">${children.map(c=>renderRow(c,depth+1)).join('')}</div>`:''}
+${indentClose}`;
+  }
+
+  el.innerHTML=rootTopics.map(t=>renderRow(t,0)).join('');
 }
 
 window.addEventListener('load',async()=>{
