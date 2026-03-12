@@ -288,6 +288,18 @@ textarea.inp{resize:none;line-height:1.6;}
 .toast-msg{font-size:13.5px;color:var(--text-primary);flex:1;}
 .toast-close{color:var(--text-label);cursor:pointer;background:none;border:none;font-size:15px;}
 
+/* ===================== TOPIC TREE ===================== */
+.cat-filter-btn{padding:5px 13px;border-radius:99px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-label);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+.cat-filter-btn:hover{border-color:var(--border-strong);color:var(--text-secondary);}
+.cat-filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.tree-topic-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.tree-topic-row:hover{border-color:var(--border-strong);transform:translateX(2px);}
+.tree-topic-row.tree-active{border-color:var(--accent);background:var(--accent-dim);}
+.tree-children{margin-left:22px;border-left:2px solid var(--border);padding-left:14px;margin-top:4px;margin-bottom:8px;}
+.tree-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.tree-cat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.user-cat-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);}
+
 /* ===================== PRINT STYLES ===================== */
 @media print {
   #topNav,#leftPane,#rightPane,#leftResizer,#rightResizer,
@@ -336,19 +348,6 @@ textarea.inp{resize:none;line-height:1.6;}
   .mobile-share-btn{display:none!important;}
 }
 .mobile-share-btn{display:none;}
-
-
-/* ===================== TOPIC TREE FULL VIEW ===================== */
-.cat-filter-btn{padding:5px 13px;border-radius:99px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-label);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;}
-.cat-filter-btn:hover{border-color:var(--border-strong);color:var(--text-secondary);}
-.cat-filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
-.tree-topic-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);margin-bottom:7px;cursor:pointer;transition:all .15s;}
-.tree-topic-row:hover{border-color:var(--border-strong);transform:translateX(2px);}
-.tree-topic-row.tree-active{border-color:var(--accent);background:var(--accent-dim);}
-.tree-children{margin-left:22px;border-left:2px solid var(--border);padding-left:12px;margin-top:4px;margin-bottom:4px;}
-.tree-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.tree-cat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
-.user-cat-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);}
 
 /* ===================== PROVIDER QUICK-SELECT POPUP ===================== */
 #providerPopup{position:fixed;z-index:400;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--radius);padding:8px;box-shadow:var(--shadow-lg);min-width:220px;max-width:300px;display:none;animation:toastIn .18s ease;}
@@ -515,51 +514,19 @@ textarea.inp{resize:none;line-height:1.6;}
       </div>
     </div>
     <div id="topicsContent" class="tab-content">
-      <div style="max-width:900px;margin:0 auto">
+      <div style="max-width:900px;margin:0 auto;padding-bottom:40px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
           <div>
             <div style="font-size:16px;font-weight:700;margin-bottom:4px">Topic Tree</div>
-            <div style="font-size:13px;color:var(--text-label)">Full topic hierarchy with category management</div>
+            <div style="font-size:13px;color:var(--text-label)">Hierarchical view with your own categories + AI groupings</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button onclick="openCategoryManager()" class="btn btn-ghost btn-sm">🏷 Manage Categories</button>
             <button onclick="openTopicNameModal(null)" class="btn btn-primary btn-sm">+ New Topic</button>
           </div>
         </div>
-        <!-- Category filter bar -->
-        <div id="catFilterBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-          <button class="cat-filter-btn active" data-cat="all" onclick="setCatFilter('all')">All</button>
-        </div>
-        <!-- Tree view -->
+        <div id="catFilterBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
         <div id="topicTreeFull"></div>
-      </div>
-    </div>
-
-    <!-- Category Manager Modal -->
-    <div class="modal-overlay" id="catManagerModal" onclick="overlayClose(event,'catManagerModal')">
-      <div class="modal-box" style="max-width:500px">
-        <div class="modal-header">
-          <span class="modal-title">Manage Categories</span>
-          <button onclick="closeModal('catManagerModal')" class="btn btn-icon btn-ghost">✕</button>
-        </div>
-        <div class="modal-body">
-          <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">
-            Define your own categories. Topics can be manually assigned or auto-categorized by AI.
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input id="newCatName" type="text" class="inp" placeholder="Category name (e.g. Work, Personal, Research)">
-            <input id="newCatColor" type="color" value="#00c8f0" style="width:42px;height:42px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;background:var(--bg-input)">
-            <button onclick="addUserCategory()" class="btn btn-primary btn-sm" style="flex-shrink:0">Add</button>
-          </div>
-          <div id="userCatList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px"></div>
-          <div style="border-top:1px solid var(--border);padding-top:14px">
-            <div style="font-size:12px;font-weight:700;color:var(--text-label);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Assign Active Topic</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap" id="assignCatBtns"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button onclick="closeModal('catManagerModal')" class="btn btn-ghost">Close</button>
-        </div>
       </div>
     </div>
     <div id="voidsContent" class="tab-content">
@@ -1741,8 +1708,6 @@ function drillDown(gapText){openTopicNameModal(state.activeTopicId,gapText);}
 // =====================================================================
 function loadActiveTopic(){
   const t=state.topics.find(x=>x.id==state.activeTopicId);
-  // Keep topic tree in sync if visible
-  if(document.getElementById('topicsContent')?.classList.contains('active')){renderCatFilterBar();renderTopicTreeFull();}
   updateNavBadge();updateTokenDisplay();updateConstraintIndicator();
   if(!t){
     document.getElementById('synthesisView').innerHTML=`<div class="empty-state"><div class="empty-icon">🔬</div><div class="empty-title">No Topic Selected</div><div class="empty-sub">Create a topic from the Discovery Tree.</div></div>`;
@@ -2571,73 +2536,79 @@ function buildMiniTopicGraph(container){
 
 
 // =====================================================================
-//  TOPIC TREE FULL VIEW + USER CATEGORIES
+//  USER CATEGORIES
 // =====================================================================
-let activeCatFilter='all';
 const USER_CATS_KEY='distila_user_cats';
-
-function loadUserCats(){return load(USER_CATS_KEY,[]);}
-function saveUserCats(cats){save(USER_CATS_KEY,cats);}
+function loadUserCats(){try{return JSON.parse(localStorage.getItem(USER_CATS_KEY)||'[]');}catch(e){return[];}}
+function saveUserCats(cats){try{localStorage.setItem(USER_CATS_KEY,JSON.stringify(cats));}catch(e){}}
 
 function addUserCategory(){
   const name=document.getElementById('newCatName').value.trim();
   const color=document.getElementById('newCatColor').value;
-  if(!name) return;
+  if(!name){showToast('Enter a category name.','error');return;}
   const cats=loadUserCats();
   if(cats.find(c=>c.name.toLowerCase()===name.toLowerCase())){showToast('Category already exists.','warn');return;}
   cats.push({id:Date.now(),name,color});
   saveUserCats(cats);
   document.getElementById('newCatName').value='';
   renderUserCatList();renderCatFilterBar();renderTopicTreeFull();
-  showToast(`Category "${name}" added.`,'success');
+  showToast(`Category "${escHTML(name)}" added.`,'success');
 }
 
 function removeUserCategory(id){
-  let cats=loadUserCats().filter(c=>c.id!==id);
+  const cats=loadUserCats().filter(c=>c.id!==id);
   saveUserCats(cats);
-  // Remove cat from any topics that used it
-  state.topics.forEach(t=>{if(t.userCategory===id){delete t.userCategory;delete t.userCategoryName;}});
+  state.topics.forEach(t=>{if(t.userCategoryId===id){delete t.userCategoryId;delete t.userCategoryName;delete t.userCategoryColor;}});
   saveState();
   renderUserCatList();renderCatFilterBar();renderTopicTreeFull();
 }
 
-function assignCategoryToTopic(catId,catName,color){
+function assignCategoryToActiveTopic(id,name,color){
   const t=state.topics.find(x=>x.id==state.activeTopicId);
   if(!t){showToast('Select a topic first.','error');return;}
-  t.userCategory=catId;t.userCategoryName=catName;t.userCategoryColor=color;
+  t.userCategoryId=id;t.userCategoryName=name;t.userCategoryColor=color;
   saveState();renderTopics();renderCatFilterBar();renderTopicTreeFull();
-  showToast(`"${t.title}" → ${catName}`,'success');
+  showToast(`"${escHTML(t.title)}" → ${escHTML(name)}`,'success');
 }
 
 function openCategoryManager(){
-  renderUserCatList();renderAssignBtns();
-  openModal('catManagerModal');
+  renderUserCatList();renderAssignCatBtns();
+  document.getElementById('catManagerModal').classList.add('open');
 }
 
 function renderUserCatList(){
+  const el=document.getElementById('userCatList');if(!el)return;
   const cats=loadUserCats();
-  const el=document.getElementById('userCatList');if(!el) return;
-  if(!cats.length){el.innerHTML=`<div style="font-size:13px;color:var(--text-label);text-align:center;padding:12px">No categories yet. Add one above.</div>`;return;}
+  if(!cats.length){
+    el.innerHTML='<div style="font-size:13px;color:var(--text-label);text-align:center;padding:12px">No categories yet. Add one above.</div>';
+    return;
+  }
   el.innerHTML=cats.map(c=>`
     <div class="user-cat-row">
-      <div style="width:16px;height:16px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
+      <div style="width:16px;height:16px;border-radius:50%;background:${escHTML(c.color)};flex-shrink:0"></div>
       <span style="flex:1;font-size:13.5px;font-weight:500">${escHTML(c.name)}</span>
-      <button onclick="assignCategoryToTopic(${c.id},'${escAttr(c.name)}','${c.color}')" class="btn btn-ghost btn-sm">Assign to Active Topic</button>
+      <button onclick="assignCategoryToActiveTopic(${c.id},'${escAttr(c.name)}','${escAttr(c.color)}')" class="btn btn-ghost btn-sm">Assign to Active</button>
       <button onclick="removeUserCategory(${c.id})" class="btn btn-danger btn-sm" style="padding:5px 8px">✕</button>
     </div>`).join('');
 }
 
-function renderAssignBtns(){
+function renderAssignCatBtns(){
+  const el=document.getElementById('assignCatBtns');if(!el)return;
   const cats=loadUserCats();
-  const el=document.getElementById('assignCatBtns');if(!el) return;
   const t=state.topics.find(x=>x.id==state.activeTopicId);
-  if(!cats.length){el.innerHTML=`<div style="font-size:13px;color:var(--text-label)">No categories defined.</div>`;return;}
+  if(!cats.length){el.innerHTML='<div style="font-size:13px;color:var(--text-label)">No categories defined above yet.</div>';return;}
   el.innerHTML=cats.map(c=>`
-    <button onclick="assignCategoryToTopic(${c.id},'${escAttr(c.name)}','${c.color}')" 
-      class="btn btn-ghost btn-sm" style="border-color:${c.color};color:${c.color}">
-      ${escHTML(c.name)} ${t?.userCategory===c.id?'✓':''}
+    <button onclick="assignCategoryToActiveTopic(${c.id},'${escAttr(c.name)}','${escAttr(c.color)}')"
+      class="btn btn-ghost btn-sm"
+      style="border-color:${escHTML(c.color)};color:${escHTML(c.color)}">
+      ${escHTML(c.name)}${t&&t.userCategoryId===c.id?' ✓':''}
     </button>`).join('');
 }
+
+// =====================================================================
+//  TOPIC TREE FULL VIEW
+// =====================================================================
+let activeCatFilter='all';
 
 function setCatFilter(cat){
   activeCatFilter=cat;
@@ -2646,81 +2617,72 @@ function setCatFilter(cat){
 }
 
 function renderCatFilterBar(){
-  const bar=document.getElementById('catFilterBar');if(!bar) return;
-  const cats=loadUserCats();
-  // Also collect AI categories
+  const bar=document.getElementById('catFilterBar');if(!bar)return;
+  const userCats=loadUserCats();
   const aiCats=[...new Set(state.topics.map(t=>t.category).filter(Boolean))];
-  let html=`<button class="cat-filter-btn ${activeCatFilter==='all'?'active':''}" data-cat="all" onclick="setCatFilter('all')">All</button>`;
-  // User-defined categories
-  cats.forEach(c=>{
-    html+=`<button class="cat-filter-btn ${activeCatFilter===String(c.id)?'active':''}" data-cat="${c.id}" onclick="setCatFilter('${c.id}')" style="${activeCatFilter===String(c.id)?`border-color:${c.color};color:${c.color};background:${c.color}22`:`border-color:${c.color}66;color:${c.color}`}">${escHTML(c.name)}</button>`;
+  let html=`<button class="cat-filter-btn${activeCatFilter==='all'?' active':''}" data-cat="all" onclick="setCatFilter('all')">All</button>`;
+  userCats.forEach(c=>{
+    const active=activeCatFilter===String(c.id);
+    html+=`<button class="cat-filter-btn${active?' active':''}" data-cat="${c.id}" onclick="setCatFilter('${c.id}')"
+      style="${active?`border-color:${c.color};color:${c.color};background:${c.color}22`:`border-color:${c.color}66;color:${c.color}`}">${escHTML(c.name)}</button>`;
   });
-  // AI categories (if different)
-  aiCats.forEach(cat=>{
-    const alreadyUser=cats.find(c=>c.name===cat);
-    if(!alreadyUser) html+=`<button class="cat-filter-btn ${activeCatFilter==='ai_'+cat?'active':''}" data-cat="ai_${cat}" onclick="setCatFilter('ai_${escAttr(cat)}')">${escHTML(cat)}</button>`;
+  aiCats.filter(cat=>!userCats.find(c=>c.name===cat)).forEach(cat=>{
+    const key='ai_'+cat;
+    html+=`<button class="cat-filter-btn${activeCatFilter===key?' active':''}" data-cat="${key}" onclick="setCatFilter('${escAttr(key)}')">${escHTML(cat)}</button>`;
   });
   bar.innerHTML=html;
 }
 
 function renderTopicTreeFull(){
-  const el=document.getElementById('topicTreeFull');if(!el) return;
-  const cats=loadUserCats();
-  const catMap={};cats.forEach(c=>catMap[c.id]={name:c.name,color:c.color});
-  
-  // Filter topics
-  const filtered=state.topics.filter(t=>{
-    if(t.archived&&!state.showArchived) return false;
-    if(activeCatFilter==='all') return true;
-    // User cat filter
+  const el=document.getElementById('topicTreeFull');if(!el)return;
+  const userCats=loadUserCats();
+  const catMap={};userCats.forEach(c=>catMap[c.id]={name:c.name,color:c.color});
+
+  const visible=state.topics.filter(t=>{
+    if(t.archived&&!state.showArchived)return false;
+    if(activeCatFilter==='all')return true;
     const numId=parseInt(activeCatFilter);
-    if(!isNaN(numId)) return t.userCategory===numId;
-    // AI cat filter
-    if(activeCatFilter.startsWith('ai_')) return t.category===activeCatFilter.slice(3);
+    if(!isNaN(numId))return t.userCategoryId===numId;
+    if(activeCatFilter.startsWith('ai_'))return t.category===activeCatFilter.slice(3);
     return true;
   });
 
-  // Build tree: group by category, then hierarchy
-  const rootTopics=filtered.filter(t=>!t.parentId);
-  
-  if(!rootTopics.length){
-    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🌳</div><div class="empty-title">No topics match this filter</div></div>`;
+  const roots=visible.filter(t=>!t.parentId);
+  if(!roots.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">🌳</div><div class="empty-title">No topics match</div></div>';
     return;
   }
 
   function renderRow(t,depth){
     const isActive=state.activeTopicId==t.id;
-    const cat=t.userCategory?catMap[t.userCategory]:null;
-    const aiCat=t.category;
-    const children=filtered.filter(c=>c.parentId==t.id);
-    const indent=depth>0?`<div class="tree-children">`:''
-    const indentClose=depth>0?'</div>':''
-    const claimsCount=(t.claims||[]).filter(c=>!c.discarded).length;
+    const ucat=t.userCategoryId?catMap[t.userCategoryId]:null;
+    const dotColor=ucat?ucat.color:(t.category?'var(--accent)':'var(--border-strong)');
+    const children=visible.filter(c=>c.parentId==t.id);
+    const claims=(t.claims||[]).filter(c=>!c.discarded).length;
     const snr=t.snr||0;
-    return`${indent}<div class="tree-topic-row ${isActive?'tree-active':''}" onclick="switchTopic(${t.id});switchTab('synthesis')">
-      ${cat?`<div class="tree-cat-dot" style="background:${cat.color}" title="${escAttr(cat.name)}"></div>`
-           :`<div class="tree-cat-dot" style="background:var(--border-strong)"></div>`}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(t.title)}</div>
-        <div style="display:flex;gap:10px;margin-top:3px;flex-wrap:wrap">
-          ${cat?`<span class="tree-cat-label" style="color:${cat.color}">${escHTML(cat.name)}</span>`:''}
-          ${aiCat&&(!cat||cat.name!==aiCat)?`<span class="tree-cat-label" style="color:var(--text-label)">AI: ${escHTML(aiCat)}</span>`:''}
-          <span style="font-size:12px;color:var(--text-label)">${claimsCount} claims</span>
-          ${snr?`<span style="font-size:12px;color:${snr>70?'#22c55e':snr>45?'#f59e0b':'#ef4444'}">${snr}% confidence</span>`:''}
-          ${t.brief?`<span style="font-size:12px;color:var(--accent)">● Brief</span>`:''}
+    return `<div>
+      <div class="tree-topic-row${isActive?' tree-active':''}" onclick="switchTopic(${t.id});switchTab('synthesis')">
+        <div class="tree-cat-dot" style="background:${dotColor}" title="${ucat?escAttr(ucat.name):(t.category||'')}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(t.title)}</div>
+          <div style="display:flex;gap:10px;margin-top:3px;flex-wrap:wrap;align-items:center">
+            ${ucat?`<span class="tree-cat-label" style="color:${ucat.color}">${escHTML(ucat.name)}</span>`:''}
+            ${t.category&&(!ucat||ucat.name!==t.category)?`<span class="tree-cat-label" style="color:var(--text-label)">AI: ${escHTML(t.category)}</span>`:''}
+            <span style="font-size:12px;color:var(--text-label)">${claims} claim${claims!==1?'s':''}</span>
+            ${snr?`<span style="font-size:12px;color:${snr>70?'#22c55e':snr>45?'#f59e0b':'#ef4444'}">${snr}% confidence</span>`:''}
+            ${t.brief?'<span style="font-size:12px;color:var(--accent)">● Brief</span>':''}
+          </div>
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0">
+          <button onclick="event.stopPropagation();switchTopic(${t.id});openCategoryManager()" class="btn btn-ghost btn-sm" title="Assign category" style="padding:5px 8px">🏷</button>
+          <button onclick="event.stopPropagation();openTopicNameModal(${t.id})" class="btn btn-ghost btn-sm" title="Add sub-topic" style="padding:5px 8px">⤷</button>
+          <button onclick="event.stopPropagation();deleteTopic(${t.id})" class="btn btn-danger btn-sm" style="padding:5px 8px">✕</button>
         </div>
       </div>
-      <div style="display:flex;gap:5px;flex-shrink:0">
-        <button onclick="event.stopPropagation();openCategoryManager()" class="btn btn-ghost btn-sm" title="Set category" style="padding:5px 8px">🏷</button>
-        <button onclick="event.stopPropagation();openTopicNameModal(${t.id})" class="btn btn-ghost btn-sm" title="Add branch" style="padding:5px 8px">⤷</button>
-        <button onclick="event.stopPropagation();deleteTopic(${t.id})" class="btn btn-danger btn-sm" style="padding:5px 8px">✕</button>
-      </div>
-    </div>
-    ${children.length?`<div class="tree-children">${children.map(c=>renderRow(c,depth+1)).join('')}</div>`:''}
-${indentClose}`;
+      ${children.length?`<div class="tree-children">${children.map(c=>renderRow(c,depth+1)).join('')}</div>`:''}
+    </div>`;
   }
-
-  el.innerHTML=rootTopics.map(t=>renderRow(t,0)).join('');
+  el.innerHTML=roots.map(t=>renderRow(t,0)).join('');
 }
 
 window.addEventListener('load',async()=>{
@@ -2762,5 +2724,34 @@ window.addEventListener('load',async()=>{
 });
 window.addEventListener('resize',checkMobileLayout);
 </script>
+
+<!-- CATEGORY MANAGER MODAL -->
+<div class="modal-overlay" id="catManagerModal" onclick="overlayClose(event,'catManagerModal')">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <span class="modal-title">Manage Categories</span>
+      <button onclick="closeModal('catManagerModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">
+        Create your own categories and assign them to topics. AI-detected categories also appear automatically.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="newCatName" type="text" class="inp" placeholder="Category name (e.g. Work, Research, Personal)">
+        <input id="newCatColor" type="color" value="#00c8f0" style="width:42px;height:42px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;padding:4px;background:var(--bg-input)">
+        <button onclick="addUserCategory()" class="btn btn-primary btn-sm" style="flex-shrink:0">Add</button>
+      </div>
+      <div id="userCatList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px"></div>
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-label);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Assign Active Topic to Category</div>
+        <div id="assignCatBtns" style="display:flex;gap:7px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('catManagerModal')" class="btn btn-ghost">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
