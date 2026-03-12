@@ -1205,26 +1205,22 @@ async function callAI(provider,userPrompt,systemPrompt,signal){
   if(!rawKey){
     throw new Error(`API key for "${provider.name}" is empty — open Settings → API Providers.`);
   }
-  const isGemini=(provider.type==='Gemini')||provider.url.includes('generativelanguage.googleapis.com');
+  const isGemini=(provider.type==='Gemini')||provider.url.includes('generativelanguage.googleapis.com')||(provider.url.includes('/models/')&&provider.url.includes('gemini'));
   const isClaude=(provider.type==='Claude')||provider.url.includes('anthropic.com');
   // Normalise base URL: strip all trailing slashes
   let baseUrl=provider.url.replace(/\/+$/,'');
   let url,body,headers={'Content-Type':'application/json'};
   if(isGemini){
-    // Strip ALL possible suffixes a user or old version might have stored:
-    // .../v1beta/models/gemini-xxx:generateContent?key=...
-    // .../v1beta/models/gemini-xxx
-    // .../v1beta/models/
-    // .../v1beta/
-    baseUrl=baseUrl
+    // ALWAYS use the canonical Gemini base — never trust whatever is stored.
+    // The key insight: the only valid Gemini generateContent base is this exact URL.
+    const GEMINI_BASE='https://generativelanguage.googleapis.com/v1beta';
+    // Sanitise model name — strip any path prefix or :generateContent suffix
+    const modelName=(provider.model||'gemini-2.0-flash')
+      .replace(/^models\//,'')
       .replace(/:generateContent(\?.*)?$/,'')
-      .replace(/\/models\/[^/?]+(\?.*)?$/,'')
-      .replace(/\/models\/?$/,'');
-    // Also sanitise model name — some sync responses return "models/gemini-xxx"
-    const modelName=(provider.model||'').replace(/^models\//,'').replace(/:generateContent$/,'');
-    url=`${baseUrl}/models/${modelName}:generateContent?key=${rawKey}`;
-    // Log constructed URL visibly for debugging (key redacted)
-    addLog('sys',`Gemini → ${url.replace(/key=[^&]+/,'key=***')}`);
+      .trim()||'gemini-2.0-flash';
+    url=`${GEMINI_BASE}/models/${modelName}:generateContent?key=${rawKey}`;
+    addLog('sys',`Gemini → ${GEMINI_BASE}/models/${modelName}:generateContent?key=***`);
     body={contents:[{parts:[{text:userPrompt}]}],systemInstruction:{parts:[{text:systemPrompt}]},generationConfig:{temperature:0.3,maxOutputTokens:4096}};
   } else if(isClaude){
     // x-api-key header, endpoint must end at /messages
@@ -2273,12 +2269,13 @@ function saveProvider(){
   if(!key){showToast('API key is required.','error');return;}
   if(!model){showToast('Select or sync a model first.','error');return;}
   const rawUrl=document.getElementById('cfgUrl').value.trim();
-  // For Gemini: always store the clean base (strip /models/... suffix users might paste)
+  const rawModel=model.replace(/^models\//,'').replace(/:generateContent(\?.*)?$/,'').trim();
+  // For Gemini: always store the canonical base URL, never a model path
   const cleanUrl=(state.providerBrand==='Gemini'||rawUrl.includes('generativelanguage'))
-    ? rawUrl.replace(/\/+$/,'').replace(/\/models\/.*$/,'').replace(/\/models\/?$/,'')
+    ? 'https://generativelanguage.googleapis.com/v1beta'
     : rawUrl;
   const p={id:state.editing||Date.now(),name,type:state.providerBrand,
-    url:cleanUrl,key,model,role,disabled:false};
+    url:cleanUrl,key,model:rawModel||model,role,disabled:false};
   // Enforce single orchestrator — demote any existing one
   if(role==='orchestrator'){
     const existing=state.providers.find(x=>x.role==='orchestrator'&&x.id!=p.id);
@@ -3199,21 +3196,20 @@ function renderTopicTreeFull(){
 window.addEventListener('load',async()=>{
   initResizers();
   setTheme(state.theme);
-  // Migrate: strip any dirty Gemini URLs AND model names saved by older versions
+  // Migrate: reset ALL Gemini providers to canonical base URL, fix model names
+  const GEMINI_BASE='https://generativelanguage.googleapis.com/v1beta';
   let geminiMigrated=false;
   state.providers.forEach(p=>{
-    if(p.type==='Gemini'||p.url.includes('generativelanguage.googleapis.com')){
-      const cleanUrl=p.url.replace(/\/+$/,'')
-        .replace(/:generateContent(\?.*)?$/,'')
-        .replace(/\/models\/[^/?]+(\?.*)?$/,'')
-        .replace(/\/models\/?$/,'');
-      const cleanModel=(p.model||'').replace(/^models\//,'').replace(/:generateContent$/,'');
-      if(cleanUrl!==p.url||cleanModel!==p.model){
-        p.url=cleanUrl;p.model=cleanModel;geminiMigrated=true;
+    if(p.type==='Gemini'||p.url.includes('generativelanguage')||(p.url.includes('gemini')&&p.url.includes('models'))){
+      const cleanModel=(p.model||'').replace(/^models\//,'').replace(/:generateContent(\?.*)?$/,'').trim();
+      if(p.url!==GEMINI_BASE||cleanModel!==p.model){
+        p.url=GEMINI_BASE;
+        if(cleanModel) p.model=cleanModel;
+        geminiMigrated=true;
       }
     }
   });
-  if(geminiMigrated){saveState();addLog('sys','Gemini URLs auto-corrected from legacy format.');}
+  if(geminiMigrated){saveState();addLog('sys','Gemini providers reset to canonical base URL.');}
   // Load constraints from storage
   state.constraints=load('myres_constraints',{domains:[],scope:'',urls:[]});
   // Initialise parallel pill
