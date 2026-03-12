@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyResAssist | Research Lab V4.1</title>
-    <!-- Tailwind CSS -->
+    <title>MyResAssist | Research Lab V4.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
@@ -55,234 +52,220 @@
             --border-val: rgba(255, 255, 255, 0.15);
         }
 
-        body { 
-            background-color: var(--bg-deep); 
-            color: var(--text-main); 
-            font-family: var(--font-primary); 
-            overflow: hidden; 
-            transition: background-color 0.3s ease, color 0.3s ease; 
-        }
-
+        body { background-color: var(--bg-deep); color: var(--text-main); font-family: var(--font-primary); overflow: hidden; transition: background-color 0.3s ease; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-val); }
-        .input-dark { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-val); border-radius: 6px; transition: all 0.2s; color: inherit; }
+        .input-dark { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-val); border-radius: 8px; transition: all 0.2s; color: inherit; }
         
-        select option { background-color: #1a1a1a !important; color: #ffffff !important; }
-        [data-theme="light"] select option { background-color: #ffffff !important; color: #000000 !important; }
+        /* Pane Transitions */
+        .side-pane { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s, padding 0.35s; overflow: hidden; }
+        .side-pane.collapsed { width: 0 !important; opacity: 0; padding: 0 !important; border: none !important; }
 
-        .btn-outline { border: 1px solid var(--accent); color: var(--accent); transition: all 0.2s; }
+        .btn-outline { border: 1px solid var(--border-val); color: var(--text-dim); transition: all 0.2s; }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(0, 209, 255, 0.05); }
         .btn-action { background: var(--accent); color: #000; font-weight: 800; transition: all 0.2s; }
         .btn-action:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 5px 15px -5px var(--accent); }
 
-        .topic-item.active { background: rgba(0, 209, 255, 0.08); border-left: 4px solid var(--accent); color: var(--accent); font-weight: 800; }
-        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
+        .topic-item { border-left: 3px solid transparent; }
+        .topic-item.active { background: rgba(0, 209, 255, 0.08); border-left: 3px solid var(--accent); color: var(--accent); font-weight: 800; }
+        .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { border-bottom: 2px solid var(--accent); color: var(--accent); }
         
-        .claim-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid var(--border-val); }
-        .claim-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 30px -10px rgba(0, 209, 255, 0.3); }
+        .synthesis-rendered h1 { font-size: 3rem; font-weight: 900; margin-bottom: 2.5rem; color: var(--accent); line-height: 1; }
+        .synthesis-rendered h2 { font-size: 1.8rem; font-weight: 800; margin-top: 3.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-val); padding-bottom: 0.5rem; }
+        .synthesis-rendered p { margin-bottom: 1.5rem; line-height: 1.8; opacity: 0.9; }
 
-        /* Professional Synthesis Content Layout */
-        .synthesis-rendered { max-width: 850px; margin: 0 auto; line-height: 1.85; font-size: 1.1rem; padding-bottom: 100px; }
-        .synthesis-rendered h1 { font-size: 3.2rem; font-weight: 900; margin-bottom: 2rem; color: var(--accent); letter-spacing: -0.06em; line-height: 1.1; }
-        .synthesis-rendered h2 { font-size: 1.8rem; font-weight: 800; margin-top: 3.5rem; margin-bottom: 1.5rem; color: var(--text-main); border-bottom: 2px solid var(--border-val); padding-bottom: 0.75rem; }
-        .synthesis-rendered h3 { font-size: 1.35rem; font-weight: 700; margin-top: 2.2rem; margin-bottom: 1rem; color: var(--accent); }
-        .synthesis-rendered p { margin-bottom: 1.8rem; opacity: 0.9; }
-        .synthesis-rendered ul { margin-left: 1.5rem; list-style-type: square; margin-bottom: 1.8rem; }
-        .synthesis-rendered li { margin-bottom: 0.8rem; }
-        .synthesis-rendered blockquote { border-left: 4px solid var(--accent); padding: 0.5rem 0 0.5rem 1.5rem; font-style: italic; opacity: 0.8; margin: 2rem 0; background: rgba(0, 209, 255, 0.03); }
-        .synthesis-rendered hr { border: 0; border-top: 2px solid var(--border-val); margin: 4rem 0; }
+        .claim-card { border: 1px solid var(--border-val); transition: all 0.3s; }
+        .claim-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px -10px var(--accent); }
 
-        @keyframes ping { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-        .ping-visual { position: relative; }
-        .ping-visual::after { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; border-radius: 50%; background: var(--accent); animation: ping 2s infinite; }
-
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--border-val); border-radius: 10px; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col" data-theme="dark">
 
     <!-- Top Navigation -->
-    <nav class="h-16 border-b border-white/5 flex items-center justify-between px-8 glass shrink-0 z-50">
-        <div class="flex items-center gap-4">
-            <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-white shadow-xl shadow-indigo-500/20">R</div>
-            <div>
-                <span class="font-black tracking-tighter text-lg uppercase leading-none block">MyResAssist</span>
-                <span class="text-[10px] text-accent font-mono opacity-70 uppercase tracking-widest font-black">Knowledge OS</span>
+    <nav class="h-14 border-b border-white/5 flex items-center justify-between px-4 glass shrink-0 z-50">
+        <div class="flex items-center gap-2">
+            <button onclick="togglePane('left')" class="p-2 hover:text-accent transition-colors" title="Toggle Topics">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center gap-2 ml-1">
+                <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg">R</div>
+                <span class="font-bold tracking-tight text-sm hidden sm:block uppercase tracking-tighter">MyResAssist Lab</span>
             </div>
         </div>
         
-        <div class="flex items-center gap-6">
-            <!-- Theme Switcher -->
-            <div class="flex items-center bg-black/30 rounded-xl p-1 border border-white/10">
-                <button onclick="setTheme('dark')" class="p-2 rounded-lg theme-btn transition-all" id="tbtn-dark" title="Dark Mode"><i data-lucide="moon" class="w-4 h-4"></i></button>
-                <button onclick="setTheme('light')" class="p-2 rounded-lg theme-btn transition-all" id="tbtn-light" title="Light Mode"><i data-lucide="sun" class="w-4 h-4"></i></button>
-                <button onclick="setTheme('academic')" class="p-2 rounded-lg theme-btn transition-all" id="tbtn-academic" title="Academic Mode"><i data-lucide="book" class="w-4 h-4"></i></button>
-                <button onclick="setTheme('modern')" class="p-2 rounded-lg theme-btn transition-all" id="tbtn-modern" title="Modern Mode"><i data-lucide="sparkles" class="w-4 h-4"></i></button>
+        <div class="flex items-center gap-4">
+            <div id="activeProviderTag" class="text-[9px] font-black mono text-slate-400 hidden lg:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5 uppercase"></div>
+            
+            <div class="flex items-center bg-black/20 rounded-lg p-0.5 border border-white/10">
+                <button onclick="setTheme('dark')" class="p-1.5 rounded theme-btn" id="tbtn-dark"><i data-lucide="moon" class="w-3.5 h-3.5"></i></button>
+                <button onclick="setTheme('light')" class="p-1.5 rounded theme-btn" id="tbtn-light"><i data-lucide="sun" class="w-3.5 h-3.5"></i></button>
+                <button onclick="setTheme('academic')" class="p-1.5 rounded theme-btn" id="tbtn-academic"><i data-lucide="book" class="w-3.5 h-3.5"></i></button>
+                <button onclick="setTheme('modern')" class="p-1.5 rounded theme-btn" id="tbtn-modern"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i></button>
             </div>
-
-            <div id="activeProviderTag" class="text-[10px] mono text-slate-300 hidden xl:flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full border border-white/10 shadow-inner"></div>
-
-            <button onclick="toggleModal('settingsModal')" class="bg-white/5 hover:bg-white/10 text-white p-2.5 rounded-xl border border-white/10 transition-all">
-                <i data-lucide="settings" class="w-5 h-5"></i>
+            
+            <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-accent p-2 transition-colors"><i data-lucide="settings" class="w-4 h-4"></i></button>
+            
+            <button onclick="togglePane('right')" class="p-2 hover:text-accent transition-colors" title="Toggle Command Center">
+                <i data-lucide="layout-panel-right" class="w-5 h-5"></i>
             </button>
         </div>
     </nav>
 
-    <!-- Config Modal -->
-    <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/85 backdrop-blur-md">
-        <div class="glass w-full max-w-2xl rounded-3xl p-10 modal-enter max-h-[95vh] overflow-y-auto border border-white/10 shadow-2xl">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-black tracking-tighter" id="modalTitle">Engine Configuration</h2>
-                <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="text-slate-500 hover:text-white transition-colors"><i data-lucide="x" class="w-8 h-8"></i></button>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass w-full max-w-2xl rounded-3xl p-8 modal-enter max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black tracking-tighter" id="modalTitle">Engine Configuration</h2>
+                <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-7 h-7"></i></button>
             </div>
 
-            <!-- Orchestration protocol -->
-            <div class="mb-10 p-6 bg-accent/5 rounded-3xl border border-accent/20">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-[11px] font-black uppercase tracking-widest text-accent">Orchestration Intelligence</h3>
+            <div class="mb-8 p-5 bg-accent/5 rounded-2xl border border-accent/20">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-accent">Parallel Synthesis</h3>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="multiLlmToggle" class="sr-only peer" onchange="saveState()">
-                        <div class="w-12 h-6 bg-slate-700 rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-                        <span class="ml-4 text-[11px] font-black uppercase tracking-widest opacity-80">Parallel Mode</span>
+                        <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
                     </label>
                 </div>
-                <p class="text-xs text-slate-400 leading-relaxed italic">In parallel mode, all agents marked 'Worker' contribute. The active 'Orchestrator' profile leads the final synthesis.</p>
+                <p class="text-[11px] text-slate-400 italic">Query all configured 'Worker' agents simultaneously for data extraction.</p>
             </div>
 
-            <!-- Tabs -->
-            <div class="flex gap-8 border-b border-white/5 mb-10 text-sm text-slate-500 font-bold">
-                <button onclick="switchTab('Claude')" class="provider-tab pb-3 px-1 transition-all" id="tab-Claude">Claude</button>
-                <button onclick="switchTab('OpenAI')" class="provider-tab pb-3 px-1 transition-all" id="tab-OpenAI">OpenAI</button>
-                <button onclick="switchTab('Gemini')" class="provider-tab pb-3 px-1 transition-all" id="tab-Gemini">Gemini</button>
-                <button onclick="switchTab('Custom')" class="provider-tab pb-3 px-1 transition-all" id="tab-Custom">Custom</button>
+            <div class="flex gap-6 border-b border-white/5 mb-8 text-sm text-slate-500 font-medium">
+                <button onclick="switchTab('Claude')" class="provider-tab pb-2 px-1" id="tab-Claude">Claude</button>
+                <button onclick="switchTab('OpenAI')" class="provider-tab pb-2 px-1" id="tab-OpenAI">OpenAI</button>
+                <button onclick="switchTab('Gemini')" class="provider-tab pb-2 px-1" id="tab-Gemini">Gemini</button>
+                <button onclick="switchTab('Custom')" class="provider-tab pb-2 px-1" id="tab-Custom">Custom</button>
             </div>
 
-            <!-- Profile Form -->
-            <div class="space-y-8">
-                <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 tracking-widest">Agent Label</label>
-                        <input id="configName" type="text" class="w-full input-dark p-3.5 text-sm font-bold" placeholder="e.g. Lead Orchestrator">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Profile Name</label>
+                        <input id="configName" type="text" class="w-full input-dark p-3 text-xs font-bold" placeholder="e.g. Lead Orchestrator">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 tracking-widest">Pipeline Role</label>
-                        <select id="configRole" class="w-full input-dark p-3.5 text-sm font-bold">
-                            <option value="worker">Worker (Extraction)</option>
-                            <option value="orchestrator" selected>Orchestrator (Synthesis)</option>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Role</label>
+                        <select id="configRole" class="w-full input-dark p-3 text-xs">
+                            <option value="worker">Worker</option>
+                            <option value="orchestrator" selected>Orchestrator</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="endpointContainer">
-                    <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 tracking-widest">API Base Endpoint</label>
-                    <input id="configUrl" type="text" class="w-full input-dark p-3.5 text-xs mono" placeholder="https://api.openai.com/v1">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">API Endpoint</label>
+                    <input id="configUrl" type="text" class="w-full input-dark p-3 text-xs mono" placeholder="https://api.openai.com/v1">
                 </div>
 
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 tracking-widest">Secret Key</label>
-                        <input id="configKey" type="password" class="w-full input-dark p-3.5 text-xs mono" placeholder="sk-...">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 tracking-widest">Selected Model</label>
-                        <select id="configModel" class="w-full input-dark p-3.5 text-xs mono"></select>
-                    </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Secret Key</label><input id="configKey" type="password" class="w-full input-dark p-3 text-xs mono" placeholder="sk-..."></div>
+                    <div><label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Model</label><select id="configModel" class="w-full input-dark p-3 text-xs mono"></select></div>
                 </div>
                 
-                <button id="fetchModelsBtn" onclick="fetchModels()" class="w-full btn-outline py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> <span id="fetchBtnText">Synchronize Provider Models</span>
+                <button id="fetchModelsBtn" onclick="fetchModels()" class="w-full btn-outline py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Synchronize Models
                 </button>
             </div>
 
-            <div class="flex justify-end gap-4 mt-12 pt-8 border-t border-white/5">
-                <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="px-8 py-3 rounded-xl text-sm text-slate-400 font-bold hover:text-white transition-colors">Discard</button>
-                <button onclick="saveProvider()" class="px-12 py-3 rounded-xl text-sm bg-white text-black font-black shadow-2xl hover:scale-[1.03] active:scale-95 transition-all">Save Profile</button>
+            <div class="flex justify-end gap-3 mt-10 pt-6 border-t border-white/5">
+                <button onclick="resetConfigForm(); toggleModal('settingsModal')" class="px-6 py-2 rounded text-sm text-slate-400 font-medium hover:text-white transition-colors">Discard</button>
+                <button onclick="saveProvider()" class="px-10 py-2 rounded text-sm bg-white text-black font-black shadow-xl hover:scale-[1.02] transition-all">Save Profile</button>
             </div>
 
-            <!-- Profile List -->
-            <div class="mt-12">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6">Active Research Profiles</h3>
-                <div id="providerList" class="space-y-4"></div>
+            <div class="mt-10">
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Saved Profiles</h3>
+                <div id="providerList" class="space-y-3"></div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-12 right-6 z-[110] hidden glass px-8 py-5 rounded-2xl border-l-4 border-accent shadow-2xl transition-all translate-y-10">
-        <p id="toastMessage" class="text-sm font-black tracking-tight"></p>
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-12 right-6 z-[110] hidden glass px-6 py-4 rounded-2xl border-l-4 border-accent shadow-2xl transition-all translate-y-10">
+        <p id="toastMessage" class="text-xs font-black"></p>
     </div>
 
-    <!-- UI Shell -->
+    <!-- Main Content -->
     <main class="flex-1 flex overflow-hidden">
         
-        <!-- Sidebar -->
-        <aside class="w-84 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0 shadow-2xl">
-            <div class="p-6 border-b border-white/5">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">Research Tree</h3>
-                    <button onclick="createNewTopic()" class="p-1.5 bg-white/5 hover:bg-accent hover:text-black rounded-lg transition-all"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+        <!-- PANE 1: DISCOVERY TREE (LEFT) -->
+        <aside id="leftPane" class="side-pane w-72 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0">
+            <div class="p-5 border-b border-white/5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Topics</h3>
+                    <button onclick="createNewTopic()" class="p-1 hover:text-accent transition-colors"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
                 </div>
-                <div id="topicList" class="space-y-1 max-h-64 overflow-y-auto no-scrollbar pr-1"></div>
-            </div>
-
-            <div class="flex-1 p-6 overflow-y-auto space-y-10 no-scrollbar">
-                <div>
-                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] mb-5">Pipeline Pulse</h3>
-                    <div id="pipelineDisplay" class="space-y-1"></div>
-                </div>
-                <div>
-                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] mb-5">Cognitive Log</h3>
-                    <div id="logStream" class="space-y-3 text-[10px] mono text-slate-400"></div>
+                <div class="relative mb-2">
+                    <input type="text" id="topicSearch" oninput="renderTopics()" placeholder="Search tree..." class="w-full bg-black/20 border border-white/5 rounded-lg py-1.5 px-3 text-[11px] focus:outline-none focus:border-accent/50 text-white">
+                    <i data-lucide="search" class="absolute right-3 top-2 w-3 h-3 opacity-30"></i>
                 </div>
             </div>
-
-            <!-- Console Input -->
-            <div class="p-6 border-t border-white/5 bg-black/40 shadow-2xl">
-                <textarea id="mainInput" placeholder="Initialize research vector..." 
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent resize-none h-36 mb-4 transition-all"></textarea>
-                <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-5 rounded-2xl text-[11px] flex items-center justify-center gap-4 shadow-lg shadow-accent/20">
-                    <i data-lucide="zap" class="w-6 h-6"></i> <span class="uppercase tracking-[0.2em] font-black">Execute Analysis</span>
-                </button>
+            <div class="flex-1 overflow-y-auto p-4 space-y-1 no-scrollbar" id="topicList"></div>
+            <div class="p-4 border-t border-white/5 bg-black/20">
+                <button onclick="toggleArchiveView()" id="archiveToggleBtn" class="w-full text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-accent py-2 transition-all">View Archived Discovery</button>
             </div>
         </aside>
 
-        <!-- Main Workspace -->
-        <section class="flex-1 flex flex-col relative overflow-hidden bg-[#050505]">
-            <div class="absolute top-1/4 left-1/4 w-[800px] h-[800px] bg-accent/5 blur-[180px] rounded-full pointer-events-none"></div>
+        <!-- PANE 2: ANALYTICAL WORKBENCH (CENTER) -->
+        <section class="flex-1 flex flex-col relative overflow-hidden bg-[#050505] border-r border-white/5">
+            <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-accent/5 blur-[140px] rounded-full pointer-events-none"></div>
 
-            <!-- Analytical Tabs -->
-            <div class="h-16 flex items-center px-12 border-b border-white/5 shrink-0 z-10 glass gap-14 overflow-x-auto no-scrollbar">
-                <button onclick="switchCenterTab('synthesis')" class="tab-btn active text-[10px] uppercase font-black tracking-[0.35em] h-full transition-all" id="tab-synthesis">Synthesis</button>
-                <button onclick="switchCenterTab('vault')" class="tab-btn text-[10px] uppercase font-black tracking-[0.35em] h-full transition-all" id="tab-vault">Claims Vault</button>
-                <button onclick="switchCenterTab('visualizer')" class="tab-btn text-[10px] uppercase font-black tracking-[0.35em] h-full transition-all" id="tab-visualizer">Signal Map</button>
-                <button onclick="switchCenterTab('gaps')" class="tab-btn text-[10px] uppercase font-black tracking-[0.35em] h-full transition-all" id="tab-gaps">Voids</button>
+            <div class="h-12 flex items-center px-8 border-b border-white/5 shrink-0 z-10 glass gap-8">
+                <button onclick="switchCenterTab('synthesis')" class="tab-btn active text-[10px] uppercase font-black tracking-widest h-full" id="tab-synthesis">Synthesis</button>
+                <button onclick="switchCenterTab('vault')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full" id="tab-vault">Claims Vault</button>
+                <button onclick="switchCenterTab('visualizer')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full" id="tab-visualizer">Signal Map</button>
+                <button onclick="switchCenterTab('gaps')" class="tab-btn text-[10px] uppercase font-black tracking-widest h-full" id="tab-gaps">Voids</button>
             </div>
 
-            <div id="canvas" class="flex-1 p-10 lg:p-24 overflow-y-auto z-10 no-scrollbar">
-                <!-- Content Layers -->
-                <div id="synthesisView" class="animate-in fade-in slide-in-from-bottom-8 duration-1000 synthesis-rendered pb-32">
-                    <div class="text-center py-56 opacity-10"><i data-lucide="compass" class="w-24 h-24 mx-auto mb-8"></i><p class="mono tracking-widest uppercase text-xs font-black">Ready for Discovery Vector</p></div>
+            <div id="canvas" class="flex-1 p-8 lg:p-14 overflow-y-auto z-10 no-scrollbar">
+                <div id="synthesisView" class="animate-in fade-in slide-in-from-bottom-6 duration-700 synthesis-rendered pb-32">
+                    <div class="text-center py-48 opacity-10"><i data-lucide="search" class="w-16 h-16 mx-auto mb-4"></i><p class="mono uppercase text-xs">Ready for Discovery Vector</p></div>
                 </div>
-
-                <div id="vaultView" class="hidden max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 pb-40" id="claimGrid"></div>
-
+                <div id="vaultView" class="hidden max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20" id="claimGrid"></div>
                 <div id="visualizerView" class="hidden h-full flex flex-col items-center justify-center animate-in fade-in zoom-in-95">
-                    <svg id="snrGraph" viewBox="0 0 500 500" width="550" height="550" class="max-w-full h-auto"></svg>
-                    <div class="mt-20 grid grid-cols-2 gap-32 text-center">
-                        <div><div class="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3">Signal Confidence</div><div class="text-7xl font-black text-accent" id="statSignal">0%</div></div>
-                        <div><div class="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3">Extraction Breadth</div><div class="text-7xl font-black text-purple-600" id="statBreadth">0%</div></div>
+                    <svg id="snrGraph" viewBox="0 0 500 500" width="450" height="450" class="max-w-full h-auto"></svg>
+                    <div class="mt-10 grid grid-cols-2 gap-16 text-center">
+                        <div><div class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Confidence</div><div class="text-4xl font-black text-accent" id="statSignal">0%</div></div>
+                        <div><div class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Breadth</div><div class="text-4xl font-black text-purple-600" id="statBreadth">0%</div></div>
                     </div>
                 </div>
-
-                <div id="gapsView" class="hidden max-w-3xl mx-auto space-y-8" id="gapList"></div>
+                <div id="gapsView" class="hidden max-w-3xl mx-auto space-y-4" id="gapList"></div>
             </div>
         </section>
+
+        <!-- PANE 3: COMMAND CENTER (RIGHT) -->
+        <aside id="rightPane" class="side-pane w-80 flex flex-col bg-[#0d0f12] shrink-0 shadow-2xl">
+            <div class="flex-1 p-5 overflow-y-auto flex flex-col no-scrollbar">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Stream</h3>
+                <div id="logStream" class="space-y-2 text-[10px] mono text-slate-500"></div>
+            </div>
+
+            <!-- Pipeline Controls -->
+            <div class="p-5 border-t border-white/5 bg-black/40 space-y-4">
+                <div id="pipelineDisplay" class="space-y-1 mb-2"></div>
+                
+                <textarea id="mainInput" placeholder="Initialize research or ask follow-up..." 
+                    class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent resize-none h-24 transition-all"></textarea>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="runPhase('scan')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent/50 transition-all flex items-center justify-center gap-1.5">
+                        <i data-lucide="zap" class="w-3 h-3 text-amber-400"></i> Quick Scan
+                    </button>
+                    <button onclick="runPhase('forensics')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent/50 transition-all flex items-center justify-center gap-1.5">
+                        <i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> Forensics
+                    </button>
+                </div>
+
+                <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-4 rounded-xl text-xs flex items-center justify-center gap-3 shadow-lg shadow-accent/20 transition-all active:scale-[0.98]">
+                    <i data-lucide="cpu" class="w-4 h-4"></i> <span class="uppercase tracking-widest font-black">Synthesize Complete Brief</span>
+                </button>
+            </div>
+        </aside>
     </main>
 
     <script>
-        // Core Pipeline Logic
         const PROVIDER_DEFAULTS = {
             Gemini: { url: 'https://generativelanguage.googleapis.com/v1beta/models/', models: ['gemini-2.0-flash-exp', 'gemini-1.5-pro'] },
             OpenAI: { url: 'https://api.openai.com/v1', models: ['gpt-4o', 'o1-preview'] },
@@ -296,16 +279,27 @@
             topics: JSON.parse(localStorage.getItem('myres_topics') || '[]'),
             activeTopicId: localStorage.getItem('myres_active_topic') || null,
             theme: localStorage.getItem('myres_theme') || 'dark',
-            currentTab: 'Gemini',
             centerTab: 'synthesis',
             phase: 'idle',
             multiLlm: localStorage.getItem('myres_multi_llm') === 'true',
-            editingProviderId: null
+            showArchived: false,
+            leftPaneCollapsed: false,
+            rightPaneCollapsed: false
         };
 
         function refreshIcons() { lucide.createIcons(); }
 
-        // --- UI ENGINE ---
+        // --- PANE TOGGLE ---
+        function togglePane(side) {
+            if (side === 'left') {
+                state.leftPaneCollapsed = !state.leftPaneCollapsed;
+                document.getElementById('leftPane').classList.toggle('collapsed', state.leftPaneCollapsed);
+            } else {
+                state.rightPaneCollapsed = !state.rightPaneCollapsed;
+                document.getElementById('rightPane').classList.toggle('collapsed', state.rightPaneCollapsed);
+            }
+        }
+
         function setTheme(t) {
             state.theme = t; document.body.setAttribute('data-theme', t); localStorage.setItem('myres_theme', t);
             document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('bg-white/10', 'text-accent'));
@@ -315,7 +309,7 @@
 
         function toggleModal(id) {
             const m = document.getElementById(id); m.classList.toggle('hidden');
-            if (id === 'settingsModal') { renderProviders(); switchTab(state.currentTab); }
+            if (id === 'settingsModal') { renderProviders(); switchTab(state.currentTab || 'Gemini'); }
         }
 
         function switchCenterTab(tab) {
@@ -330,101 +324,94 @@
             if (tab === 'visualizer') setTimeout(renderSNRGraph, 50);
         }
 
-        // --- PROVIDER CRUD & NETWORKING ---
-        function switchTab(t) {
-            state.currentTab = t;
-            document.querySelectorAll('.provider-tab').forEach(b => b.classList.remove('tab-active', 'border-accent', 'text-white'));
-            document.getElementById('tab-'+t).classList.add('tab-active', 'border-accent', 'text-white');
-            const urlInput = document.getElementById('configUrl');
-            urlInput.disabled = (t !== 'Custom');
-            if (!state.editingProviderId) {
-                urlInput.value = PROVIDER_DEFAULTS[t].url;
-                const select = document.getElementById('configModel');
-                const models = PROVIDER_DEFAULTS[t].models;
-                select.innerHTML = models.length ? models.map(m => `<option value="${m}">${m}</option>`).join('') : '<option value="" disabled selected>Retrieve Models First</option>';
-            }
+        // --- TOPIC DISCOVERY TREE ---
+        function createNewTopic(parentId = null) {
+            const title = prompt("New Discovery Vector Name:", "Untitled Research");
+            if (!title) return;
+            const nt = { id: Date.now(), title, parentId, brief: null, claims: [], gaps: [], snr: 0, breadth: 0, date: new Date().toISOString(), archived: false };
+            state.topics.unshift(nt);
+            state.activeTopicId = nt.id;
+            saveState(); renderTopics(); loadActiveTopic();
         }
 
-        async function fetchModels() {
-            const key = document.getElementById('configKey').value.trim();
-            const url = document.getElementById('configUrl').value.trim();
-            if (!key) return showToast("API Key Required.");
-            const btnText = document.getElementById('fetchBtnText');
-            btnText.innerText = "Synchronizing...";
-
-            try {
-                let fetchedModels = [];
-                if (state.currentTab === 'Gemini') {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-                    const data = await res.json();
-                    fetchedModels = data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
-                } else {
-                    const fetchUrl = url.replace(/\/chat\/completions$/, '').replace(/\/$/, '') + '/models';
-                    const res = await fetch(fetchUrl, { headers: { 'Authorization': `Bearer ${key}` }});
-                    const data = await res.json();
-                    fetchedModels = data.data.map(m => m.id);
-                }
-                document.getElementById('configModel').innerHTML = fetchedModels.sort().map(m => `<option value="${m}">${m}</option>`).join('');
-                showToast("Library Synchronized.");
-            } catch (e) { showToast("Connection failed: Endpoint Error."); }
-            finally { btnText.innerText = "Synchronize Provider Library"; }
-        }
-
-        function saveProvider() {
-            const name = document.getElementById('configName').value.trim() || state.currentTab;
-            const url = document.getElementById('configUrl').value.trim();
-            const key = document.getElementById('configKey').value.trim();
-            const model = document.getElementById('configModel').value;
-            const role = document.getElementById('configRole').value;
-            if (!key || !model) return showToast("Config data required.");
-            const p = { id: state.editingProviderId || Date.now(), name, type: state.currentTab, url: url.replace(/\/+$/, ''), key, model, role };
-            if (state.editingProviderId) {
-                const idx = state.providers.findIndex(x => x.id === state.editingProviderId);
-                state.providers[idx] = p;
-            } else {
-                state.providers.push(p);
-                if (!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id;
-            }
-            saveState(); renderProviders(); resetConfigForm(); updateUI();
-            showToast("Agent profile secured.");
-        }
-
-        function editProvider(id) {
-            const p = state.providers.find(x => x.id === id);
-            state.editingProviderId = id;
-            document.getElementById('modalTitle').innerText = "Modifying Agent Profile";
-            document.getElementById('configName').value = p.name;
-            document.getElementById('configKey').value = p.key;
-            document.getElementById('configRole').value = p.role;
-            switchTab(p.type);
-            document.getElementById('configUrl').value = p.url;
-            document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
-        }
-
-        function renderProviders() {
-            const list = document.getElementById('providerList');
-            list.innerHTML = state.providers.map(p => `
-                <div class="flex items-center gap-5 p-6 rounded-3xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
-                    <div class="flex-1 overflow-hidden">
-                        <div class="text-[9px] font-black uppercase tracking-widest text-accent opacity-70">${p.role}</div>
-                        <div class="text-sm font-black text-white truncate">${p.name}</div>
-                        <div class="text-[10px] mono opacity-40 truncate">${p.model}</div>
-                    </div>
-                    <div class="flex gap-2 shrink-0">
-                        <button onclick="setActiveProvider(${p.id})" class="px-4 py-2 text-[10px] border border-white/10 rounded-xl uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : 'hover:bg-white/5'}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
-                        <button onclick="editProvider(${p.id})" class="p-2.5 rounded-xl hover:text-accent transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="deleteProvider(${p.id})" class="p-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors"><i data-lucide="trash" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-            `).join('') || '<div class="text-center py-10 opacity-30 italic text-xs">No research agents deployed.</div>';
+        function renderTopics() {
+            const list = document.getElementById('topicList');
+            const search = document.getElementById('topicSearch').value.toLowerCase();
+            list.innerHTML = '';
+            
+            const roots = state.topics.filter(t => !t.parentId);
+            roots.forEach(t => renderTopicNode(t, list, 0, search));
             refreshIcons();
         }
 
-        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
-        function deleteProvider(id) { if(confirm("Permanently prune profile?")) { state.providers = state.providers.filter(x => x.id != id); if(state.activeProviderId == id) state.activeProviderId = null; saveState(); renderProviders(); updateUI(); }}
-        function resetConfigForm() { state.editingProviderId = null; document.getElementById('modalTitle').innerText = "Engine Configuration"; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
+        function renderTopicNode(topic, container, depth, search) {
+            const matchesSearch = topic.title.toLowerCase().includes(search);
+            const matchesArchive = state.showArchived ? topic.archived : !topic.archived;
+            
+            if (matchesArchive && (search === '' || matchesSearch)) {
+                const node = document.createElement('div');
+                node.className = `topic-item group flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all ${state.activeTopicId == topic.id ? 'active' : 'text-slate-400 hover:bg-white/5'}`;
+                node.style.marginLeft = `${depth * 14}px`;
+                node.innerHTML = `
+                    <div class="flex items-center gap-2 truncate flex-1" onclick="switchTopic(${topic.id})">
+                        <i data-lucide="${depth === 0 ? 'folder' : 'file-text'}" class="w-3.5 h-3.5 opacity-30"></i>
+                        <span class="truncate text-[11px] font-bold">${topic.title}</span>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="createNewTopic(${topic.id})" title="Drill Down"><i data-lucide="git-branch" class="w-3 h-3 hover:text-accent"></i></button>
+                        <button onclick="archiveTopic(${topic.id})" title="Archive"><i data-lucide="archive" class="w-3 h-3 hover:text-amber-400"></i></button>
+                        <button onclick="deleteTopic(${topic.id})" title="Delete"><i data-lucide="trash-2" class="w-3 h-3 hover:text-red-500"></i></button>
+                    </div>
+                `;
+                container.appendChild(node);
+            }
+            
+            const children = state.topics.filter(t => t.parentId == topic.id);
+            children.forEach(c => renderTopicNode(c, container, depth + 1, search));
+        }
+
+        function switchTopic(id) { state.activeTopicId = id; saveState(); renderTopics(); loadActiveTopic(); }
+        function archiveTopic(id) { const t = state.topics.find(x => x.id === id); if(t) t.archived = !t.archived; saveState(); renderTopics(); }
+        function deleteTopic(id) { 
+            if(confirm("Confirm purge of this vector and child branches?")) {
+                state.topics = state.topics.filter(t => t.id !== id && t.parentId !== id);
+                if(state.activeTopicId === id) state.activeTopicId = null;
+                saveState(); renderTopics(); loadActiveTopic();
+            }
+        }
+        function toggleArchiveView() { state.showArchived = !state.showArchived; document.getElementById('archiveToggleBtn').innerText = state.showArchived ? "Back to Active Discovery" : "View Archived Discovery"; renderTopics(); }
 
         // --- RELIABILITY PIPELINE V5 ---
+        async function runPhase(phase) {
+            const query = document.getElementById('mainInput').value.trim();
+            const activeP = state.providers.find(p => p.id == state.activeProviderId);
+            if (!activeP) return showToast("Orchestrator required.");
+            if (!state.activeTopicId) createNewTopic();
+
+            const t = state.topics.find(x => x.id == state.activeTopicId);
+            state.phase = phase === 'scan' ? 'scan' : 'validate';
+            updateUI();
+
+            try {
+                if (phase === 'scan') {
+                    addLog('SYSTEM', 'Rapid Triage Engine active...');
+                    const scan = await callAI_Specific(activeP, query || t.title, "Triage Agent. Identify 5 high-potential technical themes. Brief.");
+                    addLog('AI', "Triage Findings: " + scan.substring(0, 150) + "...");
+                } else if (phase === 'forensics') {
+                    addLog('SYSTEM', 'Running Forensic Data Mapping...');
+                    const context = `Context: ${t.brief || 'None'}. Follow-up query: ${query}`;
+                    const forensic = await callAI_Specific(activeP, `Perform atomic claim analysis: ${context}. Format: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. GAP: Topic. SNR: Value%.`, "Structural Parser.");
+                    const parsed = parseValidation(forensic);
+                    // MERGE instead of overwrite
+                    t.claims = [...(t.claims || []), ...parsed.claims].slice(-20); 
+                    t.snr = parsed.snr;
+                    saveState(); loadActiveTopic();
+                    showToast("Analytical Vault Updated.");
+                }
+            } catch (e) { addLog('ERROR', "Pipeline stalled."); }
+            finally { state.phase = 'idle'; updateUI(); }
+        }
+
         async function initiateResearch() {
             const query = document.getElementById('mainInput').value.trim();
             if (!query) return;
@@ -436,54 +423,35 @@
             const t = state.topics.find(x => x.id == state.activeTopicId);
 
             try {
-                // PHASE 1: TRIAGE
                 state.phase = 'scan'; updateUI();
-                addLog('SYSTEM', 'Triage Phase 1: Contextual Analysis...');
-                const scan = await callAI_Specific(activeP, query, "Triage Agent. Identify 5 technical themes. Evaluate semantic potential. High-precision brevity.");
+                addLog('SYSTEM', 'Phase 1: Multi-Agent Contextual Triage...');
+                const scan = await callAI_Specific(activeP, query, "Triage Agent. Identify technical themes. High brevity.");
                 
-                // PHASE 2: EXTRACTION
                 state.phase = 'research'; updateUI();
                 const workers = state.providers.filter(p => p.role === 'worker');
                 let blocks = [];
                 if (state.multiLlm && workers.length > 0) {
-                    addLog('SYSTEM', `Parallel Mode: Querying ${workers.length} Agent Nodes...`);
-                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, `Vector: ${query}\nContext: ${scan}`, "Expert deep extraction scientist.")));
+                    addLog('SYSTEM', `Parallel extraction on ${workers.length} nodes...`);
+                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, `Vector: ${query}\nContext: ${scan}`, "Expert deep extraction.")));
                 } else {
-                    addLog('SYSTEM', 'Core Extraction active...');
-                    blocks = [await callAI_Specific(activeP, `Vector: ${query}\nScan Data: ${scan}`, "Expert technical scientist synthesis.")];
+                    blocks = [await callAI_Specific(activeP, `Vector: ${query}\nScan Data: ${scan}`, "Expert technical synthesis.")];
                 }
 
-                // PHASE 3: UNITED SYNTHESIS
-                addLog('AI', 'Constructing Synthesis Brief...');
-                const synthPrompt = `Synthesize findings into a professional, Level 4 United Brief. 
-                    Focus on emergent linkages and latent patterns. 
-                    Output Professional Markdown format.
-                    Source data: ${blocks.join("\n\n")}`;
-                const brief = await callAI_Specific(activeP, synthPrompt, "Senior Research Architect.");
+                addLog('AI', 'Constructing United Professional Brief...');
+                const brief = await callAI_Specific(activeP, `Synthesize findings: ${blocks.join("\n\n")}`, "Senior Architect. Markdown format.");
                 t.brief = brief;
                 renderSynthesis(t);
 
-                // PHASE 4: FORENSIC EXTRACTION (Reliability Step)
                 state.phase = 'validate'; updateUI();
-                addLog('SYSTEM', 'Forensics Phase 4: Structured Metadata Generation...');
-                const forensicPrompt = `Extract Metadata from the research brief below.
-                    Brief: ${brief}
-                    
-                    FORMAT:
-                    CLAIM: [VERIFIED/UNCERTAIN] | Text of claim | Reasoning
-                    GAP: Sub-topic for future research
-                    SNR: Value%
-                    
-                    Structured data only. No intro/outro.`;
-                const extraction = await callAI_Specific(activeP, forensicPrompt, "Structural Parser.");
-                
-                const parsed = parseValidation(extraction);
+                addLog('SYSTEM', 'Reliability Phase 4: Metadata Mapping...');
+                const forensic = await callAI_Specific(activeP, `Extract from: ${brief}. Format: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. GAP: Topic. SNR: Value%.`, "Structural Parser.");
+                const parsed = parseValidation(forensic);
                 t.claims = parsed.claims; t.gaps = parsed.gaps; t.snr = parsed.snr;
                 t.breadth = (blocks.length * 20) + 15;
                 
                 saveState(); loadActiveTopic();
-                showToast("Level 4 Synthesis Complete.");
-            } catch (err) { addLog('ERROR', "Pipeline halted: Profile error or connection reset."); }
+                showToast("Synthesis achieved.");
+            } catch (err) { addLog('ERROR', "Pipeline stalled."); }
             finally { state.phase = 'idle'; updateUI(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
         }
 
@@ -492,78 +460,41 @@
             let cleanUrl = p.url.replace(/\/+$/, '');
             let url = isGemini ? `${cleanUrl}/${p.model}:generateContent?key=${p.key}` : cleanUrl;
             if (!isGemini && !url.endsWith('/chat/completions')) url += '/chat/completions';
-            const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } 
-                                  : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
+            const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
             const headers = { 'Content-Type': 'application/json' };
             if (!isGemini) headers['Authorization'] = `Bearer ${p.key}`;
             const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
             const data = await res.json();
-            
-            // Text Extraction Helper
-            let txt = "";
-            if (isGemini) {
-                txt = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                      data.candidates?.[0]?.content?.[0]?.parts?.[0]?.text;
-            } else {
-                txt = data.choices?.[0]?.message?.content;
-            }
-            return txt || "ERROR_NO_CONTENT";
+            if (isGemini) return data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.content?.[0]?.parts?.[0]?.text;
+            return data.choices?.[0]?.message?.content;
         }
 
         function parseValidation(raw) {
             const lines = raw.split('\n');
-            const claims = [], gaps = []; let snr = 85;
+            const claims = [], gaps = []; let snr = 80;
             lines.forEach(l => {
                 if (l.trim().startsWith('CLAIM:')) {
                     const p = l.replace('CLAIM:', '').split('|');
-                    claims.push({ status: p[0]?.trim() || '[?]', text: p[1]?.trim() || l, reason: p[2]?.trim() || 'Extracted from research brief.' });
+                    claims.push({ status: p[0]?.trim() || '[?]', text: p[1]?.trim() || l, reason: p[2]?.trim() || 'Extracted.' });
                 } else if (l.trim().startsWith('GAP:')) gaps.push(l.replace('GAP:', '').trim());
-                else if (l.trim().startsWith('SNR:')) snr = parseInt(l.replace('SNR:', '').replace(/\D/g, '')) || 85;
+                else if (l.trim().startsWith('SNR:')) snr = parseInt(l.replace('SNR:', '').replace(/\D/g, '')) || 80;
             });
             return { claims, gaps, snr };
         }
 
-        // --- TREE & RENDER ---
-        function createNewTopic() {
-            const title = prompt("Discovery Vector Name:", "Untitled Vector");
-            if (!title) return;
-            const nt = { id: Date.now(), title, brief: null, claims: [], gaps: [], snr: 0, breadth: 0, date: new Date().toISOString(), logs: [] };
-            state.topics.unshift(nt); state.activeTopicId = nt.id;
-            saveState(); renderTopics(); loadActiveTopic();
-        }
-
-        function renderTopics() {
-            document.getElementById('topicList').innerHTML = state.topics.map(t => `
-                <div onclick="switchTopic(${t.id})" class="topic-item group flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all ${state.activeTopicId == t.id ? 'active' : 'text-slate-400'}">
-                    <span class="truncate text-xs font-bold uppercase tracking-tight">${t.title}</span>
-                    <button onclick="event.stopPropagation(); deleteTopic(${t.id})" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-red-500 hover:scale-110"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                </div>
-            `).join('') || '<div class="text-center py-6 opacity-20 text-[10px] mono">LAB_EMPTY</div>';
-            refreshIcons();
-        }
-
-        function switchTopic(id) { state.activeTopicId = id; saveState(); renderTopics(); loadActiveTopic(); }
-
+        // --- RENDERERS ---
         function loadActiveTopic() {
             const t = state.topics.find(x => x.id == state.activeTopicId);
             if (!t) return;
             const synthesis = document.getElementById('synthesisView');
             const vault = document.getElementById('claimGrid');
-            const gaps = document.getElementById('gapsView');
+            const gaps = document.getElementById('gapList');
             if (t.brief) {
                 synthesis.innerHTML = marked.parse(t.brief);
-                vault.innerHTML = t.claims.map(c => `
-                    <div class="claim-card p-6 rounded-3xl border border-accent/20 bg-accent/5">
-                        <div class="text-[9px] font-black uppercase mb-3 tracking-widest text-accent flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span> ${c.status}
-                        </div>
-                        <p class="text-sm font-bold text-white mb-2 leading-relaxed">${c.text}</p>
-                        <p class="text-xs opacity-50 italic leading-relaxed">${c.reason}</p>
-                    </div>
-                `).join('') || '<div class="col-span-full py-40 text-center opacity-30 italic text-sm">Forensic analysis in progress...</div>';
-                gaps.innerHTML = t.gaps.map(g => `<div class="p-5 rounded-2xl glass border-white/5 flex items-center justify-between group"><div class="text-sm font-bold text-white">${g}</div><button onclick="drillDown('${g}')" class="btn-outline text-[9px] px-3 py-1 rounded-xl uppercase font-black tracking-widest">Drill Down</button></div>`).join('') || '<div class="py-24 text-center opacity-30 italic">No gaps identified.</div>';
+                vault.innerHTML = t.claims.map(c => `<div class="claim-card p-6 rounded-2xl glass border border-white/5"><div class="text-[9px] font-black uppercase mb-3 text-accent">${c.status}</div><p class="text-xs font-bold text-white mb-2 leading-relaxed">${c.text}</p><p class="text-[10px] opacity-40 italic">${c.reason}</p></div>`).join('') || '<p class="opacity-30">Analytical vault empty.</p>';
+                gaps.innerHTML = t.gaps.map(g => `<div class="p-4 rounded-xl glass border-white/5 flex items-center justify-between group"><div class="text-sm font-bold text-white">${g}</div><button onclick="drillDown('${g}')" class="btn-outline text-[9px] px-3 py-1 rounded uppercase font-black transition-all">Drill Down</button></div>`).join('');
             } else {
-                synthesis.innerHTML = `<div class="text-center py-48 opacity-20"><i data-lucide="compass" class="w-16 h-16 mx-auto mb-6"></i><p class="mono tracking-[0.4em] uppercase text-xs font-black">Initializing Knowledge Synthesis...</p></div>`;
+                synthesis.innerHTML = `<div class="text-center py-48 opacity-10"><p class="mono uppercase text-xs">Vector Ready: ${t.title}</p></div>`;
                 vault.innerHTML = gaps.innerHTML = '';
             }
             document.getElementById('statSignal').innerText = (t.snr || 0) + '%';
@@ -578,18 +509,20 @@
             const t = state.topics.find(x => x.id == state.activeTopicId);
             if (!t) return;
             const signal = t.snr || 0, breadth = t.breadth || 0, cx = 250, cy = 250;
-            const x = cx + ((breadth * 2.3) - 115);
-            const y = cy - ((signal * 2.3) - 115);
-            svg.innerHTML = `
-                <circle cx="${cx}" cy="${cy}" r="220" fill="none" stroke="rgba(0,209,255,0.03)" stroke-width="2" />
-                <circle cx="${cx}" cy="${cy}" r="160" fill="none" stroke="rgba(0,209,255,0.03)" stroke-width="1.5" />
-                <circle cx="${cx}" cy="${cy}" r="100" fill="none" stroke="rgba(0,209,255,0.03)" stroke-width="1" />
-                <line x1="20" y1="250" x2="480" y2="250" stroke="rgba(255,255,255,0.05)" />
-                <line x1="250" y1="20" x2="250" y2="480" stroke="rgba(255,255,255,0.05)" />
-                <g class="ping-visual"><circle cx="${x}" cy="${y}" r="14" fill="var(--accent)" style="filter: drop-shadow(0 0 10px var(--accent))" /></g>
-                <text x="${x + 24}" y="${y + 6}" fill="white" font-size="12" font-family="monospace" font-weight="900" style="text-shadow: 0 0 10px var(--accent)">COORDS_${breadth}_${signal}</text>
-            `;
+            const x = cx + ((breadth * 2.2) - 110);
+            const y = cy - ((signal * 2.2) - 110);
+            svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="220" fill="none" stroke="rgba(0,209,255,0.04)" stroke-width="2" /><circle cx="${cx}" cy="${cy}" r="140" fill="none" stroke="rgba(0,209,255,0.04)" /><line x1="40" y1="250" x2="460" y2="250" stroke="rgba(255,255,255,0.05)" /><line x1="250" y1="40" x2="250" y2="460" stroke="rgba(255,255,255,0.05)" /><circle cx="${x}" cy="${y}" r="12" fill="var(--accent)" style="filter: drop-shadow(0 0 8px var(--accent))" />`;
         }
+
+        // --- PROVIDER CRUD ---
+        function switchTab(t) { state.currentTab = t; document.querySelectorAll('.provider-tab').forEach(b => b.classList.remove('tab-active', 'border-accent', 'text-white')); document.getElementById('tab-'+t).classList.add('tab-active', 'border-accent', 'text-white'); const urlInput = document.getElementById('configUrl'); urlInput.disabled = (t !== 'Custom'); if (!state.editingProviderId) { urlInput.value = PROVIDER_DEFAULTS[t].url; const select = document.getElementById('configModel'); const models = PROVIDER_DEFAULTS[t].models; select.innerHTML = models.length ? models.map(m => `<option value="${m}">${m}</option>`).join('') : '<option value="" disabled selected>Retrieve</option>'; }}
+        async function fetchModels() { const key = document.getElementById('configKey').value.trim(); const url = document.getElementById('configUrl').value.trim(); if (!key) return showToast("Key required."); try { let fetched = []; if (state.currentTab === 'Gemini') { const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`); const d = await res.json(); fetched = d.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop()); } else { const res = await fetch(url.replace(/\/chat\/completions$/, '').replace(/\/$/, '') + '/models', { headers: { 'Authorization': `Bearer ${key}` }}); const d = await res.json(); fetched = d.data.map(m => m.id); } document.getElementById('configModel').innerHTML = fetched.sort().map(m => `<option value="${m}">${m}</option>`).join(''); showToast("Models synced."); } catch (e) { showToast("Sync failed."); }}
+        function saveProvider() { const name = document.getElementById('configName').value.trim() || state.currentTab; const url = document.getElementById('configUrl').value.trim(); const key = document.getElementById('configKey').value.trim(); const model = document.getElementById('configModel').value; const role = document.getElementById('configRole').value; if (!key || !model) return showToast("Data incomplete."); const p = { id: state.editingProviderId || Date.now(), name, type: state.currentTab, url: url.replace(/\/+$/, ''), key, model, role }; if (state.editingProviderId) { const idx = state.providers.findIndex(x => x.id === state.editingProviderId); state.providers[idx] = p; } else { state.providers.push(p); if (!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id; } saveState(); renderProviders(); resetConfigForm(); updateUI(); showToast("Agent secured."); }
+        function renderProviders() { const list = document.getElementById('providerList'); list.innerHTML = state.providers.map(p => `<div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}"><div class="flex-1 overflow-hidden"><div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div><div class="text-xs font-black text-white truncate">${p.name}</div><div class="text-[9px] mono opacity-40 truncate">${p.model}</div></div><div class="flex gap-1 shrink-0"><button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : 'hover:bg-white/5'}">${state.activeProviderId == p.id ? 'active' : 'use'}</button><button onclick="editProvider(${p.id})" class="p-1.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button><button onclick="deleteProvider(${p.id})" class="p-1.5 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`).join(''); refreshIcons(); }
+        function editProvider(id) { const p = state.providers.find(x => x.id === id); state.editingProviderId = id; document.getElementById('configName').value = p.name; document.getElementById('configKey').value = p.key; document.getElementById('configRole').value = p.role; switchTab(p.type); document.getElementById('configUrl').value = p.url; document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`; }
+        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
+        function deleteProvider(id) { state.providers = state.providers.filter(x => x.id != id); saveState(); renderProviders(); updateUI(); }
+        function resetConfigForm() { state.editingProviderId = null; document.getElementById('modalTitle').innerText = "Engine Configuration"; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
 
         // --- SYSTEM UTILS ---
         function saveState() {
@@ -603,20 +536,19 @@
         }
         function updateUI() {
             const p = state.providers.find(x => x.id == state.activeProviderId);
-            document.getElementById('activeProviderTag').innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent ping mr-2"></span> Orchestrator: ${p.name}` : '<span class="text-red-500 font-black uppercase text-[9px] tracking-widest">OS OFFLINE</span>';
-            const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Forensics', icon: 'shield-check' }];
-            document.getElementById('pipelineDisplay').innerHTML = pipeline.map(s => `<div class="flex items-center gap-3 p-3.5 rounded-2xl transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-xs font-black uppercase tracking-widest">${s.name}</span></div>`).join('');
+            document.getElementById('activeProviderTag').innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 font-bold uppercase text-[9px]">Offline</span>';
+            const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Analysis', icon: 'shield-check' }];
+            document.getElementById('pipelineDisplay').innerHTML = pipeline.map(s => `<div class="flex items-center gap-3 p-2.5 rounded-xl transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent border border-accent/20' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-4 h-4"></i><span class="text-[9px] font-black uppercase tracking-widest">${s.name}</span></div>`).join('');
             refreshIcons();
         }
         function addLog(type, msg) {
             const s = document.getElementById('logStream');
             const l = document.createElement('div');
-            l.className = 'flex gap-2 mb-1 animate-in slide-in-from-left-2 duration-300';
+            l.className = 'flex gap-2 mb-1 animate-in slide-in-from-left-2';
             l.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : (type === 'ERROR' ? 'text-red-500' : 'text-slate-500')} font-black">[${type}]</span> <span>${msg}</span>`;
             s.prepend(l);
         }
-        function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 4000); }
-        function toggleKeyVisibility() { const i = document.getElementById('configKey'); i.type = i.type === 'password' ? 'text' : 'password'; }
+        function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 3000); }
 
         window.onload = () => {
             document.getElementById('multiLlmToggle').checked = state.multiLlm;
