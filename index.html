@@ -1209,11 +1209,18 @@ async function callAI(provider,userPrompt,systemPrompt,signal){
   let baseUrl=provider.url.replace(/\/+$/,'');
   let url,body,headers={'Content-Type':'application/json'};
   if(isGemini){
-    // Always derive from clean base - strip any model path user may have included
-    // Accepted formats: .../v1beta  OR  .../v1beta/models  OR  .../v1beta/models/gemini-xxx
-    baseUrl=baseUrl.replace(/\/models\/.*$/,'').replace(/\/models\/?$/,'');
-    // baseUrl is now e.g. https://generativelanguage.googleapis.com/v1beta
+    // Strip ALL possible suffixes a user or old version might have stored:
+    // .../v1beta/models/gemini-xxx:generateContent?key=...
+    // .../v1beta/models/gemini-xxx
+    // .../v1beta/models/
+    // .../v1beta/
+    baseUrl=baseUrl
+      .replace(/:generateContent(\?.*)?$/,'')
+      .replace(/\/models\/[^/]+$/,'')
+      .replace(/\/models\/?$/,'');
+    // baseUrl is now exactly: https://generativelanguage.googleapis.com/v1beta
     url=`${baseUrl}/models/${provider.model}:generateContent?key=${rawKey}`;
+    console.debug('[Distila] Gemini URL:', url.replace(/key=[^&]+/,'key=***'));
     body={contents:[{parts:[{text:userPrompt}]}],systemInstruction:{parts:[{text:systemPrompt}]},generationConfig:{temperature:0.3,maxOutputTokens:4096}};
   } else if(isClaude){
     // x-api-key header, endpoint must end at /messages
@@ -3188,6 +3195,18 @@ function renderTopicTreeFull(){
 window.addEventListener('load',async()=>{
   initResizers();
   setTheme(state.theme);
+  // Migrate: strip any dirty Gemini URLs saved by older versions
+  let geminiMigrated=false;
+  state.providers.forEach(p=>{
+    if(p.type==='Gemini'||p.url.includes('generativelanguage.googleapis.com')){
+      const clean=p.url.replace(/\/+$/,'')
+        .replace(/:generateContent(\?.*)?$/,'')
+        .replace(/\/models\/[^/]+$/,'')
+        .replace(/\/models\/?$/,'');
+      if(clean!==p.url){p.url=clean;geminiMigrated=true;}
+    }
+  });
+  if(geminiMigrated) saveState();
   // Load constraints from storage
   state.constraints=load('myres_constraints',{domains:[],scope:'',urls:[]});
   // Initialise parallel pill
