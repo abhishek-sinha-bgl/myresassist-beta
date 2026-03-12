@@ -59,7 +59,7 @@
         
         /* Layout & Resizing */
         .side-pane { position: relative; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s; overflow: hidden; }
-        .side-pane.resizing { transition: none !important; } /* Disable transition while dragging */
+        .side-pane.resizing { transition: none !important; }
         .side-pane.collapsed { width: 0 !important; opacity: 0; pointer-events: none; border: none !important; }
 
         .resizer {
@@ -90,6 +90,12 @@
         .claim-card { border: 1px solid var(--border-val); transition: all 0.3s; }
         .claim-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px -10px var(--accent); }
 
+        /* Cognitive Pulse dots */
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        .dot { display: inline-block; animation: blink 1.4s infinite both; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--border-val); border-radius: 10px; }
     </style>
@@ -99,7 +105,7 @@
     <!-- Top Navigation -->
     <nav class="h-14 border-b border-white/5 flex items-center justify-between px-4 glass shrink-0 z-50">
         <div class="flex items-center gap-2">
-            <button onclick="togglePane('left')" class="p-2 hover:text-accent transition-colors">
+            <button onclick="togglePane('left')" class="p-2 hover:text-accent transition-colors" title="Toggle Discovery Tree">
                 <i data-lucide="menu" class="w-5 h-5"></i>
             </button>
             <div class="flex items-center gap-2 ml-1">
@@ -119,13 +125,13 @@
             
             <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-accent p-2 transition-colors"><i data-lucide="settings" class="w-4 h-4"></i></button>
             
-            <button onclick="togglePane('right')" class="p-2 hover:text-accent transition-colors">
+            <button onclick="togglePane('right')" class="p-2 hover:text-accent transition-colors" title="Toggle Command Center">
                 <i data-lucide="layout-panel-right" class="w-5 h-5"></i>
             </button>
         </div>
     </nav>
 
-    <!-- Tabbed Settings Modal -->
+    <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
         <div class="glass w-full max-w-3xl h-[640px] rounded-3xl p-0 modal-enter overflow-hidden border border-white/10 shadow-2xl flex flex-col transition-all">
             <div class="p-6 border-b border-white/5 flex justify-between items-center shrink-0 bg-white/5">
@@ -140,7 +146,6 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-8 no-scrollbar bg-black/10">
-                <!-- Providers -->
                 <div id="settings-providers" class="settings-content space-y-6">
                     <div class="flex items-center justify-between p-4 bg-accent/5 rounded-2xl border border-accent/20 mb-6">
                         <div>
@@ -171,8 +176,6 @@
                     </div>
                     <div id="providerList" class="space-y-2 mt-8"></div>
                 </div>
-
-                <!-- Sources -->
                 <div id="settings-sources" class="settings-content hidden space-y-6">
                     <h3 class="text-xs font-black uppercase tracking-widest text-accent">Authoritative Sources</h3>
                     <div class="flex gap-2">
@@ -181,8 +184,6 @@
                     </div>
                     <div id="sourceList" class="flex flex-wrap gap-2 mt-4"></div>
                 </div>
-
-                <!-- Themes -->
                 <div id="settings-themes" class="settings-content hidden space-y-8">
                     <div class="grid grid-cols-3 gap-4">
                         <button onclick="setTheme('dark')" class="p-6 rounded-2xl border border-white/5 bg-[#0a0b0e] text-center hover:border-accent group transition-all"><i data-lucide="moon" class="mx-auto mb-2 text-slate-400 group-hover:text-accent"></i><div class="text-[10px] font-black uppercase">Night</div></button>
@@ -191,17 +192,14 @@
                     </div>
                 </div>
             </div>
-            
             <div class="p-6 border-t border-white/5 shrink-0 flex justify-end bg-white/5">
                 <button onclick="toggleModal('settingsModal')" class="px-8 py-2.5 rounded-xl text-xs text-slate-400 font-bold hover:text-white">Close Settings</button>
             </div>
         </div>
     </div>
 
-    <!-- Main Content Area -->
+    <!-- Main Workspace -->
     <main class="flex-1 flex overflow-hidden">
-        
-        <!-- PANE 1: TREE (LEFT) -->
         <aside id="leftPane" class="side-pane w-72 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0" style="width: 288px;">
             <div class="p-5 border-b border-white/5">
                 <div class="flex justify-between items-center mb-4">
@@ -219,10 +217,8 @@
             </div>
         </aside>
 
-        <!-- RESIZER 1 -->
         <div id="leftResizer" class="resizer"></div>
 
-        <!-- PANE 2: WORKBENCH (CENTER) -->
         <section class="flex-1 flex flex-col relative overflow-hidden bg-[#050505]">
             <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-accent/5 blur-[140px] rounded-full pointer-events-none"></div>
             <div class="h-12 flex items-center px-8 border-b border-white/5 shrink-0 z-10 glass gap-8">
@@ -245,24 +241,22 @@
             </div>
         </section>
 
-        <!-- RESIZER 2 -->
         <div id="rightResizer" class="resizer"></div>
 
-        <!-- PANE 3: COMMAND & LOGS (RIGHT) -->
         <aside id="rightPane" class="side-pane w-80 flex flex-col bg-[#0d0f12] shrink-0 shadow-2xl" style="width: 320px;">
             <div class="flex-1 p-5 overflow-y-auto no-scrollbar flex flex-col">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Stream</h3>
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Log</h3>
                 <div id="logStream" class="space-y-2 text-[10px] mono text-slate-500"></div>
             </div>
             <div class="p-5 border-t border-white/5 bg-black/40 space-y-4">
                 <div id="pipelineDisplay" class="space-y-1"></div>
-                <textarea id="mainInput" placeholder="Initialize research or ask follow-up..." class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white focus:outline-none focus:ring-2 focus:ring-accent h-24 resize-none transition-all"></textarea>
+                <textarea id="mainInput" placeholder="Refine discovery vector..." class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent h-24 resize-none transition-all"></textarea>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="runPhase('scan')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent transition-all flex items-center justify-center gap-1.5"><i data-lucide="zap" class="w-3 h-3 text-amber-400"></i> Quick Scan</button>
                     <button onclick="runPhase('forensics')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent transition-all flex items-center justify-center gap-1.5"><i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> Forensics</button>
                 </div>
                 <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-4 rounded-xl text-xs flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-lg shadow-accent/20 transition-all active:scale-[0.98]">
-                    <i data-lucide="play" class="w-4 h-4"></i> Synthesize Complete Brief
+                    <i data-lucide="play" class="w-4 h-4"></i> Construct Synthesis Brief
                 </button>
             </div>
         </aside>
@@ -294,13 +288,12 @@
             editingProviderId: null
         };
 
-        // --- RESIZER LOGIC ---
+        // --- RESIZER ENGINE ---
         function initResizers() {
             const leftPane = document.getElementById('leftPane');
             const rightPane = document.getElementById('rightPane');
             const leftResizer = document.getElementById('leftResizer');
             const rightResizer = document.getElementById('rightResizer');
-
             let isResizingLeft = false;
             let isResizingRight = false;
 
@@ -320,12 +313,9 @@
 
             document.addEventListener('mouseup', () => {
                 if (isResizingLeft || isResizingRight) {
-                    isResizingLeft = false;
-                    isResizingRight = false;
-                    leftPane.classList.remove('resizing');
-                    rightPane.classList.remove('resizing');
+                    isResizingLeft = false; isResizingRight = false;
+                    leftPane.classList.remove('resizing'); rightPane.classList.remove('resizing');
                     document.body.style.cursor = 'default';
-                    // Save widths to state if desired (optional)
                 }
             });
         }
@@ -379,108 +369,105 @@
             if (tab === 'visualizer') setTimeout(renderSNRGraph, 50);
         }
 
-        // --- PROVIDERS ---
-        function switchProviderBrand(b) {
-            state.providerBrand = b;
-            document.querySelectorAll('.brand-tab').forEach(btn => btn.classList.remove('text-accent', 'border-b', 'border-accent'));
-            const brandBtn = document.getElementById('b-'+b);
-            if(brandBtn) brandBtn.classList.add('text-accent', 'border-b', 'border-accent');
-            const urlInput = document.getElementById('configUrl');
-            if(urlInput) urlInput.disabled = (b !== 'Custom');
-            if(!state.editingProviderId) {
-                if(urlInput) urlInput.value = PROVIDER_DEFAULTS[b].url;
-                const models = PROVIDER_DEFAULTS[b].models;
-                const modelSel = document.getElementById('configModel');
-                if(modelSel) modelSel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option disabled selected>Sync required</option>';
-            }
-        }
+        // --- RELIABILITY PIPELINE V5.1 ---
+        async function runPhase(phase) {
+            const q = document.getElementById('mainInput').value.trim();
+            const activeP = state.providers.find(p => p.id == state.activeProviderId);
+            if(!activeP) return showToast("Assign agent.");
+            const t = state.topics.find(x => x.id == state.activeTopicId) || createNewTopic();
+            state.phase = phase === 'scan' ? 'scan' : 'validate'; updateUI();
 
-        async function fetchModels() {
-            const key = document.getElementById('configKey').value.trim();
-            const url = document.getElementById('configUrl').value.trim();
-            if(!key) return showToast("API Key required.");
             try {
-                let fetched = [];
-                if(state.providerBrand === 'Gemini') {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-                    const d = await res.json();
-                    fetched = d.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
-                } else {
-                    const res = await fetch(url.replace(/\/chat\/completions$/, '').replace(/\/$/, '') + '/models', { headers: { 'Authorization': `Bearer ${key}` }});
-                    const d = await res.json();
-                    fetched = d.data.map(m => m.id);
+                if(phase === 'scan') {
+                    addPulseLog('Triage active...');
+                    const scan = await callAI_Specific(activeP, q || t.title, "Triage Agent. Identify 5 themes. Semantic check. Brief.");
+                    addLog('AI', "Triage Complete: " + scan.substring(0, 150) + "...");
+                } else if(phase === 'forensics') {
+                    addPulseLog('Generating forensic claims...');
+                    const forensic = await callAI_Specific(activeP, `Context: ${t.brief}. Follow-up: ${q}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. SNR: Value%.`, "Structural Parser.");
+                    const parsed = parseValidation(forensic);
+                    t.claims = [...(t.claims || []), ...parsed.claims].slice(-30);
+                    t.snr = parsed.snr;
+                    saveState(); loadActiveTopic(); showToast("Forensics Updated.");
                 }
-                document.getElementById('configModel').innerHTML = fetched.sort().map(m => `<option value="${m}">${m}</option>`).join('');
-                showToast("Library synced.");
-            } catch (e) { showToast("Sync error."); }
+            } catch(e) { addLog('ERROR', "Extraction failed."); }
+            finally { state.phase = 'idle'; updateUI(); clearPulseLog(); }
         }
 
-        function saveProvider() {
-            const name = document.getElementById('configName').value.trim() || state.providerBrand;
-            const url = document.getElementById('configUrl').value.trim();
-            const key = document.getElementById('configKey').value.trim();
-            const model = document.getElementById('configModel').value;
-            const role = document.getElementById('configRole').value;
-            if(!key || !model) return showToast("Missing data.");
-            const p = { id: state.editingProviderId || Date.now(), name, type: state.providerBrand, url, key, model, role };
-            if(state.editingProviderId) {
-                const idx = state.providers.findIndex(x => x.id === state.editingProviderId);
-                state.providers[idx] = p;
-            } else {
-                state.providers.push(p);
-                if(!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id;
-            }
-            saveState(); renderProviders(); resetConfigForm(); showToast("Secured.");
+        async function initiateResearch() {
+            const q = document.getElementById('mainInput').value.trim();
+            if(!q) return;
+            const activeP = state.providers.find(p => p.id == state.activeProviderId);
+            if(!activeP) return showToast("Assign orchestrator.");
+            if(!state.activeTopicId) createNewTopic();
+            const btn = document.getElementById('runBtn'); btn.disabled = true;
+            const t = state.topics.find(x => x.id == state.activeTopicId);
+
+            try {
+                state.phase = 'scan'; updateUI();
+                addPulseLog('Cognitive Triage Phase 1...');
+                const scan = await callAI_Specific(activeP, q, "Triage Agent. Theme Scanning.");
+                
+                state.phase = 'research'; updateUI();
+                const workers = state.providers.filter(p => p.role === 'worker');
+                let blocks = [];
+                addPulseLog(`Extracting from ${workers.length || 1} agents...`);
+                if(state.multiLlm && workers.length > 0) {
+                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, `Vector: ${q}\nContext: ${scan}`, "Expert extraction.")));
+                } else {
+                    blocks = [await callAI_Specific(activeP, `Vector: ${q}\nScan Data: ${scan}`, "Technical synthesis.")];
+                }
+
+                addPulseLog('Constructing Synthesis Brief...');
+                const synth = await callAI_Specific(activeP, `Synthesize: ${blocks.join("\n\n")}. Markdown format.`, "Senior Lead Architect.");
+                t.brief = synth;
+                renderSynthesis(t);
+
+                state.phase = 'validate'; updateUI();
+                addPulseLog('Phase 4: Forensics Generation...');
+                const forensicData = await callAI_Specific(activeP, `Brief: ${synth}. Sources: ${state.sources.join(',')}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. GAP: Topic. SNR: Value%.`, "Structural Parser.");
+                const parsed = parseValidation(forensicData);
+                t.claims = parsed.claims; t.snr = parsed.snr; t.gaps = parsed.gaps;
+                t.breadth = (blocks.length * 20) + 15;
+                
+                saveState(); loadActiveTopic(); showToast("Synthesis Achieved.");
+            } catch(e) { addLog('ERROR', "Pipeline stalled."); }
+            finally { state.phase = 'idle'; updateUI(); clearPulseLog(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
         }
 
-        function renderProviders() {
-            const list = document.getElementById('providerList'); if(!list) return;
-            list.innerHTML = state.providers.map(p => `
-                <div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
-                    <div class="flex-1 overflow-hidden">
-                        <div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div>
-                        <div class="text-xs font-black text-white truncate">${p.name}</div>
-                        <div class="text-[9px] mono opacity-40 truncate">${p.model}</div>
-                    </div>
-                    <div class="flex gap-1 shrink-0">
-                        <button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
-                        <button onclick="editProvider(${p.id})" class="p-1.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteProvider(${p.id})" class="p-1.5 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
-                </div>
-            `).join('');
-            refreshIcons();
+        async function callAI_Specific(p, prompt, system) {
+            const isGemini = p.type === 'Gemini' || p.url.includes('generativelanguage');
+            let cleanUrl = p.url.replace(/\/+$/, '');
+            let url = isGemini ? `${cleanUrl}/${p.model}:generateContent?key=${p.key}` : cleanUrl;
+            if(!isGemini && !url.endsWith('/chat/completions')) url += '/chat/completions';
+            const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
+            const headers = { 'Content-Type': 'application/json' };
+            if(!isGemini) headers['Authorization'] = `Bearer ${p.key}`;
+            const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+            const data = await res.json();
+            if(isGemini) return data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.content?.[0]?.parts?.[0]?.text;
+            return data.choices?.[0]?.message?.content;
         }
 
-        function editProvider(id) {
-            const p = state.providers.find(x => x.id === id);
-            state.editingProviderId = id;
-            document.getElementById('configName').value = p.name;
-            document.getElementById('configKey').value = p.key;
-            document.getElementById('configRole').value = p.role;
-            switchProviderBrand(p.type);
-            document.getElementById('configUrl').value = p.url;
-            document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
-        }
-
-        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
-        function deleteProvider(id) { state.providers = state.providers.filter(x => x.id != id); saveState(); renderProviders(); updateUI(); }
-        function resetConfigForm() { state.editingProviderId = null; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
-
-        // --- SOURCES ---
-        function addSource() {
-            const v = document.getElementById('newSource').value.trim();
-            if(v) { state.sources.push(v); document.getElementById('newSource').value = ''; saveState(); renderSources(); }
-        }
-        function renderSources() {
-            const list = document.getElementById('sourceList'); if(!list) return;
-            list.innerHTML = (state.sources || []).map(s => `<div class="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] mono flex items-center gap-2">${s} <button onclick="state.sources=state.sources.filter(x=>x!='${s}');saveState();renderSources();"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join('');
-            refreshIcons();
+        function parseValidation(raw) {
+            // strip potential markdown wrapper
+            const clean = raw.replace(/```[a-z]*\n/g, '').replace(/```/g, '').trim();
+            const lines = clean.split('\n');
+            const claims = [], gaps = []; let snr = 80;
+            lines.forEach(l => {
+                const line = l.trim();
+                if (line.startsWith('CLAIM:')) {
+                    const p = line.replace('CLAIM:', '').split('|');
+                    claims.push({ status: p[0]?.trim() || '[?]', text: p[1]?.trim() || line, reason: p[2]?.trim() || 'Extracted analysis.' });
+                } else if (line.startsWith('GAP:')) gaps.push(line.replace('GAP:', '').trim());
+                else if (line.startsWith('SNR:')) snr = parseInt(line.replace('SNR:', '').replace(/\D/g, '')) || 80;
+            });
+            return { claims, gaps, snr };
         }
 
         // --- TOPICS ---
         function createNewTopic(parentId = null) {
-            const title = prompt("New Discovery Name:", "Untitled Vector");
+            const title = prompt("Discovery Name:", "Untitled Vector");
             if (!title) return;
             const nt = { id: Date.now(), title, parentId, brief: null, claims: [], gaps: [], snr: 0, breadth: 0, date: new Date().toISOString(), archived: false };
             state.topics.unshift(nt); state.activeTopicId = nt.id;
@@ -521,101 +508,8 @@
 
         function switchTopic(id) { state.activeTopicId = id; saveState(); renderTopics(); loadActiveTopic(); }
         function archiveTopic(id) { const t = state.topics.find(x => x.id === id); if(t) t.archived = !t.archived; saveState(); renderTopics(); }
-        function deleteTopic(id) { if(confirm("Confirm purge?")) { state.topics = state.topics.filter(t => t.id !== id && t.parentId !== id); if(state.activeTopicId === id) state.activeTopicId = null; saveState(); renderTopics(); loadActiveTopic(); }}
-        function toggleArchiveView() { state.showArchived = !state.showArchived; document.getElementById('archiveToggleBtn').innerText = state.showArchived ? "Active Vectors" : "View Archive"; renderTopics(); }
-
-        // --- ENGINE ---
-        async function runPhase(phase) {
-            const q = document.getElementById('mainInput').value.trim();
-            const activeP = state.providers.find(p => p.id == state.activeProviderId);
-            if(!activeP) return showToast("Assign agent.");
-            const t = state.topics.find(x => x.id == state.activeTopicId) || createNewTopic();
-            state.phase = phase === 'scan' ? 'scan' : 'validate'; updateUI();
-
-            try {
-                if(phase === 'scan') {
-                    addLog('SYSTEM', 'Step 1: Rapid Triage Engine active...');
-                    const scan = await callAI_Specific(activeP, q || t.title, "Triage Agent. Identify 5 themes. Semantic check. Brief.");
-                    addLog('AI', "Triage Findings: " + scan.substring(0, 150) + "...");
-                } else if(phase === 'forensics') {
-                    addLog('SYSTEM', 'Refining forensic claims...');
-                    const forensic = await callAI_Specific(activeP, `Context: ${t.brief}. Follow-up: ${q}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. SNR: Value%.`, "Structural Parser.");
-                    const parsed = parseValidation(forensic);
-                    t.claims = [...(t.claims || []), ...parsed.claims].slice(-30);
-                    t.snr = parsed.snr;
-                    saveState(); loadActiveTopic(); showToast("Forensics Updated.");
-                }
-            } catch(e) { addLog('ERROR', "Network refusal."); }
-            finally { state.phase = 'idle'; updateUI(); }
-        }
-
-        async function initiateResearch() {
-            const q = document.getElementById('mainInput').value.trim();
-            if(!q) return;
-            const activeP = state.providers.find(p => p.id == state.activeProviderId);
-            if(!activeP) return showToast("Assign orchestrator.");
-            if(!state.activeTopicId) createNewTopic();
-            const btn = document.getElementById('runBtn'); btn.disabled = true;
-            const t = state.topics.find(x => x.id == state.activeTopicId);
-
-            try {
-                state.phase = 'scan'; updateUI();
-                addLog('SYSTEM', 'Phase 1: Multi-Agent Triage...');
-                const scan = await callAI_Specific(activeP, q, "Triage Agent. High-density theme scanning.");
-                
-                state.phase = 'research'; updateUI();
-                const workers = state.providers.filter(p => p.role === 'worker');
-                let blocks = [];
-                if(state.multiLlm && workers.length > 0) {
-                    addLog('SYSTEM', `Parallel extraction on ${workers.length} nodes...`);
-                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, `Vector: ${q}\nContext: ${scan}`, "Expert extraction.")));
-                } else {
-                    blocks = [await callAI_Specific(activeP, `Vector: ${q}\nScan Data: ${scan}`, "Technical synthesis.")];
-                }
-
-                addLog('AI', 'Phase 3: United Synthesis construction...');
-                const synth = await callAI_Specific(activeP, `Synthesize: ${blocks.join("\n\n")}. Markdown format.`, "Senior Lead Architect.");
-                t.brief = synth;
-                renderSynthesis(t);
-
-                state.phase = 'validate'; updateUI();
-                addLog('SYSTEM', 'Phase 4: Forensics Generation...');
-                const forensic = await callAI_Specific(activeP, `Extract: ${synth}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. GAP: Topic. SNR: Value%.`, "Structural Parser.");
-                const parsed = parseValidation(forensic);
-                t.claims = parsed.claims; t.snr = parsed.snr; t.gaps = parsed.gaps;
-                t.breadth = (blocks.length * 20) + 15;
-                
-                saveState(); loadActiveTopic(); showToast("V4.5 Synthesis Complete.");
-            } catch(e) { addLog('ERROR', "Pipeline stalled."); }
-            finally { state.phase = 'idle'; updateUI(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
-        }
-
-        async function callAI_Specific(p, prompt, system) {
-            const isGemini = p.type === 'Gemini' || p.url.includes('generativelanguage');
-            let cleanUrl = p.url.replace(/\/+$/, '');
-            let url = isGemini ? `${cleanUrl}/${p.model}:generateContent?key=${p.key}` : cleanUrl;
-            if(!isGemini && !url.endsWith('/chat/completions')) url += '/chat/completions';
-            const body = isGemini ? { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } } : { model: p.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] };
-            const headers = { 'Content-Type': 'application/json' };
-            if(!isGemini) headers['Authorization'] = `Bearer ${p.key}`;
-            const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-            const data = await res.json();
-            if(isGemini) return data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.content?.[0]?.parts?.[0]?.text;
-            return data.choices?.[0]?.message?.content;
-        }
-
-        function parseValidation(raw) {
-            const lines = raw.split('\n');
-            const claims = [], gaps = []; let snr = 80;
-            lines.forEach(l => {
-                if (l.trim().startsWith('CLAIM:')) {
-                    const p = l.replace('CLAIM:', '').split('|');
-                    claims.push({ status: p[0]?.trim() || '[?]', text: p[1]?.trim() || l, reason: p[2]?.trim() || '' });
-                } else if (l.trim().startsWith('GAP:')) gaps.push(l.replace('GAP:', '').trim());
-                else if (l.trim().startsWith('SNR:')) snr = parseInt(l.replace('SNR:', '').replace(/\D/g, '')) || 80;
-            });
-            return { claims, gaps, snr };
-        }
+        function deleteTopic(id) { if(confirm("Discard project and branches?")) { state.topics = state.topics.filter(t => t.id !== id && t.parentId !== id); if(state.activeTopicId === id) state.activeTopicId = null; saveState(); renderTopics(); loadActiveTopic(); }}
+        function toggleArchiveView() { state.showArchived = !state.showArchived; document.getElementById('archiveToggleBtn').innerText = state.showArchived ? "Active Discovery" : "View Archive"; renderTopics(); }
 
         // --- RENDERERS ---
         function renderSynthesis(t) { document.getElementById('synthesisView').innerHTML = marked.parse(t.brief || ''); }
@@ -646,7 +540,61 @@
             svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="220" fill="none" stroke="rgba(0,209,255,0.04)" stroke-width="2" /><circle cx="${cx}" cy="${cy}" r="150" fill="none" stroke="rgba(0,209,255,0.04)" /><line x1="40" y1="250" x2="460" y2="250" stroke="rgba(255,255,255,0.05)" /><line x1="250" y1="40" x2="250" y2="460" stroke="rgba(255,255,255,0.05)" /><circle cx="${x}" cy="${y}" r="12" fill="var(--accent)" style="filter: drop-shadow(0 0 10px var(--accent))" />`;
         }
 
-        // --- SYSTEM UTILS ---
+        function drillDown(g) { createNewTopic(state.activeTopicId); document.getElementById('mainInput').value = g; }
+
+        // --- PROVIDERS & UTILS ---
+        function switchProviderBrand(b) {
+            state.providerBrand = b;
+            document.querySelectorAll('.brand-tab').forEach(btn => btn.classList.remove('text-accent', 'border-b', 'border-accent'));
+            const brandBtn = document.getElementById('b-'+b);
+            if(brandBtn) brandBtn.classList.add('text-accent', 'border-b', 'border-accent');
+            const urlInput = document.getElementById('configUrl');
+            if(urlInput) urlInput.disabled = (b !== 'Custom');
+            if(!state.editingProviderId) {
+                if(urlInput) urlInput.value = PROVIDER_DEFAULTS[b].url;
+                const models = PROVIDER_DEFAULTS[b].models;
+                const modelSel = document.getElementById('configModel');
+                if(modelSel) modelSel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option disabled selected>Sync required</option>';
+            }
+        }
+        function saveProvider() {
+            const name = document.getElementById('configName').value.trim() || state.providerBrand;
+            const url = document.getElementById('configUrl').value.trim();
+            const key = document.getElementById('configKey').value.trim();
+            const model = document.getElementById('configModel').value;
+            const role = document.getElementById('configRole').value;
+            if(!key || !model) return showToast("Missing data.");
+            const p = { id: state.editingProviderId || Date.now(), name, type: state.providerBrand, url, key, model, role };
+            if(state.editingProviderId) {
+                const idx = state.providers.findIndex(x => x.id === state.editingProviderId);
+                state.providers[idx] = p;
+            } else {
+                state.providers.push(p);
+                if(!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id;
+            }
+            saveState(); renderProviders(); resetConfigForm(); showToast("Secured.");
+        }
+        function renderProviders() {
+            const list = document.getElementById('providerList'); if(!list) return;
+            list.innerHTML = state.providers.map(p => `<div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}"><div class="flex-1 overflow-hidden"><div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div><div class="text-xs font-black text-white truncate">${p.name}</div><div class="text-[9px] mono opacity-40 truncate">${p.model}</div></div><div class="flex gap-1 shrink-0"><button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button><button onclick="editProvider(${p.id})" class="p-1.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button><button onclick="deleteProvider(${p.id})" class="p-1.5 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`).join('');
+            refreshIcons();
+        }
+        function editProvider(id) {
+            const p = state.providers.find(x => x.id === id);
+            state.editingProviderId = id;
+            document.getElementById('configName').value = p.name;
+            document.getElementById('configKey').value = p.key;
+            document.getElementById('configRole').value = p.role;
+            switchProviderBrand(p.type);
+            document.getElementById('configUrl').value = p.url;
+            document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
+        }
+        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
+        function deleteProvider(id) { state.providers = state.providers.filter(x => x.id != id); saveState(); renderProviders(); updateUI(); }
+        function resetConfigForm() { state.editingProviderId = null; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
+        function addSource() { const v = document.getElementById('newSource').value.trim(); if(v) { state.sources.push(v); document.getElementById('newSource').value = ''; saveState(); renderSources(); }}
+        function renderSources() { document.getElementById('sourceList').innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] mono flex items-center gap-2">${s} <button onclick="state.sources=state.sources.filter(x=>x!='${s}');saveState();renderSources();"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join(''); refreshIcons(); }
+
         function saveState() {
             const multiToggle = document.getElementById('multiLlmToggle');
             if(multiToggle) state.multiLlm = multiToggle.checked;
@@ -662,7 +610,7 @@
             const p = state.providers.find(x => x.id == state.activeProviderId);
             const tag = document.getElementById('activeProviderTag');
             if(tag) tag.innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 font-bold uppercase">Offline</span>';
-            const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Verification', icon: 'shield-check' }];
+            const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Analysis', icon: 'shield-check' }];
             const disp = document.getElementById('pipelineDisplay');
             if(disp) disp.innerHTML = pipeline.map(s => `<div class="flex items-center gap-2 p-2.5 rounded-xl transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-3.5 h-3.5"></i><span class="text-[9px] font-black uppercase">${s.name}</span></div>`).join('');
             refreshIcons();
@@ -673,13 +621,19 @@
             l.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : (type === 'ERROR' ? 'text-red-500' : 'text-slate-500')} font-black">[${type}]</span> <span>${msg}</span>`;
             s.prepend(l);
         }
+        function addPulseLog(msg) {
+            const s = document.getElementById('logStream'); if(!s) return;
+            let p = document.getElementById('pulse-log');
+            if(!p) { p = document.createElement('div'); p.id = 'pulse-log'; p.className = 'flex gap-2 mb-2 text-accent italic font-bold'; s.prepend(p); }
+            p.innerHTML = `<span>[PROCESS]</span> <span>${msg} <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>`;
+        }
+        function clearPulseLog() { const p = document.getElementById('pulse-log'); if(p) p.remove(); }
         function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMessage').innerText = m; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 3000); }
 
         window.onload = () => {
             const multiToggle = document.getElementById('multiLlmToggle');
             if(multiToggle) multiToggle.checked = state.multiLlm;
-            initResizers();
-            setTheme(state.theme); renderTopics(); loadActiveTopic(); updateUI(); refreshIcons();
+            initResizers(); setTheme(state.theme); renderTopics(); loadActiveTopic(); updateUI(); refreshIcons();
             document.getElementById('mainInput').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch(); });
         };
     </script>
