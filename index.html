@@ -45,22 +45,43 @@
         body { background-color: var(--bg-deep); color: var(--text-main); font-family: var(--font-primary); overflow: hidden; transition: background-color 0.3s ease; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-val); }
-        .input-dark { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-val); border-radius: 8px; transition: all 0.2s; color: inherit; }
         
-        /* Layout Transitions */
-        .side-pane { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s, padding 0.35s; overflow: hidden; }
-        .side-pane.collapsed { width: 0 !important; opacity: 0; padding: 0 !important; border: none !important; }
+        .input-dark { 
+            background: rgba(0, 0, 0, 0.2); 
+            border: 1px solid var(--border-val); 
+            border-radius: 8px; 
+            transition: all 0.2s; 
+            color: inherit; 
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .input-dark:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
+        
+        /* Layout & Resizing */
+        .side-pane { position: relative; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s; overflow: hidden; }
+        .side-pane.resizing { transition: none !important; } /* Disable transition while dragging */
+        .side-pane.collapsed { width: 0 !important; opacity: 0; pointer-events: none; border: none !important; }
 
-        .btn-outline { border: 1px solid var(--border-val); color: var(--text-dim); transition: all 0.2s; }
+        .resizer {
+            width: 4px;
+            cursor: col-resize;
+            background: transparent;
+            transition: background 0.2s;
+            position: relative;
+            z-index: 40;
+            flex-shrink: 0;
+        }
+        .resizer:hover, .resizer.active { background: var(--accent); }
+
+        .btn-outline { border: 1px solid var(--border-val); color: var(--text-dim); transition: all 0.2s; font-size: 0.75rem; font-weight: 700; }
         .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(0, 209, 255, 0.05); }
         .btn-action { background: var(--accent); color: #000; font-weight: 800; transition: all 0.2s; }
-        .btn-action:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 5px 15px -5px var(--accent); }
-
+        
         .topic-item { border-left: 3px solid transparent; }
         .topic-item.active { background: rgba(0, 209, 255, 0.08); border-left: 3px solid var(--accent); color: var(--accent); font-weight: 800; }
         .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { border-bottom: 2px solid var(--accent); color: var(--accent); }
-        .modal-tab.active { border-bottom: 2px solid var(--accent); color: white; font-weight: 800; }
+        .modal-tab.active { border-bottom: 2px solid var(--accent); color: white !important; font-weight: 800; }
 
         .synthesis-rendered h1 { font-size: 3rem; font-weight: 900; margin-bottom: 2.5rem; color: var(--accent); line-height: 1; }
         .synthesis-rendered h2 { font-size: 1.8rem; font-weight: 800; margin-top: 3.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-val); padding-bottom: 0.5rem; }
@@ -78,7 +99,7 @@
     <!-- Top Navigation -->
     <nav class="h-14 border-b border-white/5 flex items-center justify-between px-4 glass shrink-0 z-50">
         <div class="flex items-center gap-2">
-            <button onclick="togglePane('left')" class="p-2 hover:text-accent transition-colors" title="Toggle Discovery Tree">
+            <button onclick="togglePane('left')" class="p-2 hover:text-accent transition-colors">
                 <i data-lucide="menu" class="w-5 h-5"></i>
             </button>
             <div class="flex items-center gap-2 ml-1">
@@ -98,7 +119,7 @@
             
             <button onclick="toggleModal('settingsModal')" class="text-slate-400 hover:text-accent p-2 transition-colors"><i data-lucide="settings" class="w-4 h-4"></i></button>
             
-            <button onclick="togglePane('right')" class="p-2 hover:text-accent transition-colors" title="Toggle Command Center">
+            <button onclick="togglePane('right')" class="p-2 hover:text-accent transition-colors">
                 <i data-lucide="layout-panel-right" class="w-5 h-5"></i>
             </button>
         </div>
@@ -106,19 +127,19 @@
 
     <!-- Tabbed Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
-        <div class="glass w-full max-w-3xl rounded-3xl p-0 modal-enter max-h-[90vh] overflow-hidden border border-white/10 shadow-2xl flex flex-col">
-            <div class="p-8 border-b border-white/5 flex justify-between items-center">
-                <h2 class="text-2xl font-black tracking-tighter">Lab Command Center</h2>
+        <div class="glass w-full max-w-3xl h-[640px] rounded-3xl p-0 modal-enter overflow-hidden border border-white/10 shadow-2xl flex flex-col transition-all">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center shrink-0 bg-white/5">
+                <h2 class="text-xl font-black tracking-tighter uppercase">Lab Command Center</h2>
                 <button onclick="toggleModal('settingsModal')" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             
-            <div class="flex bg-white/5 px-8 gap-8 border-b border-white/5">
-                <button onclick="switchSettingsTab('providers')" class="modal-tab py-4 text-xs font-bold uppercase tracking-widest text-slate-500 active" id="stab-providers">API Providers</button>
-                <button onclick="switchSettingsTab('sources')" class="modal-tab py-4 text-xs font-bold uppercase tracking-widest text-slate-500" id="stab-sources">Authoritative Sources</button>
-                <button onclick="switchSettingsTab('themes')" class="modal-tab py-4 text-xs font-bold uppercase tracking-widest text-slate-500" id="stab-themes">Themes</button>
+            <div class="flex bg-black/20 px-8 gap-8 border-b border-white/5 shrink-0">
+                <button onclick="switchSettingsTab('providers')" class="modal-tab py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 active" id="stab-providers">API Providers</button>
+                <button onclick="switchSettingsTab('sources')" class="modal-tab py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500" id="stab-sources">Authoritative Sources</button>
+                <button onclick="switchSettingsTab('themes')" class="modal-tab py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500" id="stab-themes">Themes</button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-8 no-scrollbar">
+            <div class="flex-1 overflow-y-auto p-8 no-scrollbar bg-black/10">
                 <!-- Providers -->
                 <div id="settings-providers" class="settings-content space-y-6">
                     <div class="flex items-center justify-between p-4 bg-accent/5 rounded-2xl border border-accent/20 mb-6">
@@ -132,32 +153,31 @@
                         </label>
                     </div>
                     <div class="flex gap-4 border-b border-white/5 pb-4 mb-6">
-                        <button onclick="switchProviderBrand('Claude')" class="brand-tab text-xs font-bold" id="b-Claude">Claude</button>
-                        <button onclick="switchProviderBrand('OpenAI')" class="brand-tab text-xs font-bold" id="b-OpenAI">OpenAI</button>
-                        <button onclick="switchProviderBrand('Gemini')" class="brand-tab text-xs font-bold" id="b-Gemini">Gemini</button>
-                        <button onclick="switchProviderBrand('Custom')" class="brand-tab text-xs font-bold" id="b-Custom">Custom</button>
+                        <button onclick="switchProviderBrand('Claude')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-Claude">Claude</button>
+                        <button onclick="switchProviderBrand('OpenAI')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-OpenAI">OpenAI</button>
+                        <button onclick="switchProviderBrand('Gemini')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-Gemini">Gemini</button>
+                        <button onclick="switchProviderBrand('Custom')" class="brand-tab text-[10px] font-bold uppercase tracking-wider text-slate-500" id="b-Custom">Custom</button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <input id="configName" type="text" class="input-dark p-3 text-xs" placeholder="Profile Label">
-                        <select id="configRole" class="input-dark p-3 text-xs"><option value="worker">Worker</option><option value="orchestrator">Orchestrator</option></select>
-                        <input id="configUrl" type="text" class="input-dark p-3 text-xs mono col-span-2" placeholder="API Endpoint">
-                        <input id="configKey" type="password" class="input-dark p-3 text-xs mono" placeholder="Secret Key">
-                        <select id="configModel" class="input-dark p-3 text-xs mono"></select>
+                        <div class="flex flex-col gap-1.5"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Label</label><input id="configName" type="text" class="input-dark p-3" placeholder="Profile Name"></div>
+                        <div class="flex flex-col gap-1.5"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Role</label><select id="configRole" class="input-dark p-3"><option value="worker">Worker</option><option value="orchestrator">Orchestrator</option></select></div>
+                        <div class="flex flex-col gap-1.5 col-span-2"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">API Endpoint</label><input id="configUrl" type="text" class="input-dark p-3 mono" placeholder="https://api.openai.com/v1"></div>
+                        <div class="flex flex-col gap-1.5"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Secret Key</label><input id="configKey" type="password" class="input-dark p-3 mono" placeholder="sk-..."></div>
+                        <div class="flex flex-col gap-1.5"><label class="text-[9px] uppercase font-bold text-slate-500 ml-1">Model ID</label><select id="configModel" class="input-dark p-3 mono"></select></div>
                     </div>
-                    <div class="flex justify-between items-center pt-4">
-                        <button onclick="fetchModels()" class="btn-outline px-4 py-2 rounded-xl text-[10px] font-black uppercase">Sync Models</button>
-                        <button onclick="saveProvider()" class="btn-action px-6 py-2 rounded-xl text-xs">Save Agent</button>
+                    <div class="flex justify-between items-center pt-6 border-t border-white/5">
+                        <button onclick="fetchModels()" class="btn-outline px-4 py-2 rounded-xl text-[10px] uppercase font-black">Sync Models</button>
+                        <button onclick="saveProvider()" class="btn-action px-6 py-2 rounded-xl text-xs uppercase font-black">Commit Agent</button>
                     </div>
                     <div id="providerList" class="space-y-2 mt-8"></div>
                 </div>
 
                 <!-- Sources -->
                 <div id="settings-sources" class="settings-content hidden space-y-6">
-                    <h3 class="text-xs font-black uppercase tracking-widest text-accent">Authoritative Source Grounding</h3>
-                    <p class="text-[11px] text-slate-500 italic">Analytical forensics will prioritize results from these domains or URLs.</p>
+                    <h3 class="text-xs font-black uppercase tracking-widest text-accent">Authoritative Sources</h3>
                     <div class="flex gap-2">
-                        <input id="newSource" type="text" placeholder="e.g. imf.org, .edu, specific-report-url.pdf" class="flex-1 input-dark p-3 text-xs">
-                        <button onclick="addSource()" class="btn-action px-6 rounded-xl text-xs">+ Add</button>
+                        <input id="newSource" type="text" placeholder="e.g. imf.org, worldbank.org, .edu" class="flex-1 input-dark p-3">
+                        <button onclick="addSource()" class="btn-action px-6 rounded-xl text-xs uppercase font-black">+ Add</button>
                     </div>
                     <div id="sourceList" class="flex flex-wrap gap-2 mt-4"></div>
                 </div>
@@ -165,20 +185,15 @@
                 <!-- Themes -->
                 <div id="settings-themes" class="settings-content hidden space-y-8">
                     <div class="grid grid-cols-3 gap-4">
-                        <button onclick="setTheme('dark')" class="p-6 rounded-2xl border border-white/5 bg-[#0a0b0e] text-center hover:border-accent transition-all group">
-                            <i data-lucide="moon" class="mx-auto mb-2 text-slate-400 group-hover:text-accent"></i>
-                            <div class="text-[10px] font-black uppercase text-slate-100">Deep Night</div>
-                        </button>
-                        <button onclick="setTheme('light')" class="p-6 rounded-2xl border border-white/5 bg-[#f8fafc] text-center hover:border-accent transition-all group">
-                            <i data-lucide="sun" class="mx-auto mb-2 text-slate-400 group-hover:text-accent"></i>
-                            <div class="text-[10px] font-black uppercase text-slate-900">High Contrast</div>
-                        </button>
-                        <button onclick="setTheme('academic')" class="p-6 rounded-2xl border border-white/5 bg-[#f4f1ea] text-center hover:border-accent transition-all group">
-                            <i data-lucide="book" class="mx-auto mb-2 text-slate-400 group-hover:text-accent"></i>
-                            <div class="text-[10px] font-black uppercase text-slate-900">Academic Paper</div>
-                        </button>
+                        <button onclick="setTheme('dark')" class="p-6 rounded-2xl border border-white/5 bg-[#0a0b0e] text-center hover:border-accent group transition-all"><i data-lucide="moon" class="mx-auto mb-2 text-slate-400 group-hover:text-accent"></i><div class="text-[10px] font-black uppercase">Night</div></button>
+                        <button onclick="setTheme('light')" class="p-6 rounded-2xl border border-white/5 bg-[#f8fafc] text-center hover:border-accent group transition-all"><i data-lucide="sun" class="mx-auto mb-2 text-slate-900 group-hover:text-accent"></i><div class="text-[10px] font-black uppercase text-slate-900">Light</div></button>
+                        <button onclick="setTheme('academic')" class="p-6 rounded-2xl border border-white/5 bg-[#f4f1ea] text-center hover:border-accent group transition-all"><i data-lucide="book" class="mx-auto mb-2 text-slate-900 group-hover:text-accent"></i><div class="text-[10px] font-black uppercase text-slate-900">Paper</div></button>
                     </div>
                 </div>
+            </div>
+            
+            <div class="p-6 border-t border-white/5 shrink-0 flex justify-end bg-white/5">
+                <button onclick="toggleModal('settingsModal')" class="px-8 py-2.5 rounded-xl text-xs text-slate-400 font-bold hover:text-white">Close Settings</button>
             </div>
         </div>
     </div>
@@ -187,25 +202,28 @@
     <main class="flex-1 flex overflow-hidden">
         
         <!-- PANE 1: TREE (LEFT) -->
-        <aside id="leftPane" class="side-pane w-72 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0">
+        <aside id="leftPane" class="side-pane w-72 border-r border-white/5 flex flex-col bg-[#0d0f12] shrink-0" style="width: 288px;">
             <div class="p-5 border-b border-white/5">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Discovery Tree</h3>
                     <button onclick="createNewTopic()" class="p-1 hover:text-accent transition-colors"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
                 </div>
                 <div class="relative mb-2">
-                    <input type="text" id="topicSearch" oninput="renderTopics()" placeholder="Search project branches..." class="w-full bg-black/20 border border-white/5 rounded-lg py-1.5 px-3 text-[11px] focus:outline-none focus:border-accent/50 text-white">
+                    <input type="text" id="topicSearch" oninput="renderTopics()" placeholder="Search projects..." class="w-full bg-black/20 border border-white/5 rounded-lg py-1.5 px-3 text-[11px] focus:outline-none focus:border-accent/50 text-white">
                     <i data-lucide="search" class="absolute right-3 top-2 w-3 h-3 opacity-30"></i>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-1 no-scrollbar" id="topicList"></div>
             <div class="p-4 border-t border-white/5 bg-black/20">
-                <button onclick="toggleArchiveView()" id="archiveToggleBtn" class="w-full text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-accent py-2 transition-all">View Archived Discovery</button>
+                <button onclick="toggleArchiveView()" id="archiveToggleBtn" class="w-full text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-accent py-2 transition-all">View Archive</button>
             </div>
         </aside>
 
+        <!-- RESIZER 1 -->
+        <div id="leftResizer" class="resizer"></div>
+
         <!-- PANE 2: WORKBENCH (CENTER) -->
-        <section class="flex-1 flex flex-col relative overflow-hidden bg-[#050505] border-r border-white/5">
+        <section class="flex-1 flex flex-col relative overflow-hidden bg-[#050505]">
             <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-accent/5 blur-[140px] rounded-full pointer-events-none"></div>
             <div class="h-12 flex items-center px-8 border-b border-white/5 shrink-0 z-10 glass gap-8">
                 <button onclick="switchCenterTab('synthesis')" class="tab-btn active text-[10px] uppercase font-black tracking-widest h-full" id="tab-synthesis">Synthesis</button>
@@ -227,21 +245,24 @@
             </div>
         </section>
 
+        <!-- RESIZER 2 -->
+        <div id="rightResizer" class="resizer"></div>
+
         <!-- PANE 3: COMMAND & LOGS (RIGHT) -->
-        <aside id="rightPane" class="side-pane w-80 flex flex-col bg-[#0d0f12] shrink-0 shadow-2xl">
+        <aside id="rightPane" class="side-pane w-80 flex flex-col bg-[#0d0f12] shrink-0 shadow-2xl" style="width: 320px;">
             <div class="flex-1 p-5 overflow-y-auto no-scrollbar flex flex-col">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Log</h3>
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Cognitive Stream</h3>
                 <div id="logStream" class="space-y-2 text-[10px] mono text-slate-500"></div>
             </div>
             <div class="p-5 border-t border-white/5 bg-black/40 space-y-4">
                 <div id="pipelineDisplay" class="space-y-1"></div>
-                <textarea id="mainInput" placeholder="Refine discovery vector or ask follow-up..." class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent h-24 resize-none transition-all"></textarea>
+                <textarea id="mainInput" placeholder="Initialize research or ask follow-up..." class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white focus:outline-none focus:ring-2 focus:ring-accent h-24 resize-none transition-all"></textarea>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="runPhase('scan')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent transition-all flex items-center justify-center gap-1.5"><i data-lucide="zap" class="w-3 h-3 text-amber-400"></i> Quick Scan</button>
                     <button onclick="runPhase('forensics')" class="py-2.5 rounded-lg border border-white/10 text-[9px] font-black uppercase hover:border-accent transition-all flex items-center justify-center gap-1.5"><i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> Forensics</button>
                 </div>
-                <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-4 rounded-xl text-xs flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-lg shadow-accent/20">
-                    <i data-lucide="play" class="w-4 h-4"></i> Construct Synthesis Brief
+                <button id="runBtn" onclick="initiateResearch()" class="w-full btn-action py-4 rounded-xl text-xs flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-lg shadow-accent/20 transition-all active:scale-[0.98]">
+                    <i data-lucide="play" class="w-4 h-4"></i> Synthesize Complete Brief
                 </button>
             </div>
         </aside>
@@ -273,16 +294,54 @@
             editingProviderId: null
         };
 
+        // --- RESIZER LOGIC ---
+        function initResizers() {
+            const leftPane = document.getElementById('leftPane');
+            const rightPane = document.getElementById('rightPane');
+            const leftResizer = document.getElementById('leftResizer');
+            const rightResizer = document.getElementById('rightResizer');
+
+            let isResizingLeft = false;
+            let isResizingRight = false;
+
+            leftResizer.addEventListener('mousedown', () => { isResizingLeft = true; leftPane.classList.add('resizing'); document.body.style.cursor = 'col-resize'; });
+            rightResizer.addEventListener('mousedown', () => { isResizingRight = true; rightPane.classList.add('resizing'); document.body.style.cursor = 'col-resize'; });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isResizingLeft) {
+                    const newWidth = Math.max(150, Math.min(500, e.clientX));
+                    leftPane.style.width = newWidth + 'px';
+                }
+                if (isResizingRight) {
+                    const newWidth = Math.max(150, Math.min(600, window.innerWidth - e.clientX));
+                    rightPane.style.width = newWidth + 'px';
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizingLeft || isResizingRight) {
+                    isResizingLeft = false;
+                    isResizingRight = false;
+                    leftPane.classList.remove('resizing');
+                    rightPane.classList.remove('resizing');
+                    document.body.style.cursor = 'default';
+                    // Save widths to state if desired (optional)
+                }
+            });
+        }
+
+        // --- UI CORE ---
         function refreshIcons() { lucide.createIcons(); }
 
-        // --- UI PANES ---
         function togglePane(side) {
             if(side === 'left') {
                 state.leftPaneCollapsed = !state.leftPaneCollapsed;
                 document.getElementById('leftPane').classList.toggle('collapsed', state.leftPaneCollapsed);
+                document.getElementById('leftResizer').style.display = state.leftPaneCollapsed ? 'none' : 'block';
             } else {
                 state.rightPaneCollapsed = !state.rightPaneCollapsed;
                 document.getElementById('rightPane').classList.toggle('collapsed', state.rightPaneCollapsed);
+                document.getElementById('rightResizer').style.display = state.rightPaneCollapsed ? 'none' : 'block';
             }
         }
 
@@ -291,13 +350,14 @@
             document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('bg-white/10', 'text-accent'));
             const activeBtn = document.getElementById(`tbtn-${t}`);
             if(activeBtn) activeBtn.classList.add('bg-white/10', 'text-accent');
+            refreshIcons();
         }
 
-        // --- SETTINGS TABS ---
         function switchSettingsTab(tab) {
             state.settingsTab = tab;
             document.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
-            document.getElementById(`stab-${tab}`).classList.add('active');
+            const btn = document.getElementById(`stab-${tab}`);
+            if(btn) btn.classList.add('active');
             document.querySelectorAll('.settings-content').forEach(c => c.classList.add('hidden'));
             document.getElementById(`settings-${tab}`).classList.remove('hidden');
         }
@@ -319,6 +379,105 @@
             if (tab === 'visualizer') setTimeout(renderSNRGraph, 50);
         }
 
+        // --- PROVIDERS ---
+        function switchProviderBrand(b) {
+            state.providerBrand = b;
+            document.querySelectorAll('.brand-tab').forEach(btn => btn.classList.remove('text-accent', 'border-b', 'border-accent'));
+            const brandBtn = document.getElementById('b-'+b);
+            if(brandBtn) brandBtn.classList.add('text-accent', 'border-b', 'border-accent');
+            const urlInput = document.getElementById('configUrl');
+            if(urlInput) urlInput.disabled = (b !== 'Custom');
+            if(!state.editingProviderId) {
+                if(urlInput) urlInput.value = PROVIDER_DEFAULTS[b].url;
+                const models = PROVIDER_DEFAULTS[b].models;
+                const modelSel = document.getElementById('configModel');
+                if(modelSel) modelSel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option disabled selected>Sync required</option>';
+            }
+        }
+
+        async function fetchModels() {
+            const key = document.getElementById('configKey').value.trim();
+            const url = document.getElementById('configUrl').value.trim();
+            if(!key) return showToast("API Key required.");
+            try {
+                let fetched = [];
+                if(state.providerBrand === 'Gemini') {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                    const d = await res.json();
+                    fetched = d.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.split('/').pop());
+                } else {
+                    const res = await fetch(url.replace(/\/chat\/completions$/, '').replace(/\/$/, '') + '/models', { headers: { 'Authorization': `Bearer ${key}` }});
+                    const d = await res.json();
+                    fetched = d.data.map(m => m.id);
+                }
+                document.getElementById('configModel').innerHTML = fetched.sort().map(m => `<option value="${m}">${m}</option>`).join('');
+                showToast("Library synced.");
+            } catch (e) { showToast("Sync error."); }
+        }
+
+        function saveProvider() {
+            const name = document.getElementById('configName').value.trim() || state.providerBrand;
+            const url = document.getElementById('configUrl').value.trim();
+            const key = document.getElementById('configKey').value.trim();
+            const model = document.getElementById('configModel').value;
+            const role = document.getElementById('configRole').value;
+            if(!key || !model) return showToast("Missing data.");
+            const p = { id: state.editingProviderId || Date.now(), name, type: state.providerBrand, url, key, model, role };
+            if(state.editingProviderId) {
+                const idx = state.providers.findIndex(x => x.id === state.editingProviderId);
+                state.providers[idx] = p;
+            } else {
+                state.providers.push(p);
+                if(!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id;
+            }
+            saveState(); renderProviders(); resetConfigForm(); showToast("Secured.");
+        }
+
+        function renderProviders() {
+            const list = document.getElementById('providerList'); if(!list) return;
+            list.innerHTML = state.providers.map(p => `
+                <div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
+                    <div class="flex-1 overflow-hidden">
+                        <div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div>
+                        <div class="text-xs font-black text-white truncate">${p.name}</div>
+                        <div class="text-[9px] mono opacity-40 truncate">${p.model}</div>
+                    </div>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
+                        <button onclick="editProvider(${p.id})" class="p-1.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteProvider(${p.id})" class="p-1.5 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            refreshIcons();
+        }
+
+        function editProvider(id) {
+            const p = state.providers.find(x => x.id === id);
+            state.editingProviderId = id;
+            document.getElementById('configName').value = p.name;
+            document.getElementById('configKey').value = p.key;
+            document.getElementById('configRole').value = p.role;
+            switchProviderBrand(p.type);
+            document.getElementById('configUrl').value = p.url;
+            document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
+        }
+
+        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
+        function deleteProvider(id) { state.providers = state.providers.filter(x => x.id != id); saveState(); renderProviders(); updateUI(); }
+        function resetConfigForm() { state.editingProviderId = null; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
+
+        // --- SOURCES ---
+        function addSource() {
+            const v = document.getElementById('newSource').value.trim();
+            if(v) { state.sources.push(v); document.getElementById('newSource').value = ''; saveState(); renderSources(); }
+        }
+        function renderSources() {
+            const list = document.getElementById('sourceList'); if(!list) return;
+            list.innerHTML = (state.sources || []).map(s => `<div class="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] mono flex items-center gap-2">${s} <button onclick="state.sources=state.sources.filter(x=>x!='${s}');saveState();renderSources();"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join('');
+            refreshIcons();
+        }
+
         // --- TOPICS ---
         function createNewTopic(parentId = null) {
             const title = prompt("New Discovery Name:", "Untitled Vector");
@@ -329,7 +488,7 @@
         }
 
         function renderTopics() {
-            const list = document.getElementById('topicList');
+            const list = document.getElementById('topicList'); if(!list) return;
             const search = document.getElementById('topicSearch').value.toLowerCase();
             list.innerHTML = '';
             const roots = state.topics.filter(t => !t.parentId);
@@ -350,7 +509,7 @@
                         <span class="truncate text-[11px] font-bold">${topic.title}</span>
                     </div>
                     <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="createNewTopic(${topic.id})" title="Branch Out"><i data-lucide="git-branch" class="w-3 h-3 hover:text-accent"></i></button>
+                        <button onclick="createNewTopic(${topic.id})" title="Drill Down"><i data-lucide="git-branch" class="w-3 h-3 hover:text-accent"></i></button>
                         <button onclick="archiveTopic(${topic.id})" title="Archive"><i data-lucide="archive" class="w-3 h-3 hover:text-amber-400"></i></button>
                         <button onclick="deleteTopic(${topic.id})" title="Delete"><i data-lucide="trash-2" class="w-3 h-3 hover:text-red-500"></i></button>
                     </div>
@@ -362,10 +521,10 @@
 
         function switchTopic(id) { state.activeTopicId = id; saveState(); renderTopics(); loadActiveTopic(); }
         function archiveTopic(id) { const t = state.topics.find(x => x.id === id); if(t) t.archived = !t.archived; saveState(); renderTopics(); }
-        function deleteTopic(id) { if(confirm("Discard project and all child vectors?")) { state.topics = state.topics.filter(t => t.id !== id && t.parentId !== id); if(state.activeTopicId === id) state.activeTopicId = null; saveState(); renderTopics(); loadActiveTopic(); }}
-        function toggleArchiveView() { state.showArchived = !state.showArchived; document.getElementById('archiveToggleBtn').innerText = state.showArchived ? "Active Discovery" : "View Archive"; renderTopics(); }
+        function deleteTopic(id) { if(confirm("Confirm purge?")) { state.topics = state.topics.filter(t => t.id !== id && t.parentId !== id); if(state.activeTopicId === id) state.activeTopicId = null; saveState(); renderTopics(); loadActiveTopic(); }}
+        function toggleArchiveView() { state.showArchived = !state.showArchived; document.getElementById('archiveToggleBtn').innerText = state.showArchived ? "Active Vectors" : "View Archive"; renderTopics(); }
 
-        // --- RELIABILITY PIPELINE V5 ---
+        // --- ENGINE ---
         async function runPhase(phase) {
             const q = document.getElementById('mainInput').value.trim();
             const activeP = state.providers.find(p => p.id == state.activeProviderId);
@@ -376,17 +535,17 @@
             try {
                 if(phase === 'scan') {
                     addLog('SYSTEM', 'Step 1: Rapid Triage Engine active...');
-                    const scan = await callAI_Specific(activeP, q || t.title, "Triage Agent. Identify 5 themes. Brief.");
-                    addLog('AI', "Triage Complete: " + scan.substring(0, 150) + "...");
+                    const scan = await callAI_Specific(activeP, q || t.title, "Triage Agent. Identify 5 themes. Semantic check. Brief.");
+                    addLog('AI', "Triage Findings: " + scan.substring(0, 150) + "...");
                 } else if(phase === 'forensics') {
-                    addLog('SYSTEM', 'Step 4: Refinement call to Claims Vault...');
-                    const forensic = await callAI_Specific(activeP, `Refine research context: ${t.brief}. New Query: ${q}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. SNR: Value%.`, "Structural Parser.");
+                    addLog('SYSTEM', 'Refining forensic claims...');
+                    const forensic = await callAI_Specific(activeP, `Context: ${t.brief}. Follow-up: ${q}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. SNR: Value%.`, "Structural Parser.");
                     const parsed = parseValidation(forensic);
                     t.claims = [...(t.claims || []), ...parsed.claims].slice(-30);
                     t.snr = parsed.snr;
                     saveState(); loadActiveTopic(); showToast("Forensics Updated.");
                 }
-            } catch(e) { addLog('ERROR', "Connection Refusal."); }
+            } catch(e) { addLog('ERROR', "Network refusal."); }
             finally { state.phase = 'idle'; updateUI(); }
         }
 
@@ -394,7 +553,7 @@
             const q = document.getElementById('mainInput').value.trim();
             if(!q) return;
             const activeP = state.providers.find(p => p.id == state.activeProviderId);
-            if(!activeP) return showToast("Lead agent required.");
+            if(!activeP) return showToast("Assign orchestrator.");
             if(!state.activeTopicId) createNewTopic();
             const btn = document.getElementById('runBtn'); btn.disabled = true;
             const t = state.topics.find(x => x.id == state.activeTopicId);
@@ -402,31 +561,31 @@
             try {
                 state.phase = 'scan'; updateUI();
                 addLog('SYSTEM', 'Phase 1: Multi-Agent Triage...');
-                const scan = await callAI_Specific(activeP, q, "Triage Agent. Contextual Theme Scanning.");
+                const scan = await callAI_Specific(activeP, q, "Triage Agent. High-density theme scanning.");
                 
                 state.phase = 'research'; updateUI();
                 const workers = state.providers.filter(p => p.role === 'worker');
                 let blocks = [];
                 if(state.multiLlm && workers.length > 0) {
-                    addLog('SYSTEM', `Parallel extraction on ${workers.length} worker agents...`);
-                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, `Vector: ${q}\nContext: ${scan}`, "Expert deep extraction Scientist.")));
+                    addLog('SYSTEM', `Parallel extraction on ${workers.length} nodes...`);
+                    blocks = await Promise.all(workers.map(p => callAI_Specific(p, `Vector: ${q}\nContext: ${scan}`, "Expert extraction.")));
                 } else {
-                    blocks = [await callAI_Specific(activeP, `Vector: ${q}\nScan Data: ${scan}`, "Expert technical synthesis.")];
+                    blocks = [await callAI_Specific(activeP, `Vector: ${q}\nScan Data: ${scan}`, "Technical synthesis.")];
                 }
 
-                addLog('AI', 'Constructing United Professional Brief...');
-                const synth = await callAI_Specific(activeP, `Synthesize findings: ${blocks.join("\n\n")}. Markdown format.`, "Senior Lead Architect.");
+                addLog('AI', 'Phase 3: United Synthesis construction...');
+                const synth = await callAI_Specific(activeP, `Synthesize: ${blocks.join("\n\n")}. Markdown format.`, "Senior Lead Architect.");
                 t.brief = synth;
                 renderSynthesis(t);
 
                 state.phase = 'validate'; updateUI();
-                addLog('SYSTEM', 'Phase 4: Reliability Metadata Mapping...');
-                const forensic = await callAI_Specific(activeP, `Extract metadata from: ${synth}. Ground with sources: ${state.sources.join(',')}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. GAP: Topic. SNR: Value%.`, "Structural Parser.");
+                addLog('SYSTEM', 'Phase 4: Forensics Generation...');
+                const forensic = await callAI_Specific(activeP, `Extract: ${synth}. FORMAT: CLAIM: [VERIFIED/UNCERTAIN] | Text | Reason. GAP: Topic. SNR: Value%.`, "Structural Parser.");
                 const parsed = parseValidation(forensic);
-                t.claims = parsed.claims; t.gaps = parsed.gaps; t.snr = parsed.snr;
+                t.claims = parsed.claims; t.snr = parsed.snr; t.gaps = parsed.gaps;
                 t.breadth = (blocks.length * 20) + 15;
                 
-                saveState(); loadActiveTopic(); showToast("Synthesis Achieved.");
+                saveState(); loadActiveTopic(); showToast("V4.5 Synthesis Complete.");
             } catch(e) { addLog('ERROR', "Pipeline stalled."); }
             finally { state.phase = 'idle'; updateUI(); btn.disabled = false; document.getElementById('mainInput').value = ''; }
         }
@@ -447,22 +606,19 @@
 
         function parseValidation(raw) {
             const lines = raw.split('\n');
-            const claims = [], gaps = []; let snr = 85;
+            const claims = [], gaps = []; let snr = 80;
             lines.forEach(l => {
                 if (l.trim().startsWith('CLAIM:')) {
                     const p = l.replace('CLAIM:', '').split('|');
                     claims.push({ status: p[0]?.trim() || '[?]', text: p[1]?.trim() || l, reason: p[2]?.trim() || '' });
                 } else if (l.trim().startsWith('GAP:')) gaps.push(l.replace('GAP:', '').trim());
-                else if (l.trim().startsWith('SNR:')) snr = parseInt(l.replace('SNR:', '').replace(/\D/g, '')) || 85;
+                else if (l.trim().startsWith('SNR:')) snr = parseInt(l.replace('SNR:', '').replace(/\D/g, '')) || 80;
             });
             return { claims, gaps, snr };
         }
 
         // --- RENDERERS ---
-        function renderSynthesis(t) {
-            document.getElementById('synthesisView').innerHTML = marked.parse(t.brief || '');
-        }
-
+        function renderSynthesis(t) { document.getElementById('synthesisView').innerHTML = marked.parse(t.brief || ''); }
         function loadActiveTopic() {
             const t = state.topics.find(x => x.id == state.activeTopicId);
             if (!t) return;
@@ -471,17 +627,16 @@
             const gaps = document.getElementById('gapList');
             if (t.brief) {
                 synthesis.innerHTML = marked.parse(t.brief);
-                vault.innerHTML = t.claims.map(c => `<div class="claim-card p-6 rounded-3xl bg-white/5"><div class="text-[9px] font-black uppercase mb-3 text-accent">${c.status}</div><p class="text-xs font-bold text-white mb-2">${c.text}</p><p class="text-[10px] opacity-40 italic leading-relaxed">${c.reason}</p></div>`).join('') || '<p class="opacity-30">Forensics empty.</p>';
-                gaps.innerHTML = t.gaps.map(g => `<div class="p-4 rounded-xl glass border-white/5 flex items-center justify-between group"><div class="text-sm font-bold text-white">${g}</div><button onclick="drillDown('${g}')" class="btn-outline text-[9px] px-3 py-1 rounded uppercase font-black">Drill Down</button></div>`).join('');
+                vault.innerHTML = t.claims.map(c => `<div class="claim-card p-6 rounded-3xl bg-white/5"><div class="text-[9px] font-black uppercase mb-3 text-accent">${c.status}</div><p class="text-xs font-bold text-white mb-2 leading-relaxed">${c.text}</p><p class="text-[10px] opacity-40 italic leading-relaxed">${c.reason}</p></div>`).join('');
+                gaps.innerHTML = (t.gaps || []).map(g => `<div class="p-4 rounded-xl glass border-white/5 flex items-center justify-between group"><div class="text-sm font-bold text-white">${g}</div><button onclick="drillDown('${g}')" class="btn-outline text-[9px] px-3 py-1 rounded uppercase font-black">Drill Down</button></div>`).join('');
             } else {
-                synthesis.innerHTML = `<div class="text-center py-48 opacity-10 uppercase text-xs mono">Vector ready: ${t.title}</div>`;
+                synthesis.innerHTML = `<div class="text-center py-48 opacity-10 uppercase text-xs mono">Initializing Discovery: ${t.title}</div>`;
                 vault.innerHTML = gaps.innerHTML = '';
             }
             document.getElementById('statSignal').innerText = (t.snr || 0) + '%';
             document.getElementById('statBreadth').innerText = (t.breadth || 0) + '%';
             updateUI();
         }
-
         function renderSNRGraph() {
             const svg = document.getElementById('snrGraph');
             const t = state.topics.find(x => x.id == state.activeTopicId);
@@ -491,75 +646,7 @@
             svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="220" fill="none" stroke="rgba(0,209,255,0.04)" stroke-width="2" /><circle cx="${cx}" cy="${cy}" r="150" fill="none" stroke="rgba(0,209,255,0.04)" /><line x1="40" y1="250" x2="460" y2="250" stroke="rgba(255,255,255,0.05)" /><line x1="250" y1="40" x2="250" y2="460" stroke="rgba(255,255,255,0.05)" /><circle cx="${x}" cy="${y}" r="12" fill="var(--accent)" style="filter: drop-shadow(0 0 10px var(--accent))" />`;
         }
 
-        function drillDown(g) { createNewTopic(state.activeTopicId); document.getElementById('mainInput').value = g; }
-
-        // --- PROVIDER CRUD HELPERS ---
-        function switchProviderBrand(b) {
-            state.providerBrand = b;
-            document.querySelectorAll('.brand-tab').forEach(btn => btn.classList.remove('text-accent', 'border-b', 'border-accent'));
-            const brandBtn = document.getElementById('b-'+b);
-            if(brandBtn) brandBtn.classList.add('text-accent', 'border-b', 'border-accent');
-            const urlInput = document.getElementById('configUrl');
-            if(urlInput) urlInput.disabled = (b !== 'Custom');
-            if(!state.editingProviderId) {
-                if(urlInput) urlInput.value = PROVIDER_DEFAULTS[b].url;
-                const models = PROVIDER_DEFAULTS[b].models;
-                const modelSel = document.getElementById('configModel');
-                if(modelSel) modelSel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('') || '<option disabled selected>Sync models</option>';
-            }
-        }
-        function saveProvider() {
-            const name = document.getElementById('configName').value.trim() || state.providerBrand;
-            const url = document.getElementById('configUrl').value.trim();
-            const key = document.getElementById('configKey').value.trim();
-            const model = document.getElementById('configModel').value;
-            const role = document.getElementById('configRole').value;
-            if(!key || !model) return showToast("Data missing.");
-            const p = { id: state.editingProviderId || Date.now(), name, type: state.providerBrand, url, key, model, role };
-            if(state.editingProviderId) {
-                const idx = state.providers.findIndex(x => x.id === state.editingProviderId);
-                state.providers[idx] = p;
-            } else {
-                state.providers.push(p);
-                if(!state.activeProviderId && role === 'orchestrator') state.activeProviderId = p.id;
-            }
-            saveState(); renderProviders(); resetConfigForm(); showToast("Secured.");
-        }
-        function renderProviders() {
-            const list = document.getElementById('providerList');
-            list.innerHTML = state.providers.map(p => `
-                <div class="flex items-center gap-4 p-4 rounded-xl border ${state.activeProviderId == p.id ? 'border-accent bg-accent/5' : 'border-white/5 bg-white/5'}">
-                    <div class="flex-1 overflow-hidden">
-                        <div class="text-[8px] font-black uppercase text-accent opacity-70">${p.role}</div>
-                        <div class="text-xs font-black text-white truncate">${p.name}</div>
-                        <div class="text-[9px] mono opacity-40 truncate">${p.model}</div>
-                    </div>
-                    <div class="flex gap-1 shrink-0">
-                        <button onclick="setActiveProvider(${p.id})" class="px-2.5 py-1.5 text-[9px] border border-white/10 rounded uppercase font-black transition-all ${state.activeProviderId == p.id ? 'bg-accent text-black border-accent' : ''}">${state.activeProviderId == p.id ? 'active' : 'use'}</button>
-                        <button onclick="editProvider(${p.id})" class="p-1.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteProvider(${p.id})" class="p-1.5 text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
-                </div>
-            `).join('');
-            refreshIcons();
-        }
-        function editProvider(id) {
-            const p = state.providers.find(x => x.id === id);
-            state.editingProviderId = id;
-            document.getElementById('configName').value = p.name;
-            document.getElementById('configKey').value = p.key;
-            document.getElementById('configRole').value = p.role;
-            switchProviderBrand(p.type);
-            document.getElementById('configUrl').value = p.url;
-            document.getElementById('configModel').innerHTML = `<option value="${p.model}" selected>${p.model}</option>`;
-        }
-        function setActiveProvider(id) { state.activeProviderId = id; saveState(); renderProviders(); updateUI(); }
-        function deleteProvider(id) { state.providers = state.providers.filter(x => x.id != id); saveState(); renderProviders(); updateUI(); }
-        function resetConfigForm() { state.editingProviderId = null; document.getElementById('configName').value = ''; document.getElementById('configKey').value = ''; }
-        function addSource() { const v = document.getElementById('newSource').value.trim(); if(v) { state.sources.push(v); document.getElementById('newSource').value = ''; saveState(); renderSources(); }}
-        function renderSources() { document.getElementById('sourceList').innerHTML = state.sources.map(s => `<div class="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] mono flex items-center gap-2">${s} <button onclick="state.sources=state.sources.filter(x=>x!='${s}');saveState();renderSources();"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join(''); refreshIcons(); }
-
-        // --- CORE SYSTEM UTILS ---
+        // --- SYSTEM UTILS ---
         function saveState() {
             const multiToggle = document.getElementById('multiLlmToggle');
             if(multiToggle) state.multiLlm = multiToggle.checked;
@@ -573,18 +660,16 @@
         }
         function updateUI() {
             const p = state.providers.find(x => x.id == state.activeProviderId);
-            const activeTag = document.getElementById('activeProviderTag');
-            if(activeTag) activeTag.innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 font-bold">Offline</span>';
+            const tag = document.getElementById('activeProviderTag');
+            if(tag) tag.innerHTML = p ? `<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse mr-2"></span> Lead: ${p.name}` : '<span class="text-red-500 font-bold uppercase">Offline</span>';
             const pipeline = [{ id: 'scan', name: 'Scan', icon: 'zap' }, { id: 'research', name: 'Synthesis', icon: 'cpu' }, { id: 'validate', name: 'Verification', icon: 'shield-check' }];
-            const pipelineDisplay = document.getElementById('pipelineDisplay');
-            if(pipelineDisplay) pipelineDisplay.innerHTML = pipeline.map(s => `<div class="flex items-center gap-2 p-2.5 rounded-xl transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-3.5 h-3.5"></i><span class="text-[9px] font-black uppercase">${s.name}</span></div>`).join('');
+            const disp = document.getElementById('pipelineDisplay');
+            if(disp) disp.innerHTML = pipeline.map(s => `<div class="flex items-center gap-2 p-2.5 rounded-xl transition-all ${state.phase === s.id ? 'bg-accent/10 text-accent' : 'text-slate-500'}"><i data-lucide="${s.icon}" class="w-3.5 h-3.5"></i><span class="text-[9px] font-black uppercase">${s.name}</span></div>`).join('');
             refreshIcons();
         }
         function addLog(type, msg) {
-            const s = document.getElementById('logStream'); 
-            if(!s) return;
-            const l = document.createElement('div');
-            l.className = 'flex gap-2 mb-1 animate-in slide-in-from-left-2';
+            const s = document.getElementById('logStream'); if(!s) return;
+            const l = document.createElement('div'); l.className = 'flex gap-2 mb-1 animate-in slide-in-from-left-2';
             l.innerHTML = `<span class="uppercase ${type === 'AI' ? 'text-accent' : (type === 'ERROR' ? 'text-red-500' : 'text-slate-500')} font-black">[${type}]</span> <span>${msg}</span>`;
             s.prepend(l);
         }
@@ -593,6 +678,7 @@
         window.onload = () => {
             const multiToggle = document.getElementById('multiLlmToggle');
             if(multiToggle) multiToggle.checked = state.multiLlm;
+            initResizers();
             setTheme(state.theme); renderTopics(); loadActiveTopic(); updateUI(); refreshIcons();
             document.getElementById('mainInput').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') initiateResearch(); });
         };
