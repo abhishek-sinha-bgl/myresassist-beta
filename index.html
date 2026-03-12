@@ -305,11 +305,16 @@ textarea.inp{resize:none;line-height:1.6;}
   #topNav,#leftPane,#rightPane,#leftResizer,#rightResizer,
   .tab-bar,.claim-actions,#phaseIndicator,#partialWarning,
   #storageWarning,#toast,#mobileBottomBar,#mobileFab,
-  #mobileInputSheet,#mobileDrawer,.resizer{display:none!important;}
+  #mobileInputSheet,#mobileDrawer,.resizer,
+  #contradictionsContent,#researchmapContent,#constellationContent,
+  #knowledgemapContent,#topicsContent{display:none!important;}
   body{overflow:visible;height:auto;background:#fff!important;color:#000!important;}
   #workspace{overflow:visible;display:block;}
   #centerPane{overflow:visible;height:auto;background:#fff!important;}
-  .tab-content{display:block!important;padding:20px!important;}
+  .tab-content{display:none!important;padding:20px!important;}
+  #synthesisContent{display:block!important;}
+  body.print-brief-claims #vaultContent{display:block!important;}
+  body.print-brief-claims-voids #vaultContent,body.print-brief-claims-voids #voidsContent{display:block!important;}
   #synthesisView{max-width:100%;padding:0;}
   .synthesis-rendered p,.synthesis-rendered li{color:#333!important;font-size:13pt;}
   .synthesis-rendered h1{font-size:22pt;color:#000!important;}
@@ -367,7 +372,7 @@ textarea.inp{resize:none;line-height:1.6;}
 .pill-toggle.basic-mode.on{border-color:var(--contested);color:var(--contested);background:rgba(245,158,11,.12);}
 
 /* ===================== LEFT PANE EXPANDED ===================== */
-#leftPane.expanded{width:calc(100vw - 360px)!important;}
+#leftPane.expanded{width:clamp(260px, calc(100vw - 360px), 700px)!important;}
 .topic-graph-wrap{overflow:auto;max-height:calc(100vh - 180px);padding:10px;}
 .tg-node{cursor:pointer;transition:all .2s;}
 .tg-node:hover .tg-circle{r:attr(data-r-hover);}
@@ -380,6 +385,32 @@ textarea.inp{resize:none;line-height:1.6;}
 .cred-low{color:#ef4444;}
 .cred-bar{width:100%;height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:3px;}
 .cred-fill{height:100%;border-radius:99px;transition:width .4s;}
+
+/* ===================== CONTRADICTION CARDS ===================== */
+.contradiction-card{background:var(--bg-card);border:1px solid rgba(168,85,247,.35);border-radius:var(--radius);padding:18px;transition:all .2s;position:relative;}
+.contradiction-card:hover{border-color:rgba(168,85,247,.6);transform:translateY(-1px);box-shadow:0 8px 32px rgba(168,85,247,.12);}
+.contra-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:99px;margin-bottom:10px;background:rgba(168,85,247,.15);color:#a855f7;border:1px solid rgba(168,85,247,.3);}
+.contra-opposing{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:var(--radius-sm);padding:10px 12px;margin-top:10px;font-size:13px;color:var(--text-secondary);line-height:1.6;}
+.contra-opposing-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#a855f7;margin-bottom:5px;}
+
+/* ===================== RESEARCH MAP ===================== */
+#researchMapWrap.maximized{position:fixed;inset:60px 0 0 0;z-index:150;border-radius:0;border:none;}
+#researchMapWrap.maximized #researchMapSvg{height:calc(100vh - 60px);}
+.rm-node{cursor:pointer;transition:opacity .15s;}
+.rm-node:hover{opacity:.85;}
+
+/* ===================== PRINT MODAL ===================== */
+.print-option{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;margin-bottom:8px;}
+.print-option:hover{border-color:var(--accent);background:var(--accent-dim);}
+.print-option input[type=radio]{accent-color:var(--accent);}
+.print-option-label{font-size:14px;font-weight:600;}
+.print-option-sub{font-size:12px;color:var(--text-label);margin-top:2px;}
+
+/* ===================== PRINT SCOPE CLASSES ===================== */
+@media print {
+  body.print-brief-only #vaultContent,body.print-brief-only #voidsContent{display:none!important;}
+  body.print-brief-claims #voidsContent{display:none!important;}
+}
 </style>
 </head>
 <body data-theme="dark">
@@ -391,8 +422,11 @@ textarea.inp{resize:none;line-height:1.6;}
   <button onclick="openMobileDrawer()" class="btn btn-icon btn-ghost" id="mobileMenuBtn" style="display:none" title="Menu">☰</button>
   <div class="nav-logo">
     <div class="nav-logo-icon">D</div>
-    <span class="nav-title">Distila</span>
-    <span class="nav-badge">V5.2</span>
+    <div style="min-width:0">
+      <span class="nav-title">Distila</span>
+      <div style="font-size:10px;color:var(--text-label);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;font-style:italic">knowledge accumulates · claims persist · contradictions surface</div>
+    </div>
+    <span class="nav-badge">V5.3</span>
   </div>
   <div id="activeProviderTag" style="display:none" class="nav-badge">
     <span id="activeProviderName">—</span>
@@ -403,7 +437,7 @@ textarea.inp{resize:none;line-height:1.6;}
     <button onclick="setTheme('academic')" title="Academic" class="btn btn-icon" id="tbtn-academic" style="padding:5px;font-size:13px">📜</button>
   </div>
   <!-- Print button -->
-  <button onclick="printResearch()" class="btn btn-ghost btn-sm" title="Print / Save PDF" id="printBtn">🖨 Print</button>
+  <button onclick="openPrintModal()" class="btn btn-ghost btn-sm" title="Print / Save PDF" id="printBtn">🖨 Print</button>
   <!-- Share (mobile) -->
   <button onclick="shareResearch()" class="btn btn-ghost btn-sm mobile-share-btn" title="Share">📤 Share</button>
   <button onclick="openModal('settingsModal')" class="btn btn-icon btn-ghost" title="Settings">⚙</button>
@@ -444,7 +478,8 @@ textarea.inp{resize:none;line-height:1.6;}
     <div class="tab-bar">
       <button class="tab active" id="tab-synthesis" onclick="switchTab('synthesis')">Synthesis</button>
       <button class="tab" id="tab-vault" onclick="switchTab('vault')">Claims Vault</button>
-      <button class="tab" id="tab-constellation" onclick="switchTab('constellation')">Signal Map</button>
+      <button class="tab" id="tab-contradictions" onclick="switchTab('contradictions')">⚠ Contradictions</button>
+      <button class="tab" id="tab-researchmap" onclick="switchTab('researchmap')">◎ Research Map</button>
       <button class="tab" id="tab-voids" onclick="switchTab('voids')">Voids</button>
       <button class="tab" id="tab-knowledgemap" onclick="switchTab('knowledgemap')">Knowledge Map</button>
       <button class="tab" id="tab-topics" onclick="switchTab('topics')">Topic Tree</button>
@@ -459,6 +494,7 @@ textarea.inp{resize:none;line-height:1.6;}
           <div class="empty-icon">🔬</div>
           <div class="empty-title">Research Lab Ready</div>
           <div class="empty-sub">Enter a research question in the Cognitive Stream and execute the pipeline. Or drop a PDF / paste a URL below.</div>
+          <div style="margin-top:18px;font-size:11.5px;color:var(--text-label);font-style:italic;letter-spacing:.3px">knowledge accumulates · claims persist · contradictions surface</div>
         </div>
         <!-- Drop zone when empty -->
         <div id="dropZone" onclick="document.getElementById('pdfFileInput').click()">
@@ -471,6 +507,54 @@ textarea.inp{resize:none;line-height:1.6;}
     </div>
     <div id="vaultContent" class="tab-content">
       <div id="claimGrid"><div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">Claims Vault Empty</div><div class="empty-sub">Run research to extract claims.</div></div></div>
+    </div>
+    <!-- CONTRADICTIONS TAB -->
+    <div id="contradictionsContent" class="tab-content">
+      <div style="max-width:820px;margin:0 auto;padding-bottom:40px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">⚠ Contradictions</div>
+            <div style="font-size:13px;color:var(--text-label)">Claims with opposing evidence — where knowledge conflicts</div>
+          </div>
+          <div id="contradictionCount" style="font-size:13px;color:var(--text-label);font-family:var(--font-mono)"></div>
+        </div>
+        <div id="contradictionGrid"></div>
+      </div>
+    </div>
+    <!-- RESEARCH MAP TAB -->
+    <div id="researchmapContent" class="tab-content">
+      <div style="max-width:900px;margin:0 auto;padding-bottom:40px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">◎ Research Map</div>
+            <div style="font-size:13px;color:var(--text-label)">Radial distance = confidence · Purple = contradictions · Click nodes to jump to claims</div>
+          </div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+            <button onclick="rmZoom(0.8)" class="btn btn-ghost btn-sm" title="Zoom out">−</button>
+            <button onclick="rmZoom(1.25)" class="btn btn-ghost btn-sm" title="Zoom in">+</button>
+            <button onclick="rmResetZoom()" class="btn btn-ghost btn-sm">Reset</button>
+            <button onclick="rmMaximize()" class="btn btn-ghost btn-sm" id="rmMaxBtn">⤢ Expand</button>
+          </div>
+        </div>
+        <!-- Legend -->
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:12px">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00c8f0;margin-right:4px;vertical-align:middle"></span>≥70% Confident</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>35–69%</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle"></span>&lt;35%</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#a855f7;transform:rotate(45deg);margin-right:6px;vertical-align:middle"></span>Contradiction</span>
+          <span style="color:var(--text-label)">· Radial distance = lower confidence → outer ring</span>
+        </div>
+        <div id="researchMapWrap" style="position:relative;border:1px solid var(--border);border-radius:var(--radius);background:#070a10;overflow:hidden">
+          <svg id="researchMapSvg" style="width:100%;display:block;cursor:grab" viewBox="0 0 860 540"></svg>
+          <div id="rmTooltip" style="display:none;position:absolute;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:10px 14px;font-size:12.5px;pointer-events:none;max-width:260px;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+        </div>
+        <div class="stats-row" style="margin-top:16px">
+          <div class="stat-item"><div class="stat-val" id="rmStatClaims">—</div><div class="stat-label">Claims Mapped</div></div>
+          <div class="stat-item"><div class="stat-val" id="rmStatContradictions" style="color:#a855f7">—</div><div class="stat-label">Contradictions</div></div>
+          <div class="stat-item"><div class="stat-val" id="rmStatVerified" style="color:#22c55e">—</div><div class="stat-label">Verified</div></div>
+          <div class="stat-item"><div class="stat-val" id="rmStatAvgConf">—</div><div class="stat-label">Avg Confidence</div></div>
+        </div>
+      </div>
     </div>
     <div id="constellationContent" class="tab-content">
       <div style="max-width:600px;margin:0 auto">
@@ -520,7 +604,12 @@ textarea.inp{resize:none;line-height:1.6;}
             <div style="font-size:16px;font-weight:700;margin-bottom:4px">Topic Tree</div>
             <div style="font-size:13px;color:var(--text-label)">Hierarchical view with your own categories + AI groupings</div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <!-- Dual view toggle -->
+            <div style="display:flex;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px;gap:3px">
+              <button id="treeViewUser" onclick="setTreeView('user')" class="btn btn-sm" style="font-size:12px;padding:5px 12px;background:var(--accent);color:#000;border:none">🏷 My Categories</button>
+              <button id="treeViewAI" onclick="setTreeView('ai')" class="btn btn-sm" style="font-size:12px;padding:5px 12px;background:transparent;color:var(--text-secondary);border:none">✨ AI View</button>
+            </div>
             <button onclick="openCategoryManager()" class="btn btn-ghost btn-sm">🏷 Manage Categories</button>
             <button onclick="openTopicNameModal(null)" class="btn btn-primary btn-sm">+ New Topic</button>
           </div>
@@ -563,7 +652,12 @@ textarea.inp{resize:none;line-height:1.6;}
         <div class="token-estimate" id="tokenEstimate">~3K tokens</div>
         <div class="constraint-indicator" id="constraintIndicator" onclick="openConstraintPanel()" style="display:none" title="Research Constraints Active">🔒 Constrained</div>
       </div>
-      <textarea id="mainInput" class="inp" placeholder="Research question… (Ctrl+Enter)" rows="4"></textarea>
+      <!-- Chat-style textarea with inline attach icon -->
+      <div style="position:relative">
+        <textarea id="mainInput" class="inp" placeholder="Research question… (Ctrl+Enter)" rows="4" style="padding-right:36px"></textarea>
+        <button onclick="document.getElementById('chatPdfInput').click()" title="Attach PDF to research context" style="position:absolute;bottom:9px;right:9px;background:none;border:none;cursor:pointer;color:var(--text-label);font-size:15px;padding:2px;line-height:1;transition:color .15s;z-index:2" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-label)'">📎</button>
+        <input type="file" id="chatPdfInput" accept=".pdf" style="display:none" onchange="handleFileSelect(event)">
+      </div>
       <!-- URL input -->
       <div style="display:flex;gap:7px">
         <input id="urlInput" type="url" class="inp" placeholder="Paste URL to scan…" style="font-size:13px;padding:8px 12px;flex:1">
@@ -584,7 +678,7 @@ textarea.inp{resize:none;line-height:1.6;}
 <div id="mobileBottomBar">
   <button class="mobile-tab-btn active" id="mtab-synthesis" onclick="switchTab('synthesis');setMobileTab('synthesis')"><span class="mtab-icon">📄</span>Synthesis</button>
   <button class="mobile-tab-btn" id="mtab-vault" onclick="switchTab('vault');setMobileTab('vault')"><span class="mtab-icon">🗂</span>Vault</button>
-  <button class="mobile-tab-btn" id="mtab-constellation" onclick="switchTab('constellation');setMobileTab('constellation')"><span class="mtab-icon">🕸</span>Map</button>
+  <button class="mobile-tab-btn" id="mtab-researchmap" onclick="switchTab('researchmap');setMobileTab('researchmap')"><span class="mtab-icon">◎</span>Map</button>
   <button class="mobile-tab-btn" id="mtab-voids" onclick="switchTab('voids');setMobileTab('voids')"><span class="mtab-icon">🕳</span>Voids</button>
 </div>
 <button id="mobileFab" onclick="openMobileInput()">✏️</button>
@@ -824,7 +918,7 @@ textarea.inp{resize:none;line-height:1.6;}
 //  CONSTANTS
 // =====================================================================
 const PROVIDER_DEFAULTS = {
-  Gemini:{ url:'https://generativelanguage.googleapis.com/v1beta/models/', models:['gemini-2.5-pro-exp-03-25','gemini-2.0-flash','gemini-1.5-pro','gemini-1.5-flash'] },
+  Gemini:{ url:'https://generativelanguage.googleapis.com/v1beta', models:['gemini-2.5-pro-exp-03-25','gemini-2.0-flash','gemini-1.5-pro','gemini-1.5-flash'] },
   OpenAI:{ url:'https://api.openai.com/v1', models:['gpt-4o','gpt-4o-mini','o3-mini','gpt-4-turbo'] },
   Claude:{ url:'https://api.anthropic.com/v1/messages', models:['claude-opus-4-6','claude-sonnet-4-6','claude-haiku-4-5-20251001'] },
   Custom:{ url:'', models:[] }
@@ -832,7 +926,7 @@ const PROVIDER_DEFAULTS = {
 const THEMES=[{id:'dark',name:'Night',bg:'#0a0c10',accent:'#00c8f0',emoji:'🌑'},{id:'midnight',name:'Midnight',bg:'#070d1a',accent:'#4d9fff',emoji:'🌊'},{id:'forest',name:'Forest',bg:'#080f09',accent:'#4ade80',emoji:'🌿'},{id:'highcontrast',name:'Hi-Contrast',bg:'#000000',accent:'#ffd700',emoji:'⬛'},{id:'light',name:'Light',bg:'#f0f4f8',accent:'#0070d8',emoji:'☀️'},{id:'sepia',name:'Sepia',bg:'#1a1208',accent:'#e8a045',emoji:'🕯️'},{id:'academic',name:'Academic',bg:'#faf8f3',accent:'#8b1a1a',emoji:'📜'}];
 // Fast-moving fields where citation age matters most
 const HIGH_VELOCITY_KEYWORDS=['ai','machine learning','artificial intelligence','crypto','cryptocurrency','blockchain','geopolitics','pandemic','covid','climate','cybersecurity','llm','gpt','generative','quantum','biotech','startup','venture'];
-const CORS_PROXIES=['https://api.allorigins.win/raw?url=','https://corsproxy.io/?'];
+const CORS_PROXIES=['https://api.allorigins.win/raw?url=','https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest='];
 
 // =====================================================================
 //  STATE
@@ -1716,6 +1810,9 @@ function loadActiveTopic(){
     return;
   }
   renderSynthesis(t);renderClaims(t);renderVoids(t);renderConstellation(t);updateStats(t);
+  renderContradictions(t);
+  // Re-render Research Map if active
+  if(document.getElementById('researchmapContent')?.classList.contains('active')) renderResearchMap(t);
 }
 
 function renderSynthesis(t){
@@ -1771,9 +1868,13 @@ function renderClaims(t){
 function renderClaimCard(c,t){
   const others=state.providers.filter(p=>!p.disabled&&p.id!=c.sourceProvider?.id);
   const valCount=(c.validations||[]).length;
-  return`<div class="claim-card ${c.discarded?'discarded':''}" id="claim-${c.id}">
+  const isContra=(c.contradicts&&c.contradicts.length>0)||c.status==='CONTESTED';
+  return`<div class="claim-card ${c.discarded?'discarded':''}" id="claim-${c.id}" style="${isContra?'border-color:rgba(168,85,247,.3)':''}">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
-      ${getStatusBadge(c.status)}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${getStatusBadge(c.status)}
+        ${isContra?'<span class="contra-badge" style="font-size:10px;padding:2px 7px">⚠ Contradiction</span>':''}
+      </div>
       ${c.confidence!==undefined?getConfidenceBadgeHTML(c.confidenceRaw||c.confidence,c.confidence,c.citationAgeNote):''}
     </div>
     <div class="claim-text">${escHTML(c.text)}</div>
@@ -1847,6 +1948,220 @@ function updateStats(t){
   const hist=t.snrHistory||[];
   const spark=document.getElementById('sparkline');
   spark.innerHTML=hist.length>1?hist.map(v=>`<div class="spark-bar" style="height:${Math.max(4,(v/Math.max(...hist,1))*28)}px"></div>`).join(''):`<div style="font-size:12px;color:var(--text-label)">History builds with each run</div>`;
+}
+
+// =====================================================================
+//  CONTRADICTIONS RENDERER
+// =====================================================================
+function renderContradictions(t){
+  const grid=document.getElementById('contradictionGrid');
+  const counter=document.getElementById('contradictionCount');
+  if(!grid) return;
+  const claims=(t.claims||[]).filter(c=>!c.discarded);
+  // Find claims that have contradictions OR were marked CONTESTED
+  const contradictingClaims=claims.filter(c=>(c.contradicts&&c.contradicts.length>0)||c.status==='CONTESTED');
+  if(counter) counter.textContent=`${contradictingClaims.length} contradiction${contradictingClaims.length!==1?'s':''} detected`;
+  if(!contradictingClaims.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No Contradictions Found</div><div class="empty-sub">Run deep research — contradictions surface when opposing evidence is extracted.</div></div>`;
+    return;
+  }
+  const claimMap={};claims.forEach(c=>claimMap[c.id]=c);
+  grid.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px">${contradictingClaims.map(c=>{
+    const opposing=(c.contradicts||[]).map(id=>claimMap[id]).filter(Boolean);
+    return`<div class="contradiction-card">
+      <div class="contra-badge">⚠ Contradiction</div>
+      <div style="margin-bottom:6px">${getStatusBadge(c.status)}</div>
+      <div class="claim-text">${escHTML(c.text)}</div>
+      ${c.reasoning?`<div class="claim-reason">${escHTML(c.reasoning)}</div>`:''}
+      <div class="claim-provenance">
+        <span>📡 ${escHTML(c.sourceProvider?.name||'Unknown')}</span>
+        <span>${c.confidence||0}% confidence</span>
+      </div>
+      ${opposing.length?`<div class="contra-opposing">
+        <div class="contra-opposing-label">↔ Opposing Evidence (${opposing.length})</div>
+        ${opposing.map(op=>`<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(168,85,247,.15);last-child:border-none">
+          <div style="font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:3px">${escHTML(op.text)}</div>
+          <div style="font-size:11.5px;color:var(--text-label)">Source: ${escHTML(op.sourceProvider?.name||'Unknown')} · ${op.confidence||0}%</div>
+        </div>`).join('')}
+      </div>`:''}
+      <div class="claim-actions" style="margin-top:10px">
+        <button onclick="openValidateModal('${c.id}')" class="btn btn-ghost btn-sm">🔍 Validate</button>
+        <button onclick="switchTab('vault')" class="btn btn-ghost btn-sm">→ Vault</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// =====================================================================
+//  RESEARCH MAP (POLAR LAYOUT)
+// =====================================================================
+let rmScale=1,rmPanX=0,rmPanY=0;
+const RM_W=860,RM_H=540,RM_CX=430,RM_CY=270,RM_MAX_R=220;
+
+function renderResearchMap(t){
+  const svg=document.getElementById('researchMapSvg');if(!svg) return;
+  const claims=(t.claims||[]).filter(c=>!c.discarded);
+  const statsEl={claims:document.getElementById('rmStatClaims'),contra:document.getElementById('rmStatContradictions'),verified:document.getElementById('rmStatVerified'),avgConf:document.getElementById('rmStatAvgConf')};
+
+  if(!claims.length){
+    svg.innerHTML=`<text x="${RM_CX}" y="${RM_CY}" text-anchor="middle" fill="#4a5a72" font-size="14" font-family="sans-serif">No claims to map. Run research first.</text>`;
+    return;
+  }
+
+  const contradictions=claims.filter(c=>(c.contradicts&&c.contradicts.length>0)||c.status==='CONTESTED');
+  const normalClaims=claims.filter(c=>!contradictions.includes(c));
+
+  // Stats
+  if(statsEl.claims) statsEl.claims.textContent=claims.length;
+  if(statsEl.contra) statsEl.contra.textContent=contradictions.length;
+  if(statsEl.verified) statsEl.verified.textContent=claims.filter(c=>c.status==='VERIFIED').length;
+  if(statsEl.avgConf) statsEl.avgConf.textContent=Math.round(claims.reduce((s,c)=>s+(c.confidence||0),0)/claims.length)+'%';
+
+  // CONTRA sector: 270°–330° (60° band at bottom-left)
+  const CONTRA_START=270*(Math.PI/180);
+  const CONTRA_END=330*(Math.PI/180);
+  const CONTRA_SPREAD=CONTRA_END-CONTRA_START;
+
+  // Normal claims spread across remaining 300°
+  const NORMAL_START=330*(Math.PI/180);
+  const NORMAL_SPREAD=(360-60)*(Math.PI/180);
+
+  function confToRadius(conf){
+    // High confidence = close to center, low = outer ring
+    const norm=1-(Math.max(0,Math.min(100,conf||50))/100);
+    return 30+norm*RM_MAX_R;
+  }
+
+  function claimColor(c){
+    if(contradictions.includes(c)) return'#a855f7';
+    const conf=c.confidence||50;
+    if(conf>=70) return'#00c8f0';
+    if(conf>=35) return'#f59e0b';
+    return'#ef4444';
+  }
+
+  // Position nodes
+  const positioned=[];
+  normalClaims.forEach((c,i)=>{
+    const angle=NORMAL_START+(i/Math.max(1,normalClaims.length))*NORMAL_SPREAD;
+    const r=confToRadius(c.confidence||50);
+    positioned.push({c,x:RM_CX+r*Math.cos(angle),y:RM_CY+r*Math.sin(angle),isContra:false,r:7,col:claimColor(c)});
+  });
+  contradictions.forEach((c,i)=>{
+    const angle=CONTRA_START+(i/Math.max(1,contradictions.length))*CONTRA_SPREAD;
+    const r=confToRadius(c.confidence||50);
+    positioned.push({c,x:RM_CX+r*Math.cos(angle),y:RM_CY+r*Math.sin(angle),isContra:true,r:7,col:'#a855f7'});
+  });
+
+  // Force spread: 3 passes
+  for(let pass=0;pass<3;pass++){
+    for(let i=0;i<positioned.length;i++){
+      for(let j=i+1;j<positioned.length;j++){
+        const dx=positioned[j].x-positioned[i].x,dy=positioned[j].y-positioned[i].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        const minD=positioned[i].r+positioned[j].r+14;
+        if(d<minD&&d>0){
+          const f=(minD-d)/d*0.5;
+          positioned[i].x-=dx*f;positioned[i].y-=dy*f;
+          positioned[j].x+=dx*f;positioned[j].y+=dy*f;
+        }
+      }
+    }
+    // Clamp to SVG bounds
+    positioned.forEach(n=>{n.x=Math.max(n.r+5,Math.min(RM_W-n.r-5,n.x));n.y=Math.max(n.r+5,Math.min(RM_H-n.r-5,n.y));});
+  }
+
+  let s='';
+
+  // Confidence rings
+  [0.25,0.5,0.75,1].forEach(f=>{
+    const r=f*RM_MAX_R;
+    const conf=Math.round((1-f)*100);
+    s+=`<circle cx="${RM_CX}" cy="${RM_CY}" r="${r}" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`;
+    s+=`<text x="${RM_CX+r+4}" y="${RM_CY-4}" fill="rgba(255,255,255,0.18)" font-size="9" font-family="monospace">${conf}%</text>`;
+  });
+
+  // Center marker
+  s+=`<circle cx="${RM_CX}" cy="${RM_CY}" r="5" fill="rgba(255,255,255,0.15)"/>`;
+  s+=`<text x="${RM_CX}" y="${RM_CY+3}" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="8" font-family="monospace">100%</text>`;
+
+  // CONTRA sector indicator
+  if(contradictions.length){
+    const cx1=RM_CX+RM_MAX_R*1.15*Math.cos(CONTRA_START);
+    const cy1=RM_CY+RM_MAX_R*1.15*Math.sin(CONTRA_START);
+    const cx2=RM_CX+RM_MAX_R*1.15*Math.cos(CONTRA_END);
+    const cy2=RM_CY+RM_MAX_R*1.15*Math.sin(CONTRA_END);
+    s+=`<path d="M${RM_CX},${RM_CY} L${cx1},${cy1} A${RM_MAX_R*1.15},${RM_MAX_R*1.15} 0 0,1 ${cx2},${cy2} Z" fill="rgba(168,85,247,0.07)" stroke="rgba(168,85,247,0.3)" stroke-width="1"/>`;
+    const midA=(CONTRA_START+CONTRA_END)/2;
+    s+=`<text x="${RM_CX+RM_MAX_R*1.3*Math.cos(midA)}" y="${RM_CY+RM_MAX_R*1.3*Math.sin(midA)}" text-anchor="middle" fill="#a855f7" font-size="10" font-weight="700" font-family="monospace">CONTRA</text>`;
+  }
+
+  // Draw support/contradiction edges
+  positioned.forEach(n=>{
+    (n.c.supports||[]).forEach(sid=>{
+      const target=positioned.find(p=>p.c.id==sid);
+      if(target) s+=`<line x1="${n.x}" y1="${n.y}" x2="${target.x}" y2="${target.y}" stroke="#22c55e" stroke-width="1" opacity=".2" stroke-dasharray="none"/>`;
+    });
+    (n.c.contradicts||[]).forEach(cid=>{
+      const target=positioned.find(p=>p.c.id==cid);
+      if(target) s+=`<line x1="${n.x}" y1="${n.y}" x2="${target.x}" y2="${target.y}" stroke="#a855f7" stroke-width="1.5" opacity=".3" stroke-dasharray="4,3"/>`;
+    });
+  });
+
+  // Draw nodes
+  positioned.forEach(n=>{
+    const label=n.c.text.split(' ').slice(0,4).join(' ');
+    const id=`rmnode_${n.c.id}`.replace(/[^a-z0-9_]/gi,'_');
+    if(n.isContra){
+      // Diamond shape
+      const d2=n.r+3;
+      s+=`<g class="rm-node" id="${id}" onclick="rmJumpToClaim('${n.c.id}')" onmouseenter="rmShowTooltip(event,'${escAttr(n.c.text.substring(0,120))}',${n.c.confidence||0},'${n.c.status}')" onmouseleave="rmHideTooltip()">
+        <polygon points="${n.x},${n.y-d2} ${n.x+d2},${n.y} ${n.x},${n.y+d2} ${n.x-d2},${n.y}" fill="${n.col}" opacity=".9" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <text x="${n.x}" y="${n.y+d2+11}" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="8.5" font-family="sans-serif">${escHTML(label)}…</text>
+      </g>`;
+    } else {
+      s+=`<g class="rm-node" id="${id}" onclick="rmJumpToClaim('${n.c.id}')" onmouseenter="rmShowTooltip(event,'${escAttr(n.c.text.substring(0,120))}',${n.c.confidence||0},'${n.c.status}')" onmouseleave="rmHideTooltip()">
+        <circle cx="${n.x}" cy="${n.y}" r="${n.r+4}" fill="${n.col}" opacity=".1"/>
+        <circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="${n.col}" opacity=".88" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+        <text x="${n.x}" y="${n.y+n.r+11}" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="8.5" font-family="sans-serif">${escHTML(label)}…</text>
+      </g>`;
+    }
+  });
+
+  svg.innerHTML=s;
+}
+
+function rmJumpToClaim(id){
+  switchTab('vault');
+  setTimeout(()=>{
+    const el=document.getElementById('claim-'+id);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow='0 0 0 3px var(--accent)';setTimeout(()=>el.style.boxShadow='',2000);}
+  },200);
+}
+function rmShowTooltip(event,text,conf,status){
+  const tt=document.getElementById('rmTooltip');if(!tt)return;
+  const wrap=document.getElementById('researchMapWrap');
+  const wRect=wrap.getBoundingClientRect();
+  const x=event.clientX-wRect.left+12;
+  const y=event.clientY-wRect.top-10;
+  tt.innerHTML=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-label);margin-bottom:5px">${escHTML(status)} · ${conf}% confidence</div><div style="font-size:12.5px;line-height:1.5">${escHTML(text)}</div>`;
+  tt.style.left=Math.min(x,wRect.width-280)+'px';tt.style.top=y+'px';tt.style.display='block';
+}
+function rmHideTooltip(){const tt=document.getElementById('rmTooltip');if(tt)tt.style.display='none';}
+function rmZoom(factor){
+  rmScale=Math.max(0.5,Math.min(3,rmScale*factor));
+  const svg=document.getElementById('researchMapSvg');
+  if(svg) svg.style.transform=`scale(${rmScale})`;
+}
+function rmResetZoom(){rmScale=1;const svg=document.getElementById('researchMapSvg');if(svg)svg.style.transform='scale(1)';}
+function rmMaximize(){
+  const wrap=document.getElementById('researchMapWrap');
+  const btn=document.getElementById('rmMaxBtn');
+  if(!wrap) return;
+  wrap.classList.toggle('maximized');
+  btn.textContent=wrap.classList.contains('maximized')?'⤡ Collapse':'⤢ Expand';
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(t) setTimeout(()=>renderResearchMap(t),100);
 }
 
 // =====================================================================
@@ -2117,12 +2432,26 @@ function exportResearch(){
   a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   showToast('Exported as Markdown.','success');
 }
-function printResearch(){
+function openPrintModal(){
   const t=state.topics.find(x=>x.id==state.activeTopicId);
   if(!t){showToast('Select a topic to print.','error');return;}
-  // Make sure synthesis tab is active for print
+  // Reset to default
+  document.querySelectorAll('input[name=printScope]').forEach(r=>r.checked=r.value==='brief');
+  openModal('printModal');
+}
+function executePrint(){
+  closeModal('printModal');
+  const scope=document.querySelector('input[name=printScope]:checked')?.value||'brief';
+  // Set body class for print CSS scoping
+  document.body.classList.remove('print-brief-claims','print-brief-claims-voids');
+  if(scope==='brief-claims') document.body.classList.add('print-brief-claims');
+  if(scope==='brief-claims-voids') document.body.classList.add('print-brief-claims-voids');
   switchTab('synthesis');
-  setTimeout(()=>{window.print();},300);
+  setTimeout(()=>{
+    window.print();
+    // Clean up classes after print
+    setTimeout(()=>document.body.classList.remove('print-brief-claims','print-brief-claims-voids'),500);
+  },300);
 }
 async function shareResearch(){
   const t=state.topics.find(x=>x.id==state.activeTopicId);
@@ -2161,12 +2490,14 @@ function initResizers(){
 // =====================================================================
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab));
-  const map={synthesis:'synthesisContent',vault:'vaultContent',constellation:'constellationContent',voids:'voidsContent',knowledgemap:'knowledgemapContent',topics:'topicsContent'};
+  const map={synthesis:'synthesisContent',vault:'vaultContent',constellation:'constellationContent',voids:'voidsContent',knowledgemap:'knowledgemapContent',topics:'topicsContent',contradictions:'contradictionsContent',researchmap:'researchmapContent'};
   Object.values(map).forEach(id=>{const el=document.getElementById(id);if(el) el.classList.remove('active');});
   const target=document.getElementById(map[tab]);if(target) target.classList.add('active');
   if(tab==='constellation'){const t=state.topics.find(x=>x.id==state.activeTopicId);if(t) renderConstellation(t);}
   if(tab==='knowledgemap') buildKnowledgeGraph();
   if(tab==='topics'){renderCatFilterBar();renderTopicTreeFull();}
+  if(tab==='contradictions'){const t=state.topics.find(x=>x.id==state.activeTopicId);if(t) renderContradictions(t);}
+  if(tab==='researchmap'){const t=state.topics.find(x=>x.id==state.activeTopicId);if(t) renderResearchMap(t);}
 }
 function setMobileTab(tab){document.querySelectorAll('.mobile-tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('mtab-'+tab)?.classList.add('active');}
 
@@ -2271,8 +2602,9 @@ let pendingPopupAction=null;
 function showProviderPopup(event,action){
   event.stopPropagation();
   const providers=state.providers.filter(p=>!p.disabled);
-  // If only 1 provider or basic mode, skip popup
-  if(providers.length<=1||state.basicMode){
+  // In parallel mode all enabled providers are used — skip popup
+  // Also skip if only 1 provider or basic mode
+  if(state.multiLlm||providers.length<=1||state.basicMode){
     if(action==='pipeline') initiateResearch();
     else runPhase(action);
     return;
@@ -2408,12 +2740,22 @@ async function buildKnowledgeGraph(){
   const catColorMap={};
   catNames.forEach((c,i)=>catColorMap[c]=CAT_COLORS[i%CAT_COLORS.length]);
 
-  // Force-directed layout (simple approximation)
+  // Force-directed layout with category clustering
   const W=820,H=480,CX=W/2,CY=H/2;
+  // Place category centroids evenly around a ring, then nodes near their centroid
+  const catCentroids={};
+  catNames.forEach((cat,i)=>{
+    const angle=(i/catNames.length)*2*Math.PI;
+    const r=catNames.length>1?130:0;
+    catCentroids[cat]={x:CX+r*Math.cos(angle),y:CY+r*Math.sin(angle)};
+  });
   const nodes=topics.map((t,i)=>{
-    const angle=(i/topics.length)*2*Math.PI;
-    const r=80+Math.random()*120;
-    return{t,x:CX+r*Math.cos(angle),y:CY+r*Math.sin(angle),
+    const cat=t.category||'Uncategorized';
+    const centroid=catCentroids[cat]||{x:CX,y:CY};
+    const jitter=(i%5-2)*22;
+    const angle=Math.random()*2*Math.PI;
+    const r=Math.random()*55+18;
+    return{t,x:centroid.x+r*Math.cos(angle)+jitter,y:centroid.y+r*Math.sin(angle)+jitter,
       r:6+Math.min(12,(t.claims||[]).length/2),col:catColorMap[t.category||'Uncategorized']};
   });
 
@@ -2609,6 +2951,16 @@ function renderAssignCatBtns(){
 //  TOPIC TREE FULL VIEW
 // =====================================================================
 let activeCatFilter='all';
+let activeTreeView='user'; // 'user' or 'ai'
+
+function setTreeView(view){
+  activeTreeView=view;
+  const btnUser=document.getElementById('treeViewUser');
+  const btnAI=document.getElementById('treeViewAI');
+  if(btnUser){btnUser.style.background=view==='user'?'var(--accent)':'transparent';btnUser.style.color=view==='user'?'#000':'var(--text-secondary)';}
+  if(btnAI){btnAI.style.background=view==='ai'?'var(--accent)':'transparent';btnAI.style.color=view==='ai'?'#000':'var(--text-secondary)';}
+  renderTopicTreeFull();
+}
 
 function setCatFilter(cat){
   activeCatFilter=cat;
@@ -2638,6 +2990,45 @@ function renderTopicTreeFull(){
   const userCats=loadUserCats();
   const catMap={};userCats.forEach(c=>catMap[c.id]={name:c.name,color:c.color});
 
+  // AI view: group topics by AI-detected category
+  if(activeTreeView==='ai'){
+    const topics=state.topics.filter(t=>!t.archived||state.showArchived);
+    const aiGroups={};
+    topics.forEach(t=>{const c=t.category||'Uncategorized';if(!aiGroups[c])aiGroups[c]=[];aiGroups[c].push(t);});
+    const catNames=Object.keys(aiGroups).sort();
+    if(!catNames.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🌳</div><div class="empty-title">No AI categories yet — run Auto-Categorize from Knowledge Map</div></div>';return;}
+    const catColorMap={};catNames.forEach((c,i)=>catColorMap[c]=CAT_COLORS[i%CAT_COLORS.length]);
+    el.innerHTML=catNames.map(cat=>{
+      const ts=aiGroups[cat];const col=catColorMap[cat];
+      return`<div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></div>
+          <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${col}">${escHTML(cat)}</span>
+          <span style="font-size:12px;color:var(--text-label)">(${ts.length})</span>
+        </div>
+        <div style="margin-left:18px">${ts.map(t=>{
+          const isActive=state.activeTopicId==t.id;
+          const claims=(t.claims||[]).filter(c=>!c.discarded).length;
+          return`<div class="tree-topic-row${isActive?' tree-active':''}" onclick="switchTopic(${t.id});switchTab('synthesis')">
+            <div class="tree-cat-dot" style="background:${col}"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(t.title)}</div>
+              <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
+                ${t.subcategory?`<span style="font-size:11px;color:var(--text-label)">${escHTML(t.subcategory)}</span>`:''}
+                <span style="font-size:12px;color:var(--text-label)">${claims} claim${claims!==1?'s':''}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:5px;flex-shrink:0">
+              <button onclick="event.stopPropagation();deleteTopic(${t.id})" class="btn btn-danger btn-sm" style="padding:5px 8px">✕</button>
+            </div>
+          </div>`;}).join('')}
+        </div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // User view (original)
   const visible=state.topics.filter(t=>{
     if(t.archived&&!state.showArchived)return false;
     if(activeCatFilter==='all')return true;
@@ -2720,10 +3111,48 @@ window.addEventListener('load',async()=>{
   const bpill=document.getElementById('basicModePill');
   if(bpill) bpill.classList.toggle('on',state.basicMode);
   // Initialize Knowledge Map if it was last active tab
-  addLog('sys','Distila V5.2 ready — research intelligence engine.');
+  addLog('sys','Distila V5.3 ready — knowledge accumulates, claims persist, contradictions surface.');
 });
 window.addEventListener('resize',checkMobileLayout);
 </script>
+
+<!-- PRINT OPTIONS MODAL -->
+<div class="modal-overlay" id="printModal" onclick="overlayClose(event,'printModal')">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">🖨 Print Options</span>
+      <button onclick="closeModal('printModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-body" style="padding:18px">
+      <div style="font-size:13.5px;color:var(--text-secondary);margin-bottom:16px">Choose what to include in the printout:</div>
+      <label class="print-option">
+        <input type="radio" name="printScope" value="brief" checked>
+        <div>
+          <div class="print-option-label">Brief Only</div>
+          <div class="print-option-sub">Research synthesis and Socratic challenge layer</div>
+        </div>
+      </label>
+      <label class="print-option">
+        <input type="radio" name="printScope" value="brief-claims">
+        <div>
+          <div class="print-option-label">Brief + Claims</div>
+          <div class="print-option-sub">Synthesis plus all extracted claims with confidence scores</div>
+        </div>
+      </label>
+      <label class="print-option">
+        <input type="radio" name="printScope" value="brief-claims-voids">
+        <div>
+          <div class="print-option-label">Brief + Claims + Voids</div>
+          <div class="print-option-sub">Full research package including knowledge gaps</div>
+        </div>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('printModal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="executePrint()" class="btn btn-primary">🖨 Print</button>
+    </div>
+  </div>
+</div>
 
 <!-- CATEGORY MANAGER MODAL -->
 <div class="modal-overlay" id="catManagerModal" onclick="overlayClose(event,'catManagerModal')">
