@@ -202,14 +202,14 @@ textarea.inp{resize:none;line-height:1.6;}
 .log-msg{color:var(--text-secondary);word-break:break-word;white-space:pre-wrap;flex:1;}
 
 /* ===================== INPUT AREA ===================== */
-#inputArea{padding:12px 14px;border-top:1px solid var(--border);background:var(--bg-surface);flex-shrink:0;display:flex;flex-direction:column;gap:9px;}
-.pipeline-stages{display:flex;gap:5px;}
-.pipeline-stage{flex:1;padding:6px 5px;border-radius:var(--radius-sm);background:var(--bg-input);border:1px solid var(--border);text-align:center;transition:all .2s;}
+#inputArea{padding:10px 13px;border-top:1px solid var(--border);background:var(--bg-surface);flex-shrink:0;display:flex;flex-direction:column;gap:8px;}
+.pipeline-stages{display:flex;gap:4px;}
+.pipeline-stage{flex:1;padding:5px 4px;border-radius:var(--radius-sm);background:var(--bg-input);border:1px solid var(--border);text-align:center;transition:all .2s;}
 .pipeline-stage.active{background:var(--accent-dim);border-color:var(--accent);}
-.pipeline-stage-label{font-size:11px;font-weight:600;color:var(--text-label);text-transform:uppercase;letter-spacing:.3px;}
+.pipeline-stage-label{font-size:10.5px;font-weight:600;color:var(--text-label);text-transform:uppercase;letter-spacing:.3px;}
 .pipeline-stage.active .pipeline-stage-label{color:var(--accent);}
 .quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-#mainInput{min-height:76px;max-height:150px;}
+#mainInput{min-height:64px;max-height:130px;}
 
 /* ===================== INLINE CONTROLS ROW ===================== */
 .controls-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -610,7 +610,8 @@ textarea.inp{resize:none;line-height:1.6;}
               <button id="treeViewUser" onclick="setTreeView('user')" class="btn btn-sm" style="font-size:12px;padding:5px 12px;background:var(--accent);color:#000;border:none">🏷 My Categories</button>
               <button id="treeViewAI" onclick="setTreeView('ai')" class="btn btn-sm" style="font-size:12px;padding:5px 12px;background:transparent;color:var(--text-secondary);border:none">✨ AI View</button>
             </div>
-            <button onclick="openCategoryManager()" class="btn btn-ghost btn-sm">🏷 Manage Categories</button>
+            <button onclick="openCategoryManager()" class="btn btn-ghost btn-sm">🏷 Manage</button>
+            <button onclick="autoCategorizeAllTopics()" class="btn btn-ghost btn-sm" title="AI-classify all uncategorized topics">✨ AI Categorize</button>
             <button onclick="openTopicNameModal(null)" class="btn btn-primary btn-sm">+ New Topic</button>
           </div>
         </div>
@@ -633,43 +634,42 @@ textarea.inp{resize:none;line-height:1.6;}
     </div>
     <div id="cogStream"></div>
     <div id="inputArea">
+      <!-- Pipeline stage indicator (slim) -->
       <div class="pipeline-stages" id="pipelineStages">
         <div class="pipeline-stage" id="stage-scan"><div class="pipeline-stage-label">Scan</div></div>
         <div class="pipeline-stage" id="stage-research"><div class="pipeline-stage-label">Research</div></div>
         <div class="pipeline-stage" id="stage-validate"><div class="pipeline-stage-label">Validate</div></div>
         <div class="pipeline-stage" id="stage-synthesize"><div class="pipeline-stage-label">Synthesize</div></div>
       </div>
-      <!-- Inline controls -->
+      <!-- Mode pills + token estimate on one compact row -->
       <div class="controls-row">
         <div class="pill-toggle" id="parallelPill" onclick="toggleParallel()" title="Toggle Parallel Synthesis">
           <div class="pill-dot"></div>
           <span id="parallelPillLabel">Solo</span>
         </div>
-        <div class="pill-toggle basic-mode" id="basicModePill" onclick="toggleBasicMode()" title="Basic Mode: quick summary, no full pipeline">
+        <div class="pill-toggle basic-mode" id="basicModePill" onclick="toggleBasicMode()" title="Basic Mode: quick summary">
           <div class="pill-dot"></div>
           <span>Basic</span>
         </div>
-        <div class="token-estimate" id="tokenEstimate">~3K tokens</div>
-        <div class="constraint-indicator" id="constraintIndicator" onclick="openConstraintPanel()" style="display:none" title="Research Constraints Active">🔒 Constrained</div>
+        <div class="token-estimate" id="tokenEstimate" style="margin-left:auto">~3K tokens</div>
+        <div class="constraint-indicator" id="constraintIndicator" onclick="openConstraintPanel()" style="display:none" title="Research Constraints Active">🔒</div>
       </div>
-      <!-- Chat-style textarea with inline attach icon -->
+      <!-- Main question textarea with 📎 inside -->
       <div style="position:relative">
-        <textarea id="mainInput" class="inp" placeholder="Research question… (Ctrl+Enter)" rows="4" style="padding-right:36px"></textarea>
-        <button onclick="document.getElementById('chatPdfInput').click()" title="Attach PDF to research context" style="position:absolute;bottom:9px;right:9px;background:none;border:none;cursor:pointer;color:var(--text-label);font-size:15px;padding:2px;line-height:1;transition:color .15s;z-index:2" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-label)'">📎</button>
+        <textarea id="mainInput" class="inp" placeholder="Ask a research question… (Ctrl+Enter)" rows="3" style="padding-right:34px;resize:vertical"></textarea>
+        <button onclick="document.getElementById('chatPdfInput').click()" title="Attach PDF" style="position:absolute;bottom:8px;right:8px;background:none;border:none;cursor:pointer;color:var(--text-label);font-size:15px;padding:2px;line-height:1;transition:color .15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-label)'">📎</button>
         <input type="file" id="chatPdfInput" accept=".pdf" style="display:none" onchange="handleFileSelect(event)">
       </div>
-      <!-- URL input -->
+      <!-- URL scan — collapsed to one row, secondary affordance -->
+      <div id="urlRow" style="display:flex;gap:6px">
+        <input id="urlInput" type="url" class="inp" placeholder="Or paste a URL to scan…" style="font-size:12.5px;padding:7px 11px;flex:1;color:var(--text-secondary)">
+        <button onclick="fetchAndScanURL()" class="btn btn-ghost btn-sm" style="flex-shrink:0;font-size:12px">⚡ URL</button>
+      </div>
+      <!-- Single primary button; secondary actions in overflow menu -->
       <div style="display:flex;gap:7px">
-        <input id="urlInput" type="url" class="inp" placeholder="Paste URL to scan…" style="font-size:13px;padding:8px 12px;flex:1">
-        <button onclick="fetchAndScanURL()" class="btn btn-ghost btn-sm" style="flex-shrink:0">⚡ Scan</button>
+        <button id="runBtn" onclick="showProviderPopup(event,'pipeline')" class="btn btn-primary" style="flex:1;padding:11px;font-size:13.5px;font-weight:700;letter-spacing:.3px">▶ Research</button>
+        <button onclick="showSecondaryActions(event)" class="btn btn-ghost" style="padding:11px 13px;font-size:16px" title="More actions">⋯</button>
       </div>
-      <div class="quick-actions">
-        <button onclick="showProviderPopup(event,'scan')" class="btn btn-ghost" style="font-size:12.5px">⚡ Quick Scan</button>
-        <button onclick="showProviderPopup(event,'forensics')" class="btn btn-ghost" style="font-size:12.5px">🛡 Forensics</button>
-      </div>
-      <button id="runBtn" onclick="showProviderPopup(event,'pipeline')" class="btn btn-primary" style="width:100%;padding:12px;font-size:14px;font-weight:700;letter-spacing:.3px">
-        ▶ Execute Research Pipeline
-      </button>
     </div>
   </aside>
 </div>
@@ -1203,8 +1203,8 @@ async function callAI(provider,userPrompt,systemPrompt,signal){
   if(!rawKey){
     throw new Error(`API key for "${provider.name}" is empty — open Settings → API Providers.`);
   }
-  const isGemini=provider.type==='Gemini'||provider.url.includes('generativelanguage');
-  const isClaude=provider.type==='Claude'||provider.url.includes('anthropic.com');
+  const isGemini=(provider.type==='Gemini')||provider.url.includes('generativelanguage.googleapis.com');
+  const isClaude=(provider.type==='Claude')||provider.url.includes('anthropic.com');
   // Normalise base URL: strip all trailing slashes
   let baseUrl=provider.url.replace(/\/+$/,'');
   let url,body,headers={'Content-Type':'application/json'};
@@ -1237,7 +1237,8 @@ async function callAI(provider,userPrompt,systemPrompt,signal){
   try{ data=JSON.parse(text); }
   catch{
     const preview=text.substring(0,120).replace(/\n/g,' ');
-    throw new Error(`${provider.name} returned non-JSON (HTTP ${res?.status}). Check endpoint URL. Got: ${preview}`);
+    const hint=res?.status===405?' — Gemini providers must use base URL (e.g. https://generativelanguage.googleapis.com/v1beta), not a model path.':'';
+    throw new Error(`${provider.name} returned non-JSON (HTTP ${res?.status})${hint} Got: ${preview}`);
   }
   if(!res.ok){
     if(res.status===429){
@@ -1906,13 +1907,51 @@ function restoreClaim(id){
 
 function renderVoids(t){
   const list=document.getElementById('voidList');
-  if(!t.gaps||t.gaps.length===0){list.innerHTML=`<div class="empty-state"><div class="empty-icon">🕳️</div><div class="empty-title">No Knowledge Voids</div></div>`;return;}
-  list.innerHTML=t.gaps.map(g=>{
+  if(!t.gaps||t.gaps.length===0){list.innerHTML=`<div class="empty-state"><div class="empty-icon">🕳️</div><div class="empty-title">No Knowledge Voids</div><div class="empty-sub">Gaps appear after deep research.</div></div>`;return;}
+  list.innerHTML=t.gaps.map((g,idx)=>{
     const text=typeof g==='object'?g.text:g;const imp=typeof g==='object'?g.importance:'medium';
-    return`<div class="void-item"><div style="font-size:15px">${imp==='high'?'🔴':imp==='low'?'🟢':'🟡'}</div>
-    <div class="void-text"><div>${escHTML(text)}</div>${imp?`<div class="void-sub">Importance: ${imp}</div>`:''}</div>
-    <button onclick="drillDown('${escAttr(text)}')" class="btn btn-ghost btn-sm">↳ Drill Down</button></div>`;
+    return`<div class="void-item">
+      <div style="font-size:15px">${imp==='high'?'🔴':imp==='low'?'🟢':'🟡'}</div>
+      <div class="void-text"><div>${escHTML(text)}</div>${imp?`<div class="void-sub">Importance: ${imp}</div>`:''}</div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="drillDown('${escAttr(text)}')" class="btn btn-ghost btn-sm" title="Create sub-topic">↳ Branch</button>
+        <button onclick="showVoidResearchPopup(event,${idx})" class="btn btn-primary btn-sm" title="Research this void">▶ Research</button>
+      </div>
+    </div>`;
   }).join('');
+}
+
+let voidResearchPopupIdx=null;
+function showVoidResearchPopup(event,idx){
+  event.stopPropagation();
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(!t||!t.gaps) return;
+  const g=t.gaps[idx];
+  const text=typeof g==='object'?g.text:g;
+  // Set the main input to this void text
+  document.getElementById('mainInput').value=text;
+  voidResearchPopupIdx=idx;
+  // Reuse provider popup with a special header
+  const popup=document.getElementById('providerPopup');
+  const header=document.getElementById('ppHeader');
+  const items=document.getElementById('ppItems');
+  header.textContent='Research this void…';
+  // Build two action rows: Quick Scan and Full Pipeline
+  items.innerHTML=`
+    <div class="pp-item" onclick="closeProviderPopup();showProviderPopup(event,'scan')" style="border-bottom:1px solid var(--border)">
+      <div class="pp-dot" style="background:#f59e0b"></div>
+      <div><div class="pp-name">⚡ Quick Scan</div><div class="pp-model">Fast overview · single model</div></div>
+    </div>
+    <div class="pp-item" onclick="closeProviderPopup();showProviderPopup(event,'pipeline')">
+      <div class="pp-dot" style="background:var(--accent)"></div>
+      <div><div class="pp-name">▶ Full Pipeline</div><div class="pp-model">Deep research · all 4 phases</div></div>
+    </div>`;
+  const rect=event.target.getBoundingClientRect();
+  popup.style.bottom=(window.innerHeight-rect.top+6)+'px';
+  popup.style.right=(window.innerWidth-rect.right)+'px';
+  popup.style.left='auto';popup.style.top='auto';
+  popup.classList.add('open');
+  setTimeout(()=>document.addEventListener('click',closeProviderPopup,{once:true}),50);
 }
 
 function renderConstellation(t){
@@ -2222,8 +2261,13 @@ function saveProvider(){
   const name=document.getElementById('cfgName').value.trim()||`${state.providerBrand} ${role}`;
   if(!key){showToast('API key is required.','error');return;}
   if(!model){showToast('Select or sync a model first.','error');return;}
+  const rawUrl=document.getElementById('cfgUrl').value.trim();
+  // For Gemini: always store the clean base (strip /models/... suffix users might paste)
+  const cleanUrl=(state.providerBrand==='Gemini'||rawUrl.includes('generativelanguage'))
+    ? rawUrl.replace(/\/+$/,'').replace(/\/models\/.*$/,'').replace(/\/models\/?$/,'')
+    : rawUrl;
   const p={id:state.editing||Date.now(),name,type:state.providerBrand,
-    url:document.getElementById('cfgUrl').value.trim(),key,model,role,disabled:false};
+    url:cleanUrl,key,model,role,disabled:false};
   // Enforce single orchestrator — demote any existing one
   if(role==='orchestrator'){
     const existing=state.providers.find(x=>x.role==='orchestrator'&&x.id!=p.id);
@@ -2237,11 +2281,11 @@ function saveProvider(){
 function editProvider(id){
   const p=state.providers.find(x=>x.id===id);if(!p) return;
   state.editing=id;
-  // Set brand tabs without clearing form
   state.providerBrand=p.type;
+  // Update brand tab highlight
   document.querySelectorAll('.brand-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('b-'+p.type)?.classList.add('active');
-  // Populate form with provider data
+  // Populate form
   document.getElementById('cfgName').value=p.name;
   document.getElementById('cfgKey').value=p.key;
   document.getElementById('cfgUrl').value=p.url;
@@ -2251,9 +2295,18 @@ function editProvider(id){
   document.getElementById('formTitle').textContent=`Editing: ${escHTML(p.name)}`;
   document.getElementById('saveProviderBtn').textContent='Save Changes';
   document.getElementById('cancelEditBtn').style.display='inline-flex';
-  // Scroll form into view without resetting modal scroll
+  // Highlight the card being edited without full re-render
+  document.querySelectorAll('.provider-card').forEach(el=>{
+    el.style.outline=el.dataset.pid==id?'2px solid var(--accent)':'';
+  });
+  // Scroll modal body up to the form (not the provider list)
+  const modalBody=document.querySelector('#stab-content-providers')?.closest('.modal-body');
   const formBox=document.getElementById('providerFormBox');
-  if(formBox) setTimeout(()=>formBox.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+  if(formBox&&modalBody){
+    setTimeout(()=>{
+      modalBody.scrollTo({top:formBox.offsetTop-modalBody.offsetTop-12,behavior:'smooth'});
+    },50);
+  }
 }
 function cancelEdit(){state.editing=null;resetForm();}
 function resetForm(){
@@ -2274,7 +2327,7 @@ function deleteProvider(id){
 function renderProviders(){
   const list=document.getElementById('providerList');if(!list) return;
   if(!state.providers.length){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-label);font-size:13.5px">No providers yet. Add one above.</div>`;return;}
-  list.innerHTML=state.providers.map(p=>`<div class="provider-card ${state.activeProviderId==p.id?'is-active':''} ${p.disabled?'is-disabled':''}">
+  list.innerHTML=state.providers.map(p=>`<div class="provider-card ${state.activeProviderId==p.id?'is-active':''} ${p.disabled?'is-disabled':''}" data-pid="${p.id}" style="${state.editing==p.id?'outline:2px solid var(--accent);outline-offset:2px':''}">
     <div class="provider-info">
       <div class="provider-role">${p.role}${state.activeProviderId==p.id?' · ACTIVE':''}</div>
       <div class="provider-name">${escHTML(p.name)}</div>
@@ -2567,6 +2620,7 @@ function addLog(type,msg){
   const tags={ai:'AI',sys:'SYS',err:'ERR',ok:'OK',warn:'WARN'};
   e.innerHTML=`<span class="log-tag ${type}">[${tags[type]||'SYS'}]</span><span class="log-msg">${escHTML(msg)}</span>`;
   s.prepend(e);while(s.children.length>100) s.removeChild(s.lastChild);
+  s.scrollTop=0;
 }
 function clearLog(){const s=document.getElementById('cogStream');if(s) s.innerHTML='';}
 function escHTML(s){if(!s) return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -2637,6 +2691,32 @@ function showProviderPopup(event,action){
 function closeProviderPopup(){
   document.getElementById('providerPopup')?.classList.remove('open');
   pendingPopupAction=null;
+}
+function showSecondaryActions(event){
+  event.stopPropagation();
+  const popup=document.getElementById('providerPopup');
+  const header=document.getElementById('ppHeader');
+  const items=document.getElementById('ppItems');
+  header.textContent='More actions';
+  items.innerHTML=`
+    <div class="pp-item" onclick="closeProviderPopup();showProviderPopup(event,'scan')" style="border-bottom:1px solid var(--border)">
+      <div class="pp-dot" style="background:#f59e0b"></div>
+      <div><div class="pp-name">⚡ Quick Scan</div><div class="pp-model">Fast single-pass overview</div></div>
+    </div>
+    <div class="pp-item" onclick="closeProviderPopup();showProviderPopup(event,'forensics')" style="border-bottom:1px solid var(--border)">
+      <div class="pp-dot" style="background:#a855f7"></div>
+      <div><div class="pp-name">🛡 Forensics</div><div class="pp-model">Bias & credibility analysis</div></div>
+    </div>
+    <div class="pp-item" onclick="closeProviderPopup();openConstraintPanel()">
+      <div class="pp-dot" style="background:var(--text-label)"></div>
+      <div><div class="pp-name">🔒 Constraints</div><div class="pp-model">Scope, sources, depth</div></div>
+    </div>`;
+  const rect=event.target.getBoundingClientRect();
+  popup.style.bottom=(window.innerHeight-rect.top+6)+'px';
+  popup.style.right=(window.innerWidth-rect.right)+'px';
+  popup.style.left='auto';popup.style.top='auto';
+  popup.classList.add('open');
+  setTimeout(()=>document.addEventListener('click',closeProviderPopup,{once:true}),50);
 }
 function selectProviderAndRun(id,action){
   closeProviderPopup();
@@ -2716,6 +2796,35 @@ Return ONLY valid JSON:
       showToast(`Categorized: ${cat.category} / ${cat.subcategory}`,'success');
     }
   }catch(e){showToast('Categorization failed: '+e.message,'error',true);}
+}
+
+async function autoCategorizeAllTopics(){
+  const uncategorized=state.topics.filter(t=>!t.archived&&!t.category);
+  const all=state.topics.filter(t=>!t.archived);
+  const targets=uncategorized.length>0?uncategorized:all;
+  if(!targets.length){showToast('No topics to categorize.','warn');return;}
+  const activeP=state.providers.find(p=>p.id==state.activeProviderId&&!p.disabled);
+  if(!activeP){showToast('No active provider.','error');return;}
+  const label=uncategorized.length>0?`Categorizing ${targets.length} uncategorized topics…`:`Re-categorizing all ${targets.length} topics…`;
+  showToast(label,'info');addLog('sys',label);
+  const allTitles=state.topics.map(x=>x.title).join('\n');
+  let done=0;
+  for(const t of targets){
+    try{
+      const prompt=`Given these research topics, categorize the following:
+ALL TOPICS:\n${allTitles}
+TARGET: "${t.title}"
+Claims: ${(t.claims||[]).slice(0,3).map(c=>c.text).join('; ')||'(none yet)'}
+Return ONLY valid JSON:
+{"category":"broad category","subcategory":"specific subcategory","emoji":"single emoji","clusterColor":"#hexcolor"}`;
+      const raw=await callAIWithRetry(activeP,prompt,'Respond ONLY with valid JSON. No markdown.');
+      const cat=parseJSON(raw);
+      if(cat){t.category=cat.category;t.subcategory=cat.subcategory;t.categoryEmoji=cat.emoji;}
+      done++;addLog('ok',`Categorized: ${t.title} → ${cat?.category||'?'}`);
+    }catch(e){addLog('warn',`Skipped "${t.title}": ${e.message}`);}
+  }
+  saveState();renderTopics();buildKnowledgeGraph();
+  showToast(`✨ Categorized ${done}/${targets.length} topics.`,'success');
 }
 
 async function buildKnowledgeGraph(){
