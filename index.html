@@ -518,6 +518,7 @@ textarea.inp{resize:none;line-height:1.6;}
   </div>
   <!-- Print button -->
   <button onclick="openPrintModal()" class="btn btn-ghost btn-sm" title="Print / Save PDF" id="printBtn">🖨 Print</button>
+  <button onclick="exportResearch('md')" class="btn btn-ghost btn-sm" id="exportBtn" title="Export synthesis as markdown">⬇ Export</button>
   <!-- Share (mobile) -->
   <button onclick="shareResearch()" class="btn btn-ghost btn-sm mobile-share-btn" title="Share">📤 Share</button>
   <button onclick="openModal('settingsModal')" class="btn btn-icon btn-ghost" title="Settings">⚙</button>
@@ -553,6 +554,23 @@ textarea.inp{resize:none;line-height:1.6;}
       </div>
     </div>
     <div id="topicList" style="flex:1;overflow-y:auto;padding:7px"></div>
+    <!-- Knowledge Map — collapsible in left pane -->
+    <div id="knowledgeMapPane" style="border-top:1px solid var(--border);flex-shrink:0">
+      <div onclick="toggleKnowledgeMapPane()" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;user-select:none">
+        <span style="font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.4px">◎ KNOWLEDGE MAP</span>
+        <span id="kmPaneChevron" style="font-size:11px;color:var(--text-label)">▸</span>
+      </div>
+      <div id="kmPaneBody" style="display:none;padding:0 8px 8px">
+        <div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap">
+          <button onclick="autoCategorizeTopic()" class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px">✨ Categorize</button>
+          <button onclick="buildKnowledgeGraph()" class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px">↺ Rebuild</button>
+        </div>
+        <div id="categoryLegendPane" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;font-size:11px"></div>
+        <svg id="knowledgeGraphSvgPane" viewBox="0 0 300 220" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card)">
+          <text x="150" y="110" text-anchor="middle" fill="var(--text-label)" font-size="12">Click Rebuild to visualize.</text>
+        </svg>
+      </div>
+    </div>
     <div style="padding:9px 10px;border-top:1px solid var(--border);flex-shrink:0">
       <button onclick="toggleArchiveView()" id="archiveToggleBtn" class="btn btn-ghost" style="width:100%;font-size:12px">View Archive</button>
     </div>
@@ -575,11 +593,8 @@ textarea.inp{resize:none;line-height:1.6;}
       <button class="tab" id="tab-contradictions" onclick="switchTab('contradictions')">⚠ Contradictions</button>
       <button class="tab" id="tab-researchmap" onclick="switchTab('researchmap')">◎ Research Map</button>
       <button class="tab" id="tab-voids" onclick="switchTab('voids')">Voids</button>
-      <button class="tab" id="tab-knowledgemap" onclick="switchTab('knowledgemap')">Knowledge Map</button>
       <button class="tab" id="tab-topics" onclick="switchTab('topics')">Topic Tree</button>
       <div style="flex:1"></div>
-      <button onclick="exportResearch('md')" class="btn btn-ghost btn-sm" style="margin:8px 4px 8px 0" id="exportBtn">⬇ Export</button>
-      <!-- Desktop share -->
       <button onclick="shareResearch()" class="btn btn-ghost btn-sm" style="margin:8px 4px 8px 0" id="shareBtn">📤 Share</button>
     </div>
     <div id="synthesisContent" class="tab-content active">
@@ -768,18 +783,22 @@ textarea.inp{resize:none;line-height:1.6;}
           <div class="pill-dot"></div>
           <span>Basic</span>
         </div>
+        <div class="pill-toggle" id="liveWebPill" onclick="toggleLiveWeb()" title="Live Web: inject real-time web context into LLM calls for grounding">
+          <div class="pill-dot"></div>
+          <span>Live Web</span>
+        </div>
         <div class="token-estimate" id="tokenEstimate" style="margin-left:auto">~3K tokens</div>
         <div class="constraint-indicator" id="constraintIndicator" onclick="openConstraintPanel()" style="display:none" title="Research Constraints Active">🔒</div>
       </div>
       <!-- Main question textarea with 📎 inside -->
       <div style="position:relative">
-        <textarea id="mainInput" class="inp" placeholder="Ask a research question… (Ctrl+Enter)" rows="3" style="padding-right:34px;resize:vertical"></textarea>
+        <textarea id="mainInput" class="inp" placeholder="Ask a research question, or paste a URL… (Ctrl+Enter)" rows="3" style="padding-right:34px;resize:vertical"></textarea>
         <button onclick="document.getElementById('chatPdfInput').click()" title="Attach PDF" style="position:absolute;bottom:8px;right:8px;background:none;border:none;cursor:pointer;color:var(--text-label);font-size:15px;padding:2px;line-height:1;transition:color .15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-label)'">📎</button>
         <input type="file" id="chatPdfInput" accept=".pdf" style="display:none" onchange="handleFileSelect(event)">
       </div>
       <!-- URL field — auto-detected when ▶ Research is pressed -->
       <div id="urlRow">
-        <input id="urlInput" type="url" class="inp" placeholder="Or paste a URL — then press ▶ Research" style="font-size:12.5px;padding:7px 11px;width:100%;color:var(--text-secondary)">
+        <input id="urlInput" type="url" class="inp" placeholder="Or paste URL here directly…" style="font-size:12.5px;padding:7px 11px;width:100%;color:var(--text-secondary)">
       </div>
       <!-- Single primary button; secondary actions in overflow menu -->
       <div style="display:flex;gap:7px">
@@ -1086,7 +1105,7 @@ let state={
   editing:null,pendingParentId:null,currentPhase:'idle',abortController:null,
   constraints:{domains:[],scope:'',urls:[]},providerBrand:'Gemini',
   undoStack:[],encryptionEnabled:load('myres_enc',false),
-  groundingFilter:'all',sourcesPanelOpen:true
+  groundingFilter:'all',sourcesPanelOpen:true,liveWeb:false
 };
 function saveState(){
   save('myres_providers',state.providers);save('myres_active_id',state.activeProviderId);
@@ -1457,6 +1476,10 @@ Return ONLY valid JSON:
 // =====================================================================
 async function callAI(provider,userPrompt,systemPrompt,signal){
   if(!provider) throw new Error('No provider specified');
+  // Live Web: prepend grounding instruction when enabled
+  if(state.liveWeb){
+    systemPrompt = 'IMPORTANT: You have access to the web. Search for current, real-world information to ground your claims in up-to-date sources before responding. Cite sources where possible.\n\n' + systemPrompt;
+  }
   // Guard: detect un-decrypted keys
   const rawKey=(provider.key||'').trim();
   if(rawKey.startsWith('ENC:')){
@@ -1647,6 +1670,7 @@ async function runPhaseWithContext(phase,docContext,contextLabel){
     // Show a non-destructive banner in synthesis — user decides what to do next
     showURLScanBanner(t,contextLabel,data);
     showToast(`${contextLabel} scanned. Choose an action above.`,'success');
+    clearResearchInputs();
   }catch(e){addLog('err',e.message);showToast(`Error: ${e.message}`,'error',true);}
   finally{setPhase('idle');stopProgress();enableRunBtn(true);}
 }
@@ -1887,6 +1911,7 @@ async function initiateResearch(){
     t.snrHistory=[...(t.snrHistory||[]),t.snr||0].slice(-12);
     saveState();loadActiveTopic();switchTab('synthesis');
     showToast('Pipeline complete.','success');
+    clearResearchInputs();
     // Async edge inference — don't block UI, runs quietly in background
     setTimeout(()=>runEdgeInference(),800);
     addLog('ok',`Done. ${allClaims.length} claims. SNR: ${t.snr||0}%`);
@@ -3397,7 +3422,7 @@ async function shareResearch(){
   const title=t.title;
   const text=t.brief.replace(/#{1,6}\s/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/\n{3,}/g,'\n\n').substring(0,2000);
   if(navigator.share){
-    try{await navigator.share({title,text,url:window.location.href});showToast('Shared.','success');}
+    try{await navigator.share({title,text});showToast('Shared.','success');}
     catch(e){if(e.name!=='AbortError') copyToClipboard(text);}
   } else {copyToClipboard(text);}
 }
@@ -3489,7 +3514,14 @@ function setPhase(phase,detail){
 }
 function startProgress(){document.getElementById('progressBar').classList.add('running');}
 function stopProgress(){document.getElementById('progressBar').classList.remove('running');}
-function enableRunBtn(en){const b=document.getElementById('runBtn');if(b){b.disabled=!en;b.textContent=en?'▶ Research':'⏳ Running…';}}
+function enableRunBtn(en){const b=document.getElementById('runBtn');if(b){b.disabled=!en;b.textContent=en?'▶ Research':'⏳ Working…';b.style.background=en?'':'var(--warn)';b.style.color=en?'':'#000';}}
+function clearResearchInputs(){
+  const mi=document.getElementById('mainInput');if(mi) mi.value='';
+  const ui=document.getElementById('urlInput');if(ui) ui.value='';
+  const mim=document.getElementById('mainInputMobile');if(mim) mim.value='';
+  const uim=document.getElementById('urlInputMobile');if(uim) uim.value='';
+  updateTokenDisplay();
+}
 function showPartialWarning(msg){const e=document.getElementById('partialWarning');e.textContent='⚠ Partial: '+msg;e.style.display='block';}
 function hidePartialWarning(){document.getElementById('partialWarning').style.display='none';}
 function updateNavBadge(){
@@ -3623,9 +3655,10 @@ function selectProviderAndRun(id,action){
 }
 
 // =====================================================================
-//  BASIC MODE
+//  BASIC MODE / LIVE WEB
 // =====================================================================
 state.basicMode=load('distila_basic',false);
+state.liveWeb=load('distila_liveweb',false);
 function toggleBasicMode(){
   state.basicMode=!state.basicMode;
   save('distila_basic',state.basicMode);
@@ -3637,6 +3670,23 @@ function toggleBasicMode(){
   }
   updateTokenDisplay();
   addLog('sys',state.basicMode?'Basic Mode ON: quick summary pipeline.':'Basic Mode OFF: full research pipeline.');
+}
+function toggleLiveWeb(){
+  state.liveWeb=!state.liveWeb;
+  save('distila_liveweb',state.liveWeb);
+  const pill=document.getElementById('liveWebPill');
+  if(pill) pill.classList.toggle('on',state.liveWeb);
+  addLog('sys',state.liveWeb?'Live Web ON: LLM calls will include a web grounding instruction.':'Live Web OFF.');
+  showToast(state.liveWeb?'Live Web enabled — LLMs will search the web for grounding.':'Live Web disabled.','info');
+}
+function toggleKnowledgeMapPane(){
+  const body=document.getElementById('kmPaneBody');
+  const chev=document.getElementById('kmPaneChevron');
+  if(!body) return;
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  if(chev) chev.textContent=open?'▾':'▸';
+  if(open) buildKnowledgeGraph();
 }
 async function runBasicSummary(q,docContext){
   const activeP=state.providers.find(p=>p.id==state.activeProviderId&&!p.disabled);
@@ -3812,6 +3862,31 @@ async function buildKnowledgeGraph(){
 
   // Legend
   legend.innerHTML=catNames.map(c=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px;border-radius:99px;background:${catColorMap[c]}22;border:1px solid ${catColorMap[c]}44"><div style="width:8px;height:8px;border-radius:50%;background:${catColorMap[c]};flex-shrink:0"></div><span style="color:${catColorMap[c]};font-weight:600">${escHTML(c)}</span><span style="color:var(--text-label)">(${cats[c].length})</span></div>`).join('');
+
+  // Also render into the left-pane mini SVG if open
+  const paneSvg=document.getElementById('knowledgeGraphSvgPane');
+  const paneLegend=document.getElementById('categoryLegendPane');
+  if(paneSvg){
+    // Scale nodes to 300x220 viewport
+    const scaleX=300/820, scaleY=220/480;
+    let paneNodes=nodes.map(n=>{
+      const label=n.t.title.length>12?n.t.title.substring(0,11)+'…':n.t.title;
+      const isActive=state.activeTopicId==n.t.id;
+      const px=n.x*scaleX, py=n.y*scaleY, pr=Math.max(3,n.r*0.6);
+      return`<g onclick="switchTopic(${n.t.id})" style="cursor:pointer">
+        ${isActive?`<circle cx="${px}" cy="${py}" r="${pr+3}" fill="${n.col}" opacity=".2"/>`:''}
+        <circle cx="${px}" cy="${py}" r="${pr}" fill="${n.col}" opacity="${isActive?1:.7}"/>
+        <text x="${px}" y="${py+pr+8}" text-anchor="middle" fill="var(--text-secondary)" font-size="8" font-family="var(--font-sans)">${escHTML(label)}</text>
+      </g>`;
+    }).join('');
+    let paneEdges=nodes.map(n=>(n.t.relatedTopics||[]).map(rel=>{
+      const j=nodes.findIndex(x=>x.t.title===rel);
+      if(j<0) return '';
+      return`<line x1="${n.x*scaleX}" y1="${n.y*scaleY}" x2="${nodes[j].x*scaleX}" y2="${nodes[j].y*scaleY}" stroke="${n.col}" stroke-width="1" opacity=".2" stroke-dasharray="3,2"/>`;
+    }).join('')).join('');
+    paneSvg.innerHTML=paneEdges+paneNodes;
+  }
+  if(paneLegend) paneLegend.innerHTML=catNames.map(c=>`<span style="background:${catColorMap[c]}22;color:${catColorMap[c]};border:1px solid ${catColorMap[c]}44;border-radius:99px;padding:2px 7px">${escHTML(c)}</span>`).join('');
 
   // Topic list with categories
   kmList.innerHTML=topics.map(t=>`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:13px;cursor:pointer;transition:border-color .15s" onclick="switchTopic(${t.id});switchTab('synthesis')" class="${state.activeTopicId==t.id?'is-active':''}">
@@ -4115,6 +4190,18 @@ window.addEventListener('load',async()=>{
   // Keyboard shortcuts
   document.getElementById('mainInput').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();initiateResearch();}});
   document.getElementById('mainInput').addEventListener('input',updateTokenDisplay);
+  // URL detection: if user pastes a URL into the chat input, treat it as a URL scan
+  document.getElementById('mainInput').addEventListener('paste',e=>{
+    setTimeout(()=>{
+      const val=(document.getElementById('mainInput').value||'').trim();
+      if(/^https?:\/\/\S+/.test(val)){
+        document.getElementById('urlInput').value=val;
+        document.getElementById('mainInput').value='';
+        updateTokenDisplay();
+        fetchAndScanURL();
+      }
+    },50);
+  });
   document.getElementById('newSource')?.addEventListener('keydown',e=>{if(e.key==='Enter') addSource();});
   document.getElementById('topicNameInput')?.addEventListener('keydown',e=>{if(e.key==='Enter') confirmTopicName();});
   document.getElementById('urlInput')?.addEventListener('keydown',e=>{if(e.key==='Enter') fetchAndScanURL();});
@@ -4127,8 +4214,13 @@ window.addEventListener('load',async()=>{
   // Initialize basic mode pill
   const bpill=document.getElementById('basicModePill');
   if(bpill) bpill.classList.toggle('on',state.basicMode);
+  // Initialize Live Web pill
+  const lwpill=document.getElementById('liveWebPill');
+  if(lwpill) lwpill.classList.toggle('on',state.liveWeb);
+  // Update version badge
+  const badge=document.querySelector('.nav-badge');if(badge&&badge.textContent.startsWith('V')) badge.textContent='V6.0';
   // Initialize Knowledge Map if it was last active tab
-  addLog('sys','Distila V5.9 ready — knowledge accumulates, claims persist, contradictions surface.');
+  addLog('sys','Distila V6.0 ready — knowledge accumulates, claims persist, contradictions surface.');
 });
 window.addEventListener('resize',checkMobileLayout);
 </script>
