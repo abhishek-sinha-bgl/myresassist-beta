@@ -435,8 +435,9 @@ textarea.inp{resize:none;line-height:1.6;}
   .mobile-tab-btn{flex:1;padding:11px 6px;text-align:center;cursor:pointer;border:none;background:none;color:var(--text-label);font-size:11px;font-weight:600;transition:color .15s;display:flex;flex-direction:column;align-items:center;gap:3px;}
   .mobile-tab-btn .mtab-icon{font-size:17px;}
   .mobile-tab-btn.active{color:var(--accent);}
-  #mobileFab{position:fixed;bottom:76px;right:18px;z-index:150;width:54px;height:54px;border-radius:50%;background:var(--accent);color:#000;font-size:22px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.3);transition:all .2s;}
+  #mobileFab{position:fixed;bottom:76px;right:18px;z-index:450;width:54px;height:54px;border-radius:50%;background:var(--accent);color:#000;font-size:22px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s,opacity .2s;}
   #mobileFab:active{transform:scale(.92);}
+  #mobileFab.sheet-open{transform:scale(0);opacity:0;pointer-events:none;}
   #mobileInputSheet{position:fixed;bottom:0;left:0;right:0;z-index:250;background:var(--bg-surface);border-top:1px solid var(--border);border-radius:18px 18px 0 0;padding:18px 14px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
   #mobileInputSheet.open{transform:translateY(0);}
   .tab-bar{display:none;}
@@ -843,7 +844,7 @@ textarea.inp{resize:none;line-height:1.6;}
   <button class="mobile-tab-btn" id="mtab-researchmap" onclick="switchTab('researchmap');setMobileTab('researchmap')"><span class="mtab-icon">◎</span>Map</button>
   <button class="mobile-tab-btn" id="mtab-voids" onclick="switchTab('voids');setMobileTab('voids')"><span class="mtab-icon">🕳</span>Voids</button>
 </div>
-<button id="mobileFab" onclick="openMobileInput()">✏️</button>
+<button id="mobileFab" onclick="openMobileInput()" title="Ask a question" aria-label="Open research input"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
 <!-- MOBILE DRAWER -->
 <div id="mobileDrawer" onclick="closeMobileDrawer(event)">
@@ -3689,8 +3690,8 @@ function switchSettingsTab(tab){
 // =====================================================================
 function openMobileDrawer(){document.getElementById('mobileDrawer').classList.add('open');}
 function closeMobileDrawer(e){if(!e||e.target===document.getElementById('mobileDrawer')||e.type==='click') document.getElementById('mobileDrawer').classList.remove('open');}
-function openMobileInput(){document.getElementById('mobileInputSheet').classList.add('open');document.getElementById('mainInputMobile').value=document.getElementById('mainInput').value;setTimeout(()=>document.getElementById('mainInputMobile').focus(),300);}
-function closeMobileInput(){document.getElementById('mobileInputSheet').classList.remove('open');}
+function openMobileInput(){document.getElementById('mobileInputSheet').classList.add('open');document.getElementById('mobileFab').classList.add('sheet-open');document.getElementById('mainInputMobile').value=document.getElementById('mainInput').value;setTimeout(()=>document.getElementById('mainInputMobile').focus(),300);}
+function closeMobileInput(){document.getElementById('mobileInputSheet').classList.remove('open');document.getElementById('mobileFab').classList.remove('sheet-open');}
 function syncMobileInput(){const v=document.getElementById('mainInputMobile').value;document.getElementById('mainInput').value=v;const vm=document.getElementById('urlInputMobile').value;if(vm) document.getElementById('urlInput').value=vm;}
 function checkMobileLayout(){
   const m=window.innerWidth<768;
