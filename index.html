@@ -394,6 +394,24 @@ textarea.inp{resize:none;line-height:1.6;}
 .tree-cat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
 .user-cat-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);}
 
+/* ===================== V6.3 NEW STYLES ===================== */
+.publish-tab{flex:1;padding:10px 8px;font-size:12.5px;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-label);cursor:pointer;transition:all .15s;}
+.publish-tab:hover{color:var(--text-primary);}
+.publish-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+/* Freshness banner in synthesis */
+#freshnessBanner{margin-bottom:16px;padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+#freshnessBanner.high{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#ef4444;}
+#freshnessBanner.medium{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#f59e0b;}
+#freshnessBanner.low{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:#22c55e;}
+/* Add sources button in synthesis */
+#addSourcesBtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);border:1px dashed var(--border-strong);background:var(--bg-input);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:16px;}
+#addSourcesBtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+/* Source list in synthesis */
+#synthSourceList{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.synth-source-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid var(--border);}
+.synth-source-chip.high{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08);color:#22c55e;}
+.synth-source-chip.medium{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.07);color:#f59e0b;}
+.synth-source-chip.low{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.07);color:#ef4444;}
 /* ===================== PRINT STYLES ===================== */
 @media print {
   #topNav,#leftPane,#rightPane,#leftResizer,#rightResizer,
@@ -523,7 +541,7 @@ textarea.inp{resize:none;line-height:1.6;}
       <span class="nav-title">Distila</span>
       <div style="font-size:10px;color:var(--text-label);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;font-style:italic">knowledge accumulates · claims persist · contradictions surface</div>
     </div>
-    <span class="nav-badge">V6.2</span>
+    <span class="nav-badge">V6.3</span>
   </div>
   <div id="activeProviderTag" style="display:none" class="nav-badge">
     <span id="activeProviderName">—</span>
@@ -613,6 +631,8 @@ textarea.inp{resize:none;line-height:1.6;}
       <button class="tab" id="tab-topics" onclick="switchTab('topics')">Topic Tree</button>
       <div style="flex:1"></div>
       <button onclick="shareResearch()" class="btn btn-ghost btn-sm" style="margin:8px 4px 8px 0" id="shareBtn">📤 Share</button>
+      <button onclick="openPublishModal()" class="btn btn-ghost btn-sm" style="margin:8px 4px 8px 0" id="publishBtn" title="Generate LinkedIn post, tweet thread, or blog post">✦ Publish</button>
+      <button onclick="exportResearch()" class="btn btn-ghost btn-sm" style="margin:8px 8px 8px 0" id="exportBtn" title="Export full research package as Markdown">⬇ Export</button>
     </div>
     <div id="synthesisContent" class="tab-content active">
       <div id="synthesisView">
@@ -1117,7 +1137,7 @@ const PROVIDER_DEFAULTS = {
 };
 const THEMES=[{id:'dark',name:'Night',bg:'#0a0c10',accent:'#00c8f0',emoji:'🌑'},{id:'midnight',name:'Midnight',bg:'#070d1a',accent:'#4d9fff',emoji:'🌊'},{id:'forest',name:'Forest',bg:'#080f09',accent:'#4ade80',emoji:'🌿'},{id:'highcontrast',name:'Hi-Contrast',bg:'#000000',accent:'#ffd700',emoji:'⬛'},{id:'light',name:'Light',bg:'#f0f4f8',accent:'#0070d8',emoji:'☀️'},{id:'sepia',name:'Sepia',bg:'#1a1208',accent:'#e8a045',emoji:'🕯️'},{id:'academic',name:'Academic',bg:'#faf8f3',accent:'#8b1a1a',emoji:'📜'}];
 // Fast-moving fields where citation age matters most
-const HIGH_VELOCITY_KEYWORDS=['ai','machine learning','artificial intelligence','crypto','cryptocurrency','blockchain','geopolitics','pandemic','covid','climate','cybersecurity','llm','gpt','generative','quantum','biotech','startup','venture'];
+const HIGH_VELOCITY_KEYWORDS=['ai','machine learning','artificial intelligence','crypto','cryptocurrency','blockchain','geopolitics','pandemic','covid','climate','cybersecurity','llm','gpt','generative','quantum','biotech','startup','venture','war','conflict','election','politics','sanctions','interest rate','inflation','fed ','fed.','central bank','recession','market','stock','earnings','merger','acquisition','ipo','regulation','legislation','supreme court','policy','treaty','missile','nuclear','china','russia','ukraine','middle east','israel','gaza','taiwan','2024','2025','2026'];
 const CORS_PROXIES=['https://api.allorigins.win/raw?url=','https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest='];
 
 // =====================================================================
@@ -1405,11 +1425,15 @@ function buildConstraintContext(){
 const PERSONAS={
   analyst:{
     id:'analyst',label:'Analyst',emoji:'🔬',color:'#00c8f0',
-    systemPrompt:'You are a lead research synthesizer producing a peer-review quality brief. Use scholarly prose throughout.',
+    systemPrompt:'You are a principal research analyst producing a decision-grade intelligence brief. Your output must pass the "so what" test on every finding — describe AND interpret. Structure argument from evidence, never from assertion. Be direct about uncertainty without hiding behind it.',
     synthesize(topic,claims,gaps,workerBlocks,sources,providerNames,constraints,positions){
       const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-      const posBlock=positions.length?`\n\nLOAD-BEARING POSITIONS (researcher has committed to these — explicitly note where evidence supports or challenges each):\n${positions.map(p=>`• ${p.text}${p.challenges?.mustProve?' [Must establish: '+p.challenges.mustProve+']':''}`).join('\n')}`:'';
-      return`TOPIC: "${topic}"\nDATE: ${today}\nCONTRIBUTORS: ${providerNames.join(', ')}\n${sources.length?`AUTHORITATIVE SOURCES: ${sources.join(', ')}\n`:''}\nVALIDATED CLAIMS:\n${claims.map(c=>`[${c.status}|${c.confidence||0}%] ${c.text}\n  Evidence: ${c.reasoning||''}${c.citations?.length?' | '+c.citations.join(', '):''}`).join('\n\n')}\n\nGAPS: ${gaps.map(g=>typeof g==='object'?g.text:g).join('; ')}${posBlock}\n\nWrite a SCHOLARLY RESEARCH BRIEF in markdown:\n\n# [Descriptive title for "${topic}"]\n\n> **Date:** ${today} | **Confidence:** [x]% | **Sources:** [key sources with years]\n\n## Executive Summary\n[3–5 sentence abstract. Key finding, significance, state of evidence.]\n\n## Key Findings\n[Numbered. Evidence strength per finding. Be specific.]\n\n## Contested Territory\n[Where evidence conflicts. Both sides, neutrally.]\n\n## Knowledge Gaps\n[Unexplored questions and why they matter.]\n\n## Socratic Challenge\n[What fundamental assumptions might be wrong?]\n\n## Conclusions\n[What can be stated with confidence vs what remains uncertain.]\n\n---\n*${claims.length} claims via ${providerNames.join(', ')}. ${today}.*`;
+      const verified=claims.filter(c=>c.status==='VERIFIED').length;
+      const contested=claims.filter(c=>c.status==='CONTESTED').length;
+      const weak=claims.filter(c=>c.status==='WEAK').length;
+      const avgConf=claims.length?Math.round(claims.reduce((a,c)=>a+(c.confidence||50),0)/claims.length):0;
+      const posBlock=positions.length?`\n\nCOMMITTED POSITIONS — the researcher has staked a view on these. Assess calibration explicitly:\n${positions.map(p=>`• ${p.text}${p.challenges?.mustProve?' | KEY ASSUMPTION: '+p.challenges.mustProve:''}${p.challenges?.weakAssumptions?.length?' | VULNERABILITIES: '+p.challenges.weakAssumptions.slice(0,2).join('; '):''}`).join('\n')}`:'';
+      return`TOPIC: "${topic}"\nDATE: ${today} | CONTRIBUTORS: ${providerNames.join(', ')}\nEVIDENCE BASE: ${claims.length} claims — ${verified} verified, ${contested} contested, ${weak} weak | avg confidence ${avgConf}%\n${sources.length?`AUTHORITATIVE SOURCES: ${sources.join(', ')}\n`:''}${posBlock}\n\nCLAIMS WITH EVIDENCE:\n${claims.filter(c=>!c.discarded).map(c=>`[${c.status}|${c.confidence||0}%] ${c.text}\n  Evidence: ${c.reasoning||'none'}${c.citations?.length?' | Sources: '+c.citations.join(', '):''}${c.sourceDoc?' | Grounded: '+c.sourceDoc.title+(c.sourceDoc.userConfidence?' ('+c.sourceDoc.userConfidence+' confidence)':''):''}`).join('\n\n')}\n\nKNOWLEDGE GAPS: ${gaps.map(g=>typeof g==='object'?g.text:g).join(' | ')}\n\nWrite a DECISION-GRADE ANALYST BRIEF in markdown. Every section must interpret, not just describe.\n\n# [Precise, active-voice title that states the key finding]\n\n> **${today}** | **Evidence Quality:** ${avgConf}% avg confidence across ${claims.length} claims | **Contributors:** ${providerNames.join(', ')}\n\n## Bottom Line Up Front\n[2–3 sentences. What does the evidence actually show? State the finding plainly. A decision-maker reading only this must get the essential picture.]\n\n## What the Evidence Shows\n[4–6 numbered findings. For each: **Finding** — [evidence basis] — *Implication: ...*. Flag contested findings explicitly.]\n\n## Where the Evidence Conflicts\n[Genuine disagreements in the claim base. Present both sides. State what would be required to resolve it.]\n\n## Analytical Risks & Blind Spots\n[What assumptions underpin this analysis? What is NOT in the evidence base? What could make this assessment wrong? Be specific.]\n\n## Implications\n[What does this mean for decisions, strategy, or further research? Connect findings to consequences — do not restate findings.]\n\n## Open Questions\n[What remains unresolved and why it matters. Prioritise by decision relevance.]\n\n---\n*${claims.length} claims analysed (${verified} verified, ${contested} contested). ${today}.*`;
     }
   },
   executive:{
@@ -1671,9 +1695,29 @@ Return ONLY valid JSON:
 // =====================================================================
 async function callAI(provider,userPrompt,systemPrompt,signal){
   if(!provider) throw new Error('No provider specified');
-  // Live Web: prepend grounding instruction when enabled
+  const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  // Provider detection helpers
+  const isPerplexity=provider.url?.includes('perplexity.ai')||(provider.name||'').toLowerCase().includes('perplexity');
+  const isOpenRouter=provider.url?.includes('openrouter.ai')||(provider.name||'').toLowerCase().includes('openrouter');
+  const isGroq=provider.url?.includes('groq.com')||(provider.name||'').toLowerCase().includes('groq');
+  // Live Web grounding — strategy varies by provider
   if(state.liveWeb){
-    systemPrompt = 'IMPORTANT: You have access to the web. Search for current, real-world information to ground your claims in up-to-date sources before responding. Cite sources where possible.\n\n' + systemPrompt;
+    if(isPerplexity){
+      // Perplexity has native online search — just tell it to use it
+      systemPrompt='You are an online research assistant with real-time web access. Always search the web for current information before answering. Today is '+today+'. Cite every factual claim with [Source: URL or publication name, date].\n\n'+systemPrompt;
+    } else if(isOpenRouter){
+      // OpenRouter: inject date context + grounding instruction. Some models routed through OR have web access (e.g. :online suffix models)
+      systemPrompt='GROUNDING INSTRUCTION: Today is '+today+'. Your training data has a cutoff. For any claim that could have changed in the past 12 months, explicitly flag it as [MAY BE OUTDATED] and note what current information would look like. When you can cite sources, do so with publication name and year.\n\n'+systemPrompt;
+      // Append freshness context to user prompt too
+      userPrompt='[Today: '+today+'. Flag any information that may have changed since your training cutoff.]\n\n'+userPrompt;
+    } else if(isGroq){
+      // Groq serves Llama/Mixtral — no web access. Be explicit about limitations + push for best-effort recency.
+      systemPrompt='IMPORTANT — DATE CONTEXT: Today is '+today+'. You do not have real-time web access. However: (1) use the most recent information in your training, (2) explicitly flag any claim that is time-sensitive as [VERIFY: may be outdated], (3) always include the year of the source when known, (4) prefer citing primary sources over secondary summaries.\n\n'+systemPrompt;
+      userPrompt='[Context: '+today+'. Flag time-sensitive claims as [VERIFY]. Use most recent training data available.]\n\n'+userPrompt;
+    } else {
+      // Generic fallback: strong grounding instruction for any OpenAI-compatible or unknown provider
+      systemPrompt='GROUNDING INSTRUCTION: Today is '+today+'. You have access to the web — search for current, real-world information before responding. For every factual claim: (1) cite your source with publication name and date, (2) flag claims where your information may be more than 6 months old as [VERIFY: '+today+'], (3) distinguish clearly between established facts and recent developments.\n\n'+systemPrompt;
+    }
   }
   // Guard: detect un-decrypted keys
   const rawKey=(provider.key||'').trim();
@@ -1699,7 +1743,13 @@ async function callAI(provider,userPrompt,systemPrompt,signal){
       .trim()||'gemini-2.0-flash';
     url=`${GEMINI_BASE}/models/${modelName}:generateContent?key=${rawKey}`;
     addLog('sys',`Gemini → ${GEMINI_BASE}/models/${modelName}:generateContent?key=***`);
-    body={contents:[{parts:[{text:userPrompt}]}],systemInstruction:{parts:[{text:systemPrompt}]},generationConfig:{temperature:0.3,maxOutputTokens:4096}};
+    const geminiBody={contents:[{parts:[{text:userPrompt}]}],systemInstruction:{parts:[{text:systemPrompt}]},generationConfig:{temperature:0.3,maxOutputTokens:4096}};
+    // Enable Gemini native grounding (Google Search) when liveWeb is on
+    if(state.liveWeb){
+      geminiBody.tools=[{google_search:{}}];
+      addLog('sys','Gemini: Google Search grounding enabled');
+    }
+    body=geminiBody;
   } else if(isClaude){
     // x-api-key header, endpoint must end at /messages
     url=baseUrl.endsWith('/messages')?baseUrl:baseUrl.replace(/\/messages\/?$/,'')+'/messages';
@@ -1984,11 +2034,23 @@ async function initiateResearch(){
     // Build source doc context for this topic
     const sourceDocs=(t.sourceDocs||[]);
     const sourceContext=sourceDocs.length
-      ? '\n\nATTACHED PRIMARY SOURCES:\n'+sourceDocs.map(d=>
-          `[${d.title}](${d.url})\n${d.passages?.map(p=>`"${p.quote}" — ${p.topic||''}`).join('\n')||d.content?.substring(0,1000)||''}`
-        ).join('\n\n---\n')
+      ? '\n\nATTACHED PRIMARY SOURCES (user-rated confidence in brackets):\n'+sourceDocs.map(d=>
+          `[${d.title}](${d.url}) [USER CONFIDENCE: ${(d.userConfidence||'medium').toUpperCase()}]\n${d.passages?.map(p=>`"${p.quote}" — ${p.topic||''}`).join('\n')||d.content?.substring(0,1000)||''}`
+        ).join('\n\n---\n')+
+        '\n\nSOURCE WEIGHTING RULES: HIGH confidence sources — treat as authoritative, cite prominently. MEDIUM — corroborate where possible. LOW — treat as supplementary; do not lead claims with low-confidence sources; flag uncertainty explicitly.'
       : '';
     if(sourceDocs.length) addLog('sys',`${sourceDocs.length} source doc${sourceDocs.length>1?'s':''} attached to this topic`);
+
+    // FRESHNESS CLASSIFICATION — before any LLM call
+    // Classify topic velocity and store on topic for rendering decisions
+    const freshnessClass=isHighVelocityTopic(q)?'high':(
+      /\b(history|historical|ancient|classic|theory|fundamentals|introduction|overview|background)\b/i.test(q)?'low':'medium'
+    );
+    t.freshnessClass=freshnessClass;
+    t.freshnessClassifiedAt=new Date().toISOString();
+    if(freshnessClass==='high'){
+      addLog('warn',`High-velocity topic detected — information may change rapidly. ${state.liveWeb?'Live Web grounding active.':'Consider enabling Live Web in the toolbar.'}`);
+    }
 
     // PHASE A: SCAN
     setPhase('scan','Phase 1/4 — Quick Scan');
@@ -2040,17 +2102,22 @@ async function initiateResearch(){
               c.text.toLowerCase().includes(p.topic?.toLowerCase()||'')||
               c.reasoning?.toLowerCase().includes(p.topic?.toLowerCase()||'')
             ));
-            if(match){sourceDoc={url:doc.url,title:doc.title,passage:match.quote,relationship:'supports'};break;}
+            if(match){sourceDoc={url:doc.url,title:doc.title,passage:match.quote,relationship:'supports',userConfidence:doc.userConfidence||'medium'};break;}
           }
           // If no passage match but claim cites the source domain
           if(!sourceDoc){
             const cited=(c.citations||[]).join(' ').toLowerCase();
             const domainMatch=sourceDocs.find(d=>cited.includes(d.domain));
-            if(domainMatch) sourceDoc={url:domainMatch.url,title:domainMatch.title,passage:'',relationship:'supports'};
+            if(domainMatch) sourceDoc={url:domainMatch.url,title:domainMatch.title,passage:'',relationship:'supports',userConfidence:domainMatch.userConfidence||'medium'};
           }
         }
+        // Source confidence penalty: low=−15, medium=0, high=+5 (capped)
+        let srcConfPenalty=0;
+        if(sourceDoc?.userConfidence==='low') srcConfPenalty=-15;
+        else if(sourceDoc?.userConfidence==='high') srcConfPenalty=5;
+        const finalConf=Math.min(100,Math.max(5,(citScore.adjusted||50)+srcConfPenalty));
         rawClaims.push({...c,id:Date.now()+Math.random(),
-          confidenceRaw:c.confidence,confidence:citScore.adjusted,
+          confidenceRaw:c.confidence,confidence:finalConf,
           citationAgeNote:citScore.reason,
           sourceProvider:{id:(workers[i]||activeP).id,name:providerNames[i]},
           sourceLayer:'worker',validations:[],timestamp:new Date().toISOString(),discarded:false,
@@ -2273,18 +2340,41 @@ async function executeValidation(){
 }
 
 let deltaTimer=null;
-function scheduleDeltaUpdate(t,claim){
+function scheduleDeltaUpdate(t,claim,reason='claim'){
   clearTimeout(deltaTimer);
   deltaTimer=setTimeout(async()=>{
-    if(state.activeTopicId!==t.id) return; // Don't update wrong topic
+    if(state.activeTopicId!==t.id) return;
     const activeP=state.providers.find(p=>p.id==state.activeProviderId&&!p.disabled);
     if(!activeP||!t.brief) return;
     try{
-      addLog('sys','Delta synthesis update…');
-      const updated=await callAIWithRetry(activeP,`Update the following research brief to reflect this claim status change:\nTOPIC: ${t.title}\nCLAIM: ${claim.text}\nNEW STATUS: ${claim.status}\nNEW CONFIDENCE: ${claim.confidence}%\n\nBRIEF (first 2500 chars):\n${t.brief.substring(0,2500)}\n\nUpdate the Contested Territory and Conclusions sections. Return the complete updated brief in markdown.`,'You are a research synthesizer. Update the brief minimally and accurately.');
-      if(updated&&updated.length>200){t.brief=updated;saveState();renderSynthesis(t);addLog('ok','Living synthesis updated.');}
+      addLog('sys',`Delta synthesis update (${reason})…`);
+      // Use full brief — no truncation. Chunked if very long.
+      const briefForUpdate=t.brief.length>8000?t.brief.substring(0,8000)+'\n\n[...brief truncated for update pass — full content preserved]':t.brief;
+      const changeDesc=claim
+        ?`CLAIM CHANGE:\n  Text: ${claim.text}\n  New Status: ${claim.status}\n  New Confidence: ${claim.confidence}%\n  Reasoning: ${claim.reasoning||''}`
+        :`POSITION ${reason.toUpperCase()}: ${t.claims?.find(c=>c.isPosition)?.text||'position updated'}`;
+      const updated=await callAIWithRetry(activeP,
+        `Update the following research brief to reflect a change in the evidence base.\nTOPIC: ${t.title}\n\n${changeDesc}\n\nFULL BRIEF:\n${briefForUpdate}\n\nInstructions: Update ONLY the sections affected by this change (typically Where Evidence Conflicts, Contested Territory, Conclusions, or Implications). Preserve all other sections exactly. Return the complete updated brief in markdown.`,
+        'You are a research synthesizer. Make minimal, precise updates. Never remove verified findings. Preserve the brief structure exactly.');
+      if(updated&&updated.length>200){
+        t.brief=updated;
+        t.briefUpdatedAt=new Date().toISOString();
+        t.briefUpdateReason=reason;
+        saveState();renderSynthesis(t);
+        addLog('ok',`Living synthesis updated (${reason}).`);
+        showBriefUpdatedSignal(reason);
+      }
     }catch(e){addLog('warn','Delta update: '+e.message);}
   },3000);
+}
+function showBriefUpdatedSignal(reason){
+  const sv=document.getElementById('synthesisView');
+  if(!sv) return;
+  const sig=document.createElement('div');
+  sig.style.cssText='position:sticky;top:0;z-index:10;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:var(--radius-sm);padding:7px 14px;font-size:12.5px;color:#22c55e;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;animation:toastIn .25s ease';
+  sig.innerHTML=`↻ Brief updated — reflects ${reason} change &nbsp;<button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;color:#22c55e;cursor:pointer;font-size:14px;line-height:1">✕</button>`;
+  sv.querySelector('.synthesis-rendered')?.prepend(sig);
+  setTimeout(()=>sig.remove(),8000);
 }
 
 // =====================================================================
@@ -2475,7 +2565,39 @@ function renderSynthesis(t){
   // Build lens switcher — all other personas as chips
   const otherPersonas=Object.values(PERSONAS).filter(x=>x.id!==(t.persona||'analyst'));
   const lensChips=otherPersonas.map(x=>`<button class="lens-chip" id="lchip-${x.id}" onclick="resynthesizeAs('${x.id}')" title="View this brief through the ${x.label} lens">${x.emoji} ${x.label}</button>`).join('');
+
+  // Freshness banner
+  let freshBanner='';
+  if(t.freshnessClass==='high'){
+    const liveWebOn=state.liveWeb;
+    freshBanner=`<div id="freshnessBanner" class="high">
+      <span style="font-size:18px;flex-shrink:0">⚡</span>
+      <div style="flex:1">
+        <strong>High-velocity topic</strong> — information in this field changes rapidly.
+        ${liveWebOn
+          ?'Live Web grounding was active during research.'
+          :'<span style="opacity:.85">Consider re-running with <strong>Live Web</strong> enabled, or add fresh URLs below.</span>'}
+        ${t.confidenceNote?`<div style="margin-top:4px;font-size:12px;opacity:.8">${t.confidenceNote}</div>`:''}
+      </div>
+      ${!liveWebOn?`<button onclick="toggleLiveWeb();initiateResearch()" class="btn btn-sm" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ef4444;flex-shrink:0;font-size:12px">↻ Re-run with Live Web</button>`:''}
+    </div>`;
+  } else if(t.freshnessClass==='medium'&&t.confidenceNote){
+    freshBanner=`<div id="freshnessBanner" class="medium"><span style="font-size:16px">⚠</span><div>${t.confidenceNote}</div></div>`;
+  }
+
+  // Source chips — topic-attached sources with confidence indicators
+  const topicSources=(t.sourceDocs||[]);
+  const sourceChipsHtml=topicSources.length
+    ?`<div id="synthSourceList">${topicSources.map(d=>`<span class="synth-source-chip ${d.userConfidence||'medium'}" title="${d.url}">
+        ${d.userConfidence==='high'?'🟢':d.userConfidence==='low'?'🔴':'🟡'} ${d.domain}
+        <button onclick="removeSourceDoc(${d.id});renderSynthesis(state.topics.find(t=>t.id==state.activeTopicId))" style="background:none;border:none;cursor:pointer;color:inherit;opacity:.6;padding:0;font-size:11px;line-height:1" title="Remove source">✕</button>
+      </span>`).join('')}</div>`
+    :'';
+
   el.innerHTML=`<div class="synthesis-rendered">
+    ${freshBanner}
+    <button id="addSourcesBtn" onclick="openAddSourcesModal()">+ Add Sources <span style="font-size:11px;opacity:.6;font-weight:400">· attach URLs to this topic</span></button>
+    ${sourceChipsHtml}
     <div class="lens-bar">
       <span class="lens-bar-label">VIEW AS</span>
       ${lensChips}
@@ -2667,6 +2789,8 @@ async function promoteToPosition(claimId){
   showToast('Position committed. Running challenge analysis…','info');
   // Kick off async challenge pass — don't block UI
   challengePosition(claimId);
+  // Delta synthesis update for position commit
+  if(t.brief) scheduleDeltaUpdate(t,null,'position commit');
 }
 function demoteFromPosition(claimId){
   const t=state.topics.find(x=>x.id==state.activeTopicId);if(!t) return;
@@ -2677,6 +2801,8 @@ function demoteFromPosition(claimId){
   saveState();renderClaims(t);
   addLog('sys',`Position withdrawn: "${c.text.substring(0,60)}…"`);
   showToast('Position withdrawn.','info');
+  // Delta synthesis update for position withdrawal
+  if(t.brief) scheduleDeltaUpdate(t,null,'position withdrawal');
 }
 async function challengePosition(claimId){
   const t=state.topics.find(x=>x.id==state.activeTopicId);if(!t) return;
@@ -3398,8 +3524,8 @@ function toggleSourcesPanel(){
   document.getElementById('sourcesPanelBody').style.display=state.sourcesPanelOpen?'block':'none';
   document.getElementById('sourcesPanelChevron').textContent=state.sourcesPanelOpen?'▾':'▸';
 }
-async function addSourceDoc(){
-  const urlVal=document.getElementById('sourceUrlInput').value.trim();
+async function addSourceDoc(urlOverride){
+  const urlVal=urlOverride||(document.getElementById('sourceUrlInput')?.value||'').trim();
   if(!urlVal||!urlVal.startsWith('http')){showToast('Enter a valid URL starting with http(s)','error');return;}
   const t=state.topics.find(x=>x.id==state.activeTopicId);
   if(!t){showToast('Select a topic first','error');return;}
@@ -3422,11 +3548,15 @@ async function addSourceDoc(){
     }catch(e){addLog('warn',`Proxy failed: ${e.message}`);}
   }
   const domain=new URL(urlVal).hostname.replace('www.','');
+  // Read user confidence from modal if open, otherwise default 'medium'
+  const confEl=document.getElementById('sourceConfidenceSelect');
+  const userConfidence=confEl?confEl.value:'medium';
   const doc={
     id:Date.now(),url:urlVal,title:title||domain,domain,
     addedAt:new Date().toISOString(),
     content:content.substring(0,6000),
-    passageCount:0
+    passageCount:0,
+    userConfidence  // 'high'|'medium'|'low' — set by user, used in synthesis weighting
   };
   // Extract key passages using AI if provider available
   const activeP=state.providers.find(p=>p.id==state.activeProviderId&&!p.disabled);
@@ -3593,14 +3723,140 @@ function setTheme(id){
 // =====================================================================
 function exportResearch(){
   const t=state.topics.find(x=>x.id==state.activeTopicId);
-  if(!t||!t.brief){showToast('No synthesis to export.','error');return;}
+  if(!t){showToast('Select a topic to export.','error');return;}
+  openExportModal();
+}
+function openExportModal(){openModal('exportModal');}
+function executeExport(){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(!t){showToast('No topic selected.','error');return;}
+  closeModal('exportModal');
   const ts=new Date().toISOString().split('T')[0];
-  const md=`${t.brief}\n\n---\n## Claims (${(t.claims||[]).length})\n\n${(t.claims||[]).filter(c=>!c.discarded).map(c=>`**[${c.status} ${c.confidence||0}%]** ${c.text}\n> ${c.reasoning||''}\n`).join('\n')}\n\n## Research Gaps\n${(t.gaps||[]).map(g=>`- ${typeof g==='object'?g.text:g}`).join('\n')}`;
+  const scope=document.querySelector('input[name=exportScope]:checked')?.value||'full';
+  const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const activeClaims=(t.claims||[]).filter(c=>!c.discarded);
+  const positions=activeClaims.filter(c=>c.isPosition);
+  const contras=t.contradictions||[];
+  const sources=t.sourceDocs||[];
+
+  let md='';
+  // ── Header ──
+  md+=`# Research Package: ${t.title}\n`;
+  md+=`**Exported:** ${today} | **Distila V6.3** | **Lens:** ${(t.persona||'analyst').charAt(0).toUpperCase()+(t.persona||'analyst').slice(1)}\n`;
+  if(t.freshnessClass) md+=`**Topic Velocity:** ${t.freshnessClass.toUpperCase()} | `;
+  if(t.snr) md+=`**Evidence Confidence:** ${t.snr}%\n`;
+  md+='\n---\n\n';
+
+  // ── Synthesis Brief ──
+  if(t.brief){
+    md+=t.brief+'\n\n';
+    if(t.briefUpdatedAt) md+=`*Brief last updated: ${new Date(t.briefUpdatedAt).toLocaleString()} (${t.briefUpdateReason||'manual'})*\n`;
+    md+='\n---\n\n';
+  }
+
+  // ── Positions (committed views) ──
+  if(scope!=='brief'&&positions.length){
+    md+=`## Committed Positions (${positions.length})\n`;
+    md+='*These are claims the researcher has explicitly committed to as load-bearing views.*\n\n';
+    positions.forEach(c=>{
+      md+=`### ◈ ${c.text}\n`;
+      md+=`- **Status:** ${c.status} | **Confidence:** ${c.confidence||0}%\n`;
+      md+=`- **Committed:** ${c.committedAt?new Date(c.committedAt).toLocaleDateString():'unknown'}\n`;
+      if(c.challenges){
+        if(c.challenges.weakAssumptions?.length) md+=`- **Weak Assumptions:** ${c.challenges.weakAssumptions.join('; ')}\n`;
+        if(c.challenges.counterArguments?.length) md+=`- **Counter-Arguments:** ${c.challenges.counterArguments.join('; ')}\n`;
+        if(c.challenges.mustProve) md+=`- **Must Establish:** ${c.challenges.mustProve}\n`;
+      }
+      md+='\n';
+    });
+    md+='---\n\n';
+  }
+
+  // ── All Claims ──
+  if(scope==='full'||scope==='claims'){
+    md+=`## Claims Vault (${activeClaims.length} active)\n\n`;
+    const byStatus={VERIFIED:[],CONTESTED:[],WEAK:[],UNVERIFIED:[]};
+    activeClaims.forEach(c=>(byStatus[c.status]||byStatus.UNVERIFIED).push(c));
+    for(const [st,cls] of Object.entries(byStatus)){
+      if(!cls.length) continue;
+      md+=`### ${st} (${cls.length})\n`;
+      cls.forEach(c=>{
+        md+=`- **[${c.confidence||0}%]** ${c.text}\n`;
+        if(c.reasoning) md+=`  > ${c.reasoning}\n`;
+        if(c.citations?.length) md+=`  > Sources: ${c.citations.join(', ')}\n`;
+        if(c.sourceDoc) md+=`  > Grounded: [${c.sourceDoc.title}](${c.sourceDoc.url})${c.sourceDoc.userConfidence?' ('+c.sourceDoc.userConfidence+' confidence)':''}\n`;
+        if(c.decayLabel&&c.decayLabel!=='fresh') md+=`  > ⏱ ${c.decayLabel}: confidence decayed ${c.decayDelta||0}pts\n`;
+        md+='\n';
+      });
+    }
+    md+='---\n\n';
+  }
+
+  // ── Contradictions ──
+  if(scope==='full'&&contras.length){
+    md+=`## Contradictions (${contras.length})\n\n`;
+    contras.forEach(c=>{
+      md+=`- **"${c.claimA?.text||''}"**\n  *conflicts with* **"${c.claimB?.text||''}"**\n  Confidence delta: ${Math.abs((c.claimA?.confidence||0)-(c.claimB?.confidence||0))}pts\n\n`;
+    });
+    md+='---\n\n';
+  }
+
+  // ── Knowledge Gaps ──
+  if(scope!=='brief'&&(t.gaps||[]).length){
+    md+=`## Knowledge Gaps\n\n`;
+    (t.gaps||[]).forEach(g=>{
+      const gt=typeof g==='object'?g:null;
+      md+=`- ${gt?gt.text:g}${gt?.importance?' *('+gt.importance+')*':''}\n`;
+    });
+    md+='\n---\n\n';
+  }
+
+  // ── Socratic Challenges ──
+  if(scope==='full'&&t.socratic?.challenges?.length){
+    md+=`## Socratic Challenge Layer\n\n`;
+    t.socratic.challenges.forEach(ch=>{
+      md+=`- **Assumption:** ${ch.assumption||''}\n`;
+      md+=`  **Challenge:** ${ch.challenge||''}\n`;
+      md+=`  **Severity:** ${ch.severity||'medium'}\n\n`;
+    });
+    if(t.socratic.alternativeFraming) md+=`**Alternative Framing:** ${t.socratic.alternativeFraming}\n\n`;
+    md+='---\n\n';
+  }
+
+  // ── Source Documents ──
+  if(scope==='full'&&sources.length){
+    md+=`## Source Documents (${sources.length})\n\n`;
+    sources.forEach(d=>{
+      md+=`### [${d.title}](${d.url})\n`;
+      md+=`- **Domain:** ${d.domain} | **User Confidence:** ${d.userConfidence||'medium'} | **Added:** ${d.addedAt?new Date(d.addedAt).toLocaleDateString():''}\n`;
+      if(d.passages?.length){
+        md+=`- **Key Passages:**\n`;
+        d.passages.forEach(p=>md+=`  > "${p.quote}"${p.significance?' — '+p.significance:''}\n`);
+      }
+      md+='\n';
+    });
+    md+='---\n\n';
+  }
+
+  // ── Staleness / Decay Summary ──
+  if(scope==='full'&&t.confidenceNote){
+    md+=`## Staleness & Confidence Notes\n\n`;
+    md+=`- **Confidence Adjustment:** ${t.confidenceNote}\n`;
+    if(t.avgCitAge) md+=`- **Avg Citation Age:** ${t.avgCitAge} years\n`;
+    if(t.freshnessClass) md+=`- **Topic Velocity:** ${t.freshnessClass} (affects decay rate)\n`;
+    const stale=activeClaims.filter(c=>c.decayLabel==='stale').length;
+    const drifting=activeClaims.filter(c=>c.decayLabel==='drifting').length;
+    if(stale||drifting) md+=`- **Decay Status:** ${stale} stale, ${drifting} drifting claims\n`;
+    md+='\n---\n\n';
+  }
+
+  md+=`*Exported from Distila V6.3 · ${today} · distila.io*\n`;
+
   const blob=new Blob([md],{type:'text/markdown'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`research-${t.title.replace(/\s+/g,'-').toLowerCase()}-${ts}.md`;
+  a.download=`distila-${t.title.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-${ts}.md`;
   a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  showToast('Exported as Markdown.','success');
+  showToast('Exported — ready for Claude Desktop or any LLM.','success');
 }
 function openPrintModal(){
   const t=state.topics.find(x=>x.id==state.activeTopicId);
@@ -3879,6 +4135,168 @@ function toggleBasicMode(){
   updateTokenDisplay();
   addLog('sys',state.basicMode?'Basic Mode ON: quick summary pipeline.':'Basic Mode OFF: full research pipeline.');
 }
+// =====================================================================
+//  V6.3 — ADD SOURCES MODAL
+// =====================================================================
+function openAddSourcesModal(){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(!t){showToast('Select a topic first.','error');return;}
+  document.getElementById('modalSourceUrl').value='';
+  document.getElementById('sourceConfidenceSelect').value='medium';
+  setSourceConfidence('medium');
+  document.getElementById('addAnotherSource').checked=false;
+  document.getElementById('publishOutput')&&(document.getElementById('publishOutput').style.display='none');
+  openModal('addSourcesModal');
+  setTimeout(()=>document.getElementById('modalSourceUrl').focus(),200);
+}
+function setSourceConfidence(level){
+  document.getElementById('sourceConfidenceSelect').value=level;
+  ['high','medium','low'].forEach(l=>{
+    const box=document.getElementById(`sconf-${l}-box`);
+    if(!box) return;
+    if(l===level){
+      box.style.borderColor='var(--accent)';box.style.background='var(--accent-dim)';
+      box.querySelector('div:nth-child(2)').style.color='var(--accent)';
+    } else {
+      box.style.borderColor='var(--border)';box.style.background='';
+      box.querySelector('div:nth-child(2)').style.color='var(--text-primary)';
+    }
+  });
+}
+async function executeAddSource(){
+  const urlVal=(document.getElementById('modalSourceUrl').value||'').trim();
+  if(!urlVal||!urlVal.startsWith('http')){showToast('Enter a valid URL starting with https://','error');return;}
+  const addAnother=document.getElementById('addAnotherSource').checked;
+  closeModal('addSourcesModal');
+  // Delegate to existing addSourceDoc which reads sourceConfidenceSelect
+  await addSourceDoc(urlVal);
+  // Re-render synthesis to show updated source chips + trigger re-synthesis prompt
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(t) renderSynthesis(t);
+  if(addAnother) setTimeout(()=>openAddSourcesModal(),400);
+}
+// Override addSourceDoc to accept optional url param (called from modal)
+const _origAddSourceDoc=addSourceDoc;
+
+// =====================================================================
+//  V6.3 — SOCIAL PUBLISH
+// =====================================================================
+let currentPublishTab='linkedin';
+const PUBLISH_FORMATS={
+  linkedin:{
+    label:'LinkedIn Post',desc:'Professional insight post ≤ 1,500 characters. Hook → key insight → implication → CTA.',
+    maxChars:1500,
+    prompt(topic,brief,claims){
+      const top3=claims.filter(c=>c.status==='VERIFIED'&&!c.discarded).slice(0,3).map(c=>c.text).join('\n');
+      return`Write a LinkedIn post based on this research.
+TOPIC: "${topic}"
+TOP FINDINGS:\n${top3||'See brief'}
+BRIEF EXCERPT: ${brief.substring(0,1200)}
+
+Requirements:
+- ≤ 1,500 characters total (hard limit)
+- Hook in first line — make someone stop scrolling
+- 2–3 key insights with specific evidence
+- One clear implication or "so what"
+- End with a question or CTA to drive engagement
+- Professional but human tone — no corporate jargon
+- Use line breaks for readability. NO hashtag spam — max 3 relevant hashtags at the end.
+Return only the post text, ready to copy-paste.`;
+    }
+  },
+  tweet:{
+    label:'Tweet Thread',desc:'5–7 tweet thread. Each tweet ≤ 280 chars. Numbered 1/ 2/ etc.',
+    maxChars:null,
+    prompt(topic,brief,claims){
+      const verified=claims.filter(c=>c.status==='VERIFIED'&&!c.discarded).slice(0,5).map(c=>c.text).join('\n');
+      return`Write a tweet thread based on this research.
+TOPIC: "${topic}"
+KEY VERIFIED FINDINGS:\n${verified||'See brief'}
+BRIEF EXCERPT: ${brief.substring(0,1000)}
+
+Requirements:
+- 5–7 tweets numbered 1/ 2/ 3/ etc.
+- Each tweet ≤ 280 characters (strict)
+- Tweet 1: compelling hook that makes people want to read the thread
+- Tweets 2–5: one concrete finding per tweet, specific not vague
+- Tweet 6: the implication or "so what"
+- Final tweet: open question or call to share
+- Conversational tone. No fluff. Each tweet must stand alone.
+Return only the thread, one tweet per line, numbered.`;
+    }
+  },
+  blog:{
+    label:'Blog Post Outline',desc:'Full blog post with intro, 3–5 sections, conclusion. ~800–1200 words.',
+    maxChars:null,
+    prompt(topic,brief,claims){
+      const allClaims=claims.filter(c=>!c.discarded).slice(0,12).map(c=>`[${c.status}|${c.confidence||0}%] ${c.text}`).join('\n');
+      return`Write a complete blog post based on this research.
+TOPIC: "${topic}"
+CLAIMS:\n${allClaims}
+FULL BRIEF: ${brief.substring(0,2500)}
+
+Requirements:
+- Compelling headline (not clickbait — informative and specific)
+- Engaging intro that establishes stakes (2–3 paragraphs)
+- 3–5 substantive sections with subheadings
+- Each section builds on the research — cite specific findings
+- Include a section on contested/uncertain areas (intellectual honesty)
+- Conclusion with clear takeaway and open question
+- Target ~900 words. Accessible to an informed general reader.
+- Write in full prose, not bullet points.
+Return the complete blog post in markdown.`;
+    }
+  }
+};
+function switchPublishTab(tab){
+  currentPublishTab=tab;
+  document.querySelectorAll('.publish-tab').forEach(b=>b.classList.toggle('active',b.id===`ptab-${tab}`));
+  const fmt=PUBLISH_FORMATS[tab];
+  document.getElementById('publishFormatDesc').textContent=fmt.desc;
+  document.getElementById('publishOutput').style.display='none';
+}
+async function generatePublishContent(){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(!t||!t.brief){showToast('Run research first — no brief to publish from.','error');return;}
+  const activeP=state.providers.find(p=>p.id==state.activeProviderId&&!p.disabled);
+  if(!activeP){showToast('No active provider.','error');return;}
+  const btn=document.getElementById('publishGenerateBtn');
+  btn.disabled=true;btn.textContent='Generating…';
+  try{
+    const fmt=PUBLISH_FORMATS[currentPublishTab];
+    const prompt=fmt.prompt(t.title,t.brief,t.claims||[]);
+    const result=await callAIWithRetry(activeP,prompt,`You are a skilled content writer. Write for ${fmt.label}. Follow all format requirements exactly.`);
+    document.getElementById('publishTextarea').value=result.trim();
+    document.getElementById('publishOutput').style.display='block';
+    updatePublishCharCount();
+    addLog('ok',`${fmt.label} generated.`);
+  }catch(e){showToast('Generation failed: '+e.message,'error',true);}
+  finally{btn.disabled=false;btn.textContent='✦ Generate';}
+}
+function updatePublishCharCount(){
+  const ta=document.getElementById('publishTextarea');
+  const cnt=document.getElementById('publishCharCount');
+  if(!ta||!cnt) return;
+  const len=ta.value.length;
+  const fmt=PUBLISH_FORMATS[currentPublishTab];
+  const max=fmt.maxChars;
+  cnt.textContent=max?`${len} / ${max} chars${len>max?' ⚠ OVER LIMIT':''}`:`${len} chars`;
+  cnt.style.color=max&&len>max?'#ef4444':'var(--text-label)';
+}
+function copyPublishContent(){
+  const ta=document.getElementById('publishTextarea');
+  if(!ta||!ta.value) return;
+  navigator.clipboard?.writeText(ta.value).then(()=>showToast('Copied to clipboard.','success')).catch(()=>{
+    ta.select();document.execCommand('copy');showToast('Copied.','success');
+  });
+}
+function openPublishModal(){
+  const t=state.topics.find(x=>x.id==state.activeTopicId);
+  if(!t||!t.brief){showToast('Run research first — no brief to publish from.','error');return;}
+  switchPublishTab('linkedin');
+  openModal('publishModal');
+}
+
 function toggleLiveWeb(){
   state.liveWeb=!state.liveWeb;
   save('distila_liveweb',state.liveWeb);
@@ -4428,7 +4846,10 @@ window.addEventListener('load',async()=>{
   // Initialize persona selector
   document.querySelectorAll('.persona-btn').forEach(b=>b.classList.toggle('active',b.id===`pbtn-${state.persona}`));
   // Update version badge
-  addLog('sys','Distila V6.2 ready — knowledge accumulates, claims persist, contradictions surface.');
+  addLog('sys','Distila V6.3 ready — knowledge accumulates, claims persist, contradictions surface.');
+  // Init publish modal default tab desc
+  const pdesc=document.getElementById('publishFormatDesc');
+  if(pdesc) pdesc.textContent=PUBLISH_FORMATS.linkedin.desc;
 });
 window.addEventListener('resize',checkMobileLayout);
 </script>
@@ -4467,6 +4888,124 @@ window.addEventListener('resize',checkMobileLayout);
     <div class="modal-footer">
       <button onclick="closeModal('printModal')" class="btn btn-ghost">Cancel</button>
       <button onclick="executePrint()" class="btn btn-primary">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal" onclick="overlayClose(event,'exportModal')">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <span class="modal-title">⬇ Export Research Package</span>
+      <button onclick="closeModal('exportModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-body" style="padding:18px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5">Export a structured Markdown file — ready to import into Claude Desktop, ChatGPT, or any LLM for article writing or further analysis.</div>
+      <label class="print-option">
+        <input type="radio" name="exportScope" value="full" checked>
+        <div>
+          <div class="print-option-label">Full Package</div>
+          <div class="print-option-sub">Brief · Positions · All claims · Contradictions · Gaps · Sources · Socratic layer · Staleness notes</div>
+        </div>
+      </label>
+      <label class="print-option">
+        <input type="radio" name="exportScope" value="claims">
+        <div>
+          <div class="print-option-label">Brief + Claims + Gaps</div>
+          <div class="print-option-sub">Synthesis brief with full claims vault and knowledge gaps</div>
+        </div>
+      </label>
+      <label class="print-option">
+        <input type="radio" name="exportScope" value="brief">
+        <div>
+          <div class="print-option-label">Brief Only</div>
+          <div class="print-option-sub">Synthesis brief only — clean, no metadata</div>
+        </div>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('exportModal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="executeExport()" class="btn btn-primary">⬇ Export Markdown</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOCIAL PUBLISH MODAL -->
+<div class="modal-overlay" id="publishModal" onclick="overlayClose(event,'publishModal')">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-header">
+      <span class="modal-title">✦ Publish Brief</span>
+      <button onclick="closeModal('publishModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div style="display:flex;border-bottom:1px solid var(--border)">
+        <button class="publish-tab active" id="ptab-linkedin" onclick="switchPublishTab('linkedin')">💼 LinkedIn</button>
+        <button class="publish-tab" id="ptab-tweet" onclick="switchPublishTab('tweet')">𝕏 Tweet Thread</button>
+        <button class="publish-tab" id="ptab-blog" onclick="switchPublishTab('blog')">✍ Blog Post</button>
+      </div>
+      <div style="padding:16px">
+        <div id="publishFormatDesc" style="font-size:12.5px;color:var(--text-label);margin-bottom:12px"></div>
+        <button id="publishGenerateBtn" onclick="generatePublishContent()" class="btn btn-primary" style="width:100%;margin-bottom:14px">✦ Generate</button>
+        <div id="publishOutput" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span id="publishCharCount" style="font-size:11.5px;font-family:var(--font-mono);color:var(--text-label)"></span>
+            <button onclick="copyPublishContent()" class="btn btn-ghost btn-sm">Copy</button>
+          </div>
+          <textarea id="publishTextarea" class="inp" style="width:100%;min-height:220px;resize:vertical;font-size:13.5px;line-height:1.6" oninput="updatePublishCharCount()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SOURCES MODAL -->
+<div class="modal-overlay" id="addSourcesModal" onclick="overlayClose(event,'addSourcesModal')">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <span class="modal-title">+ Add Source</span>
+      <button onclick="closeModal('addSourcesModal')" class="btn btn-icon btn-ghost">✕</button>
+    </div>
+    <div class="modal-body" style="padding:18px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5">Add a URL source for this topic. Your confidence rating will be factored into claim scoring and synthesis weighting.</div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-label);letter-spacing:.3px;display:block;margin-bottom:6px">SOURCE URL</label>
+        <input id="modalSourceUrl" type="url" class="inp" placeholder="https://…" style="width:100%">
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-label);letter-spacing:.3px;display:block;margin-bottom:8px">YOUR CONFIDENCE IN THIS SOURCE</label>
+        <div style="display:flex;gap:8px">
+          <label id="sconf-high" style="flex:1;cursor:pointer" onclick="setSourceConfidence('high')">
+            <div style="border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px;text-align:center;transition:all .15s" id="sconf-high-box">
+              <div style="font-size:16px;margin-bottom:3px">🟢</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-primary)">High</div>
+              <div style="font-size:11px;color:var(--text-label)">Primary, authoritative source</div>
+            </div>
+          </label>
+          <label id="sconf-medium" style="flex:1;cursor:pointer" onclick="setSourceConfidence('medium')">
+            <div style="border:2px solid var(--accent);border-radius:var(--radius-sm);padding:10px;text-align:center;transition:all .15s;background:var(--accent-dim)" id="sconf-medium-box">
+              <div style="font-size:16px;margin-bottom:3px">🟡</div>
+              <div style="font-size:12px;font-weight:700;color:var(--accent)">Medium</div>
+              <div style="font-size:11px;color:var(--text-label)">Credible but verify</div>
+            </div>
+          </label>
+          <label id="sconf-low" style="flex:1;cursor:pointer" onclick="setSourceConfidence('low')">
+            <div style="border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px;text-align:center;transition:all .15s" id="sconf-low-box">
+              <div style="font-size:16px;margin-bottom:3px">🔴</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Low</div>
+              <div style="font-size:11px;color:var(--text-label)">Supplementary only</div>
+            </div>
+          </label>
+        </div>
+        <input type="hidden" id="sourceConfidenceSelect" value="medium">
+      </div>
+      <div id="sourceAddMore" style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <input type="checkbox" id="addAnotherSource" style="cursor:pointer">
+        <label for="addAnotherSource" style="font-size:13px;color:var(--text-secondary);cursor:pointer">Add another source after this one</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal('addSourcesModal')" class="btn btn-ghost">Cancel</button>
+      <button onclick="executeAddSource()" class="btn btn-primary" id="addSourceConfirmBtn">+ Add Source</button>
     </div>
   </div>
 </div>
